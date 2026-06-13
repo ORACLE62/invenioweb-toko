@@ -27,23 +27,33 @@ const db = mysql.createPool({
 async function buatTabelOtomatis() {
     try {
         console.log("Sedang menghubungkan dan membuat tabel di Cloud Aiven...");
-        
-        // Buat Tabel User
+
+        // 1. Buat Tabel User
         await db.execute(`CREATE TABLE IF NOT EXISTS user (id_user INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, nama VARCHAR(100) NOT NULL)`);
-        
-        // Buat Tabel Supplier
-        await db.execute(`CREATE TABLE IF NOT EXISTS supplier (id_supplier VARCHAR(50) PRIMARY KEY, nama_supplier VARCHAR(100) NOT NULL, kontak VARCHAR(50))`);
-        
-        // Buat Tabel Barang
-        await db.execute(`CREATE TABLE IF NOT EXISTS barang (id_barang VARCHAR(50) PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, id_supplier VARCHAR(50), stok INT DEFAULT 0, harga INT DEFAULT 0, FOREIGN KEY (id_supplier) REFERENCES supplier(id_supplier) ON DELETE SET NULL)`);
-        
-        // Buat Tabel Transaksi
-        await db.execute(`CREATE TABLE IF NOT EXISTS transaksi (id_transaksi INT AUTO_INCREMENT PRIMARY KEY, id_barang VARCHAR(50), jenis_transaksi ENUM('masuk', 'keluar') NOT NULL, jumlah INT NOT NULL, tanggal DATE NOT NULL, FOREIGN KEY (id_barang) REFERENCES barang(id_barang) ON DELETE CASCADE)`);
-        
-        // Isi User Admin Pertama (Password: admin123)
-        await db.execute(`INSERT IGNORE INTO user (username, password, nama) VALUES ('admin', 'admin123', 'Fal Admin')`);
-        
-        console.log("🚀 BERHASIL! Semua tabel sudah terbuat otomatis di Cloud Aiven.");
+
+        // 2. Buat Tabel Supplier
+        await db.execute(`CREATE TABLE IF NOT EXISTS supplier (id_supplier VARCHAR(50) NOT NULL PRIMARY KEY, nama_supplier VARCHAR(100) NOT NULL, alamat TEXT, no_telp VARCHAR(20))`);
+
+        // 3. Buat Tabel Petugas
+        await db.execute(`CREATE TABLE IF NOT EXISTS petugas (id_petugas VARCHAR(50) NOT NULL PRIMARY KEY, nama_petugas VARCHAR(100) NOT NULL, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, level ENUM('Admin','Petugas Gudang','Pimpinan') NOT NULL)`);
+
+        // 4. Buat Tabel Barang
+        await db.execute(`CREATE TABLE IF NOT EXISTS barang (id_barang VARCHAR(50) NOT NULL PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, stok INT NOT NULL DEFAULT 0, harga DECIMAL(10,2) NOT NULL, id_supplier VARCHAR(50) DEFAULT NULL)`);
+
+        // 5. Buat Tabel Transaksi (DITAMBAH KOLOM MASUK & KELUAR BIAR GAK EROR)
+        await db.execute(`CREATE TABLE IF NOT EXISTS transaksi (id_transaksi INT AUTO_INCREMENT PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, jenis_transaksi ENUM('masuk','keluar') NOT NULL, jumlah INT NOT NULL, tanggal DATE NOT NULL, masuk VARCHAR(50) DEFAULT 'masuk', keluar VARCHAR(50) DEFAULT 'keluar')`);
+
+        // 6. Buat Tabel Transaksi Keluar
+        await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_keluar (id_keluar VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_keluar DATE NOT NULL, jumlah_keluar INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
+
+        // 7. Buat Tabel Transaksi Masuk
+        await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_masuk (id_masuk VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_masuk DATE NOT NULL, jumlah_masuk INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
+
+        // 8. Isi Data Default biar langsung bisa dipakai Login
+        await db.execute(`INSERT IGNORE INTO user (username, password, nama) VALUES ('admin', 'admin826', 'Naufal')`);
+        await db.execute(`INSERT IGNORE INTO petugas VALUES ('USR001', 'Naufal (Admin)', 'admin', 'admin826', 'Admin'), ('USR002', 'Chou (Gudang)', 'gudang', 'gudang1102', 'Petugas Gudang'), ('USR003', 'Siti (Pimpinan)', 'pimpinan', 'pimpinan82686', 'Pimpinan')`);
+
+        console.log("🚀 BERHASIL! Semua tabel dan data default sudah terbuat otomatis di Cloud Aiven.");
     } catch (error) {
         console.log("Gagal membuat tabel otomatis: " + error.message);
     }
