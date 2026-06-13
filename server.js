@@ -60,6 +60,17 @@ async function buatTabelOtomatis() {
 }
 buatTabelOtomatis(); // Jalankan fungsinya
 
+// --- TRIK DARURAT TAMBAH KOLOM MASUK KELUAR ---
+   setTimeout(async () => {
+       try {
+           await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS masuk VARCHAR(50) DEFAULT 'masuk'`);
+           await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS keluar VARCHAR(50) DEFAULT 'keluar'`);
+           console.log("🚀 Kolom penyelamat berhasil ditambahkan ke Aiven!");
+       } catch (e) {
+           console.log("Kolom sudah ada atau aman.");
+       }
+   }, 5000);
+
 // --- PROTECT ROUTE MIDDLEWARE ---
 const requireLogin = (req, res, next) => {
     if (req.session.user) next(); else res.redirect('/login');
