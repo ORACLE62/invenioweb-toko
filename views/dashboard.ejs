@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - InvenioWeb</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-white font-sans min-h-screen flex">
+
+    <div class="w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex flex-col justify-between">
+        <div>
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold">I</div>
+                <span class="font-bold text-lg tracking-wider">InvenioWeb</span>
+            </div>
+            <nav class="space-y-2">
+                <a href="/dashboard" class="block px-4 py-2.5 bg-indigo-600 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Dashboard</a>
+                <a href="/barang" class="block px-4 py-2.5 bg-indigo-600 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Kelola Barang</a>
+                <a href="/supplier" class="block px-4 py-2.5 bg-indigo-600 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Kelola Supplier</a>
+                <a href="/transaksi" class="block px-4 py-2.5 bg-indigo-600 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Kelola Transaksi</a>
+                <a href="/laporan" class="block px-4 py-2.5 bg-indigo-600 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Cetak Laporan</a>
+            </nav>
+        </div>
+        <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
+            <div>
+                <p class="text-xs text-zinc-500">Masuk sebagai:</p>
+                <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (Admin)</p>
+                <div class="mt-1">
+                    <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium">Admin</span>
+                </div>
+            </div>
+            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
+        </div>
+    </div>
+
+    <div class="flex-grow p-10 overflow-y-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold tracking-tight">Sistem Inventaris Barang Toko</h1>
+            <p class="text-zinc-400 text-sm mt-1">Metode Pengembangan: Waterfall SDLC Model</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="p-6 bg-zinc-900 border border-zinc-800 rounded-xl relative overflow-hidden">
+                <p class="text-xs text-zinc-500 font-medium uppercase tracking-wider">Total Varian Produk</p>
+                <p class="text-3xl font-bold mt-2 text-indigo-400"><%= totalBarang %></p>
+                <div class="absolute right-2 bottom-2 text-6xl font-bold text-zinc-800/10">📦</div>
+            </div>
+            <div class="p-6 bg-zinc-900 border border-zinc-800 rounded-xl relative overflow-hidden">
+                <p class="text-xs text-zinc-500 font-medium uppercase tracking-wider">Mitra Penyuplai (Supplier)</p>
+                <p class="text-3xl font-bold mt-2 text-emerald-400"><%= totalSupplier %></p>
+                <div class="absolute right-2 bottom-2 text-6xl font-bold text-zinc-800/10">🤝</div>
+            </div>
+            <div class="p-6 bg-zinc-900 border border-zinc-800 rounded-xl relative overflow-hidden">
+                <p class="text-xs text-zinc-500 font-medium uppercase tracking-wider">Transaksi Barang Masuk</p>
+                <p class="text-3xl font-bold mt-2 text-amber-400"><%= totalMasuk %></p>
+                <div class="absolute right-2 bottom-2 text-6xl font-bold text-zinc-800/10">📥</div>
+            </div>
+            <div class="p-6 bg-zinc-900 border border-zinc-800 rounded-xl relative overflow-hidden">
+                <p class="text-xs text-zinc-500 font-medium uppercase tracking-wider">Transaksi Barang Keluar</p>
+                <p class="text-3xl font-bold mt-2 text-rose-400"><%= totalKeluar %></p>
+                <div class="absolute right-2 bottom-2 text-6xl font-bold text-zinc-800/10">📤</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 p-6 bg-zinc-900 border border-zinc-800 rounded-xl">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">⚠️ Notifikasi Stok Produk Menipis</h3>
+                <p class="text-zinc-400 text-xs mb-4">Segera hubungi supplier terkait jika stok menyentuh batas aman (minimal 5 item).</p>
+                <div class="space-y-3">
+                    <div class="p-4 bg-zinc-950 rounded-lg border border-zinc-800/50 flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-medium">Beras Premium 5kg</p>
+                            <span class="text-xs text-zinc-500 font-mono">SUP-001 (PT. Sumber Rasa)</span>
+                        </div>
+                        <span class="text-xs font-bold text-rose-400 bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20">Sisa 2 Pcs</span>
+                    </div>
+                    <div class="p-4 bg-zinc-950 rounded-lg border border-zinc-800/50 flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-medium">Minyak Goreng 2L</p>
+                            <span class="text-xs text-zinc-500 font-mono">SUP-003 (Wilmar Retail)</span>
+                        </div>
+                        <span class="text-xs font-bold text-rose-400 bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20">Sisa 4 Pcs</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 bg-zinc-900 border border-zinc-800 rounded-xl flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-bold mb-2">📊 Status Alur Waterfall</h3>
+                    <p class="text-xs text-zinc-400 leading-relaxed">Sistem ini dikembangkan secara sekuensial terstruktur sesuai metodologi air terjun:</p>
+                    
+                    <div class="mt-4 space-y-2 text-xs">
+                        <div class="flex items-center gap-2 text-zinc-500"><span class="text-emerald-400">✓</span> 1. Analisis Kebutuhan Toko</div>
+                        <div class="flex items-center gap-2 text-zinc-500"><span class="text-emerald-400">✓</span> 2. Desain Database & ERD</div>
+                        <div class="flex items-center gap-2 text-indigo-400">➔ 3. Tahap Coding & Implementasi</div>
+                        <div class="flex items-center gap-2 text-zinc-600">⚪ 4. Pengujian Sistem Toko</div>
+                    </div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-zinc-800 text-[11px] text-zinc-500 text-center">
+                    InvenioWeb v1.0.0 © 2026
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Supplier - InvenioWeb</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-white font-sans min-h-screen flex">
+
+    <div class="w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex flex-col justify-between">
+        <div>
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold">I</div>
+                <span class="font-bold text-lg tracking-wider">InvenioWeb</span>
+            </div>
+            <nav class="space-y-2">
+                <a href="/dashboard" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Dashboard</a>
+                <a href="/barang" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Kelola Barang</a>
+                <a href="/supplier" class="block px-4 py-2.5 bg-indigo-600 rounded-lg text-sm font-medium transition">Kelola Supplier</a>
+                <a href="/transaksi" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Kelola Transaksi</a>
+                <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Cetak Laporan</a>
+            </nav>
+        </div>
+        <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
+            <div>
+                <p class="text-xs text-zinc-500">Masuk sebagai:</p>
+                <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (Admin)</p>
+                <div class="mt-1">
+                    <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium">Admin</span>
+                </div>
+            </div>
+            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
+        </div>
+    </div>
+
+    <div class="flex-grow p-10 overflow-y-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold tracking-tight">Kelola Mitra Supplier</h1>
+            <p class="text-zinc-400 text-sm mt-1">Daftar penyuplai rantai pasok barang inventaris gudang toko.</p>
+        </header>
+
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-zinc-800 bg-zinc-900/50 text-zinc-400 text-xs font-semibold uppercase tracking-wider">
+                        <th class="p-4">ID Supplier</th>
+                        <th class="p-4">Nama Supplier</th>
+                        <th class="p-4">Nomor Telepon</th>
+                        <th class="p-4">Alamat Kantor</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800 text-sm text-zinc-300">
+                    <% if (supplier.length === 0) { %>
+                        <tr>
+                            <td colspan="4" class="p-8 text-center text-zinc-500 italic">Belum ada data supplier di database.</td>
+                        </tr>
+                    <% } else { %>
+                        <% supplier.forEach(sup => { %>
+                            <tr class="hover:bg-zinc-800/30 transition">
+                                <td class="p-4 font-mono text-indigo-400 font-semibold"><%= sup.id_supplier %></td>
+                                <td class="p-4 font-medium text-white"><%= sup.nama_supplier %></td>
+                                <td class="p-4 font-mono text-zinc-400"><%= sup.no_telp %></td>
+                                <td class="p-4 text-zinc-400"><%= sup.alamat %></td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
