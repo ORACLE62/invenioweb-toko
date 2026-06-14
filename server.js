@@ -177,12 +177,17 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// ROUTE POST PUTUSAN: UPDATE DATA BARANG LANGSUNG DI SERVER.JS
+// ROUTE POST PENJINAK ERROR FOREIGN KEY (FIXED)
 // ==========================================
 app.post('/barang/edit/:id', requireLogin, async (req, res) => {
     try {
-        const id_barang = req.params.id; // Menangkap ID barang dari URL
-        const { nama_barang, id_supplier, stok, harga } = req.body; // Menangkap data form input
+        const id_barang = req.params.id;
+        let { nama_barang, id_supplier, stok, harga } = req.body;
+
+        // JINAKKAN DI SINI: Jika supplier kosong, berikan nilai null asli (bukan string "")
+        if (!id_supplier || id_supplier === '' || id_supplier === 'null' || id_supplier === 'undefined') {
+            id_supplier = null;
+        }
 
         // Query update data ke database MySQL online kamu
         const query = `
