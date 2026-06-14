@@ -9,6 +9,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// ============================================================
+// 🚨 MIDDLEWARE PENYELAMAT TYPO SPASI (ANTI-ERROR CANNOT GET)
+// ============================================================
+app.use((req, res, next) => {
+    // Jika ada spasi terselubung di URL akibat salah ketik di href EJS
+    if (req.url.includes('%20') || req.url.includes(' ')) {
+        const cleanUrl = req.url.replace(/%20/g, '').replace(/\s+/g, '');
+        return res.redirect(cleanUrl);
+    }
+    next();
+});
+
 app.use(session({ 
     secret: 'invenioweb_single_secret_key', 
     resave: false, 
