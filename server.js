@@ -229,6 +229,24 @@ app.get('/transaksi', requireLogin, async (req, res) => {
     } catch (e) { res.send("Error Menu Transaksi: " + e.message); }
 });
 
+// ROUTE PENYELAMAT: Mengarahkan jika form di EJS mengarah ke /transaksi/tambah
+app.post('/transaksi/tambah', requireLogin, async (req, res) => {
+    try {
+        const { id_barang, jumlah, jenis_transaksi, tanggal } = req.body;
+        
+        // Cek tipe transaksi dari form
+        const tipe = jenis_transaksi || 'masuk'; 
+        const op = (tipe === 'masuk') ? '+' : '-';
+
+        await db.execute('INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal) VALUES (?, ?, ?, ?)', [id_barang, tipe, jumlah, tanggal]);
+        await db.execute(`UPDATE barang SET stok = stok ${op} ? WHERE id_barang = ?`, [jumlah, id_barang]);
+        
+        res.redirect('/transaksi');
+    } catch (e) { 
+        res.send("Error Transaksi Tambah: " + e.message); 
+    }
+});
+
 app.post('/transaksi/masuk', requireLogin, async (req, res) => {
     try {
         const { id_barang, jumlah, tanggal } = req.body;
