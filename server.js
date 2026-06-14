@@ -142,7 +142,7 @@ app.get('/barang/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 4. ROUTE KELOLA SUPPLIER (SINKRON DENGAN KOLOM KONTAK)
+// 4. ROUTE KELOLA SUPPLIER (BYPASS KOLOM ALAMAT)
 // ==========================================
 app.get('/supplier', requireLogin, async (req, res) => {
     try {
@@ -155,16 +155,15 @@ app.get('/supplier', requireLogin, async (req, res) => {
 
 app.post('/supplier/tambah', requireLogin, async (req, res) => {
     try {
-        // 1. Ambil data dari form HTML kamu (name="telepon")
-        const { nama_supplier, telepon, alamat } = req.body;
+        // Ambil nama_supplier dan telepon dari form HTML
+        const { nama_supplier, telepon } = req.body;
 
         const paramNama    = nama_supplier !== undefined ? nama_supplier : null;
         const paramTelepon = telepon !== undefined ? telepon : null;
-        const paramAlamat  = alamat !== undefined ? alamat : null;
 
-        // 2. Diarahkan ke kolom 'kontak' dan 'alamat' sesuai struktur MySQL kamu
-        const query = 'INSERT INTO supplier (nama_supplier, kontak, alamat) VALUES (?, ?, ?)';
-        await db.execute(query, [paramNama, paramTelepon, paramAlamat]);
+        // Hanya masukkan ke kolom nama_supplier dan kontak yang pasti ada di database
+        const query = 'INSERT INTO supplier (nama_supplier, kontak) VALUES (?, ?)';
+        await db.execute(query, [paramNama, paramTelepon]);
         
         res.redirect('/supplier');
     } catch (e) {
@@ -176,16 +175,15 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
 app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
     try {
         const id_supplier = req.params.id;
-        const { nama_supplier, telepon, alamat } = req.body;
+        const { nama_supplier, telepon } = req.body;
 
         const paramId      = id_supplier !== undefined ? id_supplier : null;
         const paramNama    = nama_supplier !== undefined ? nama_supplier : null;
         const paramTelepon = telepon !== undefined ? telepon : null;
-        const paramAlamat  = alamat !== undefined ? alamat : null;
 
-        // Diubah menjadi 'kontak = ?' agar cocok dengan isi tabel database
-        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ?, alamat = ? WHERE id_supplier = ?';
-        await db.execute(query, [paramNama, paramTelepon, paramAlamat, paramId]);
+        // Update hanya untuk kolom nama_supplier dan kontak saja
+        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ? WHERE id_supplier = ?';
+        await db.execute(query, [paramNama, paramTelepon, paramId]);
 
         res.redirect('/supplier');
     } catch (e) {
