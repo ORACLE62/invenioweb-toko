@@ -247,6 +247,48 @@ app.get('/transaksi/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
+// ROUTE POST: TAMBAH TRANSAKSI MASUK
+// ==========================================
+app.post('/transaksi/masuk', requireLogin, async (req, res) => {
+    try {
+        const { id_barang, jumlah_masuk, tanggal_masuk } = req.body;
+        
+        // 1. Masukkan data ke tabel riwayat transaksi (sesuaikan nama kolom database kamu)
+        const queryTransaksi = 'INSERT INTO transaksi (id_barang, tipe, jumlah, tanggal) VALUES (?, ?, ?, ?)';
+        await db.execute(queryTransaksi, [id_barang, 'masuk', jumlah_masuk, tanggal_masuk]);
+        
+        // 2. Update tambah stok barang otomatis
+        const queryBarang = 'UPDATE barang SET stok = stok + ? WHERE id_barang = ?';
+        await db.execute(queryBarang, [jumlah_masuk, id_barang]);
+
+        res.redirect('/transaksi');
+    } catch (e) {
+        res.send("Error Transaksi Masuk: " + e.message);
+    }
+});
+
+// ==========================================
+// ROUTE POST: TAMBAH TRANSAKSI KELUAR
+// ==========================================
+app.post('/transaksi/keluar', requireLogin, async (req, res) => {
+    try {
+        const { id_barang, jumlah_keluar, tanggal_keluar } = req.body;
+        
+        // 1. Masukkan data ke tabel riwayat transaksi
+        const queryTransaksi = 'INSERT INTO transaksi (id_barang, tipe, jumlah, tanggal) VALUES (?, ?, ?, ?)';
+        await db.execute(queryTransaksi, [id_barang, 'keluar', jumlah_keluar, tanggal_keluar]);
+        
+        // 2. Update kurangi stok barang otomatis
+        const queryBarang = 'UPDATE barang SET stok = stok - ? WHERE id_barang = ?';
+        await db.execute(queryBarang, [jumlah_keluar, id_barang]);
+
+        res.redirect('/transaksi');
+    } catch (e) {
+        res.send("Error Transaksi Keluar: " + e.message);
+    }
+});
+
+// ==========================================
 // 6. ROUTE CETAK LAPORAN (DENGAN TANGGAL)
 // ==========================================
 app.get('/laporan', requireLogin, async (req, res) => {
