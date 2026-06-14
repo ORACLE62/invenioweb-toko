@@ -142,11 +142,10 @@ app.get('/barang/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 4. ROUTE KELOLA SUPPLIER (FIXED & AMAN)
+// 4. ROUTE KELOLA SUPPLIER (SINKRON DENGAN KOLOM KONTAK)
 // ==========================================
 app.get('/supplier', requireLogin, async (req, res) => {
     try {
-        // Ambil data supplier untuk ditampilkan ke tabel
         const [supplier] = await db.execute('SELECT * FROM supplier');
         res.render('supplier', { user: req.session.user, supplier });
     } catch (e) {
@@ -156,16 +155,15 @@ app.get('/supplier', requireLogin, async (req, res) => {
 
 app.post('/supplier/tambah', requireLogin, async (req, res) => {
     try {
-        // 1. Tangkap variabel dari form (nama_supplier, telepon, alamat)
+        // 1. Ambil data dari form HTML kamu (name="telepon")
         const { nama_supplier, telepon, alamat } = req.body;
 
-        // 2. Jembatan Pengaman: Ubah dari undefined ke null murni jika kosong
         const paramNama    = nama_supplier !== undefined ? nama_supplier : null;
         const paramTelepon = telepon !== undefined ? telepon : null;
         const paramAlamat  = alamat !== undefined ? alamat : null;
 
-        // 3. Eksekusi query tanpa menyertakan id_supplier karena auto increment oleh database
-        const query = 'INSERT INTO supplier (nama_supplier, telepon, alamat) VALUES (?, ?, ?)';
+        // 2. Diarahkan ke kolom 'kontak' dan 'alamat' sesuai struktur MySQL kamu
+        const query = 'INSERT INTO supplier (nama_supplier, kontak, alamat) VALUES (?, ?, ?)';
         await db.execute(query, [paramNama, paramTelepon, paramAlamat]);
         
         res.redirect('/supplier');
@@ -185,7 +183,8 @@ app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
         const paramTelepon = telepon !== undefined ? telepon : null;
         const paramAlamat  = alamat !== undefined ? alamat : null;
 
-        const query = 'UPDATE supplier SET nama_supplier = ?, telepon = ?, alamat = ? WHERE id_supplier = ?';
+        // Diubah menjadi 'kontak = ?' agar cocok dengan isi tabel database
+        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ?, alamat = ? WHERE id_supplier = ?';
         await db.execute(query, [paramNama, paramTelepon, paramAlamat, paramId]);
 
         res.redirect('/supplier');
