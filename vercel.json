@@ -8,20 +8,48 @@
   ],
   "routes": [
     {
+      "src": "/login",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/barang",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/barang/(.*)",
+      "dest": "/server.js"
+    },
+    {
       "src": "/supplier",
-      "dest": "server.js"
+      "dest": "/server.js"
     },
     {
       "src": "/supplier/(.*)",
-      "dest": "server.js"
+      "dest": "/server.js"
+    },
+    {
+      "src": "/transaksi",
+      "dest": "/server.js"
     },
     {
       "src": "/transaksi/(.*)",
-      "dest": "server.js"
+      "dest": "/server.js"
+    },
+    {
+      "src": "/laporan",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/logout",
+      "dest": "/server.js"
     },
     {
       "src": "/(.*)",
-      "dest": "server.js"
+      "dest": "/server.js"
     }
   ]
 }
