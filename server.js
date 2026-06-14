@@ -16,13 +16,13 @@ app.use(session({
 }));
 
 // --- DATABASE CONNECTION TO CLOUD AIVEN ---
-// --- DATABASE CONNECTION TO CLOUD AIVEN (PAKAI URI) ---
 const db = mysql.createPool({ 
     uri: 'mysql://avnadmin:AVNS_Qz7KYFav9bEb6eGGu9N@mysql-3cd9e1e3-naufalfadhilah553-f9de.e.aivencloud.com:11057/defaultdb?ssl-mode=REQUIRED', 
     ssl: {
         rejectUnauthorized: false
     }
 });
+
 // --- PEMBUATAN TABEL OTOMATIS KE CLOUD AIVEN ---
 async function buatTabelOtomatis() {
     try {
@@ -30,13 +30,13 @@ async function buatTabelOtomatis() {
 
         // Buat semua tabel utama
         await db.execute(`CREATE TABLE IF NOT EXISTS user (id_user INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, nama VARCHAR(100) NOT NULL)`);
+        
+        // FIX: Kolom nomor telepon disamakan menjadi 'no_telp' agar konsisten
         await db.execute(`CREATE TABLE IF NOT EXISTS supplier (id_supplier VARCHAR(50) NOT NULL PRIMARY KEY, nama_supplier VARCHAR(100) NOT NULL, alamat TEXT, no_telp VARCHAR(20))`);
+        
         await db.execute(`CREATE TABLE IF NOT EXISTS petugas (id_petugas VARCHAR(50) NOT NULL PRIMARY KEY, nama_petugas VARCHAR(100) NOT NULL, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, level ENUM('Admin','Petugas Gudang','Pimpinan') NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS barang (id_barang VARCHAR(50) NOT NULL PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, stok INT NOT NULL DEFAULT 0, harga DECIMAL(10,2) NOT NULL, id_supplier VARCHAR(50) DEFAULT NULL)`);
-        
-        // 🚀 KUNCI UTAMA: Membuat tabel transaksi utuh dengan kolom masuk dan keluar langsung dari awal
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi (id_transaksi INT AUTO_INCREMENT PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, jenis_transaksi ENUM('masuk','keluar') NOT NULL, jumlah INT NOT NULL, tanggal DATE NOT NULL, masuk VARCHAR(50) DEFAULT 'masuk', keluar VARCHAR(50) DEFAULT 'keluar')`);
-        
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_keluar (id_keluar VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_keluar DATE NOT NULL, jumlah_keluar INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_masuk (id_masuk VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_masuk DATE NOT NULL, jumlah_masuk INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
 
@@ -52,15 +52,15 @@ async function buatTabelOtomatis() {
 buatTabelOtomatis();
 
 // --- TRIK DARURAT TAMBAH KOLOM MASUK KELUAR ---
-   setTimeout(async () => {
-       try {
-           await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS masuk VARCHAR(50) DEFAULT 'masuk'`);
-           await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS keluar VARCHAR(50) DEFAULT 'keluar'`);
-           console.log("🚀 Kolom penyelamat berhasil ditambahkan ke Aiven!");
-       } catch (e) {
-           console.log("Kolom sudah ada atau aman.");
-       }
-   }, 5000);    
+setTimeout(async () => {
+    try {
+        await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS masuk VARCHAR(50) DEFAULT 'masuk'`);
+        await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS keluar VARCHAR(50) DEFAULT 'keluar'`);
+        console.log("🚀 Kolom penyelamat berhasil ditambahkan ke Aiven!");
+    } catch (e) {
+        console.log("Kolom sudah ada atau aman.");
+    }
+}, 5000);    
 
 // --- PROTECT ROUTE MIDDLEWARE ---
 const requireLogin = (req, res, next) => {
@@ -109,7 +109,7 @@ app.get('/dashboard', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 3. ROUTE KELOLA BARANG (DENGAN FITUR HAPUS)
+// 3. ROUTE KELOLA BARANG
 // ==========================================
 app.get('/barang', requireLogin, async (req, res) => {
     try {
@@ -141,92 +141,66 @@ app.get('/barang/hapus/:id', requireLogin, async (req, res) => {
     } catch (e) { res.send("Error Hapus Barang: " + e.message); }
 });
 
-// ==========================================
-// ROUTE GET: MENAMPILKAN HALAMAN SUPPLIER (FIXED CANNOT GET)
-// ==========================================
-app.get('/supplier', requireLogin, async (req, res) => {
-    try {
-        // Ambil data supplier dari database cloud kamu
-        const [supplier] = await db.execute('SELECT * FROM supplier');
-        
-        // Render file views/supplier.ejs dan kirimkan data user & supplier
-        res.render('supplier', { user: req.session.user, supplier });
-    } catch (e) {
-        console.error("Error Menu Supplier:", e);
-        res.send("Error Menu Supplier: " + e.message);
-    }
-});
-
-// ==========================================
-// ROUTE POST: TAMBAH SUPPLIER BARU (FIXED ALAMAT KOSONG)
-// ==========================================
-app.post('/supplier/tambah', requireLogin, async (req, res) => {
-    try {
-        // Ambil nama sesuai atribut name yang dikirim dari form input HTML/EJS
-        const { id_supplier, nama_supplier, telepon, alamat } = req.body;
-
-        // Jembatan pengaman: jika ada input teks kosong, paksa menjadi null asli database
-        const paramTelepon = (telepon && telepon.trim() !== '') ? telepon : null;
-        const paramAlamat = (alamat && alamat.trim() !== '') ? alamat : null;
-
-        // Pastikan urutan tanda tanya (?) pas dengan variabel di dalam array []
-        const query = `
-            INSERT INTO supplier (id_supplier, nama_supplier, telepon, alamat) 
-            VALUES (?, ?, ?, ?)
-        `;
-        
-        await db.execute(query, [id_supplier, nama_supplier, paramTelepon, paramAlamat]);
-        
-        // Berhasil, kembalikan ke halaman supplier
-        res.redirect('/supplier');
-    } catch (e) {
-        console.error("Error Simpan Supplier:", e);
-        res.send("Error Simpan Supplier: " + e.message);
-    }
-});
-
-// ==========================================
-// ROUTE POST PENJINAK ERROR FOREIGN KEY (FIXED)
-// ==========================================
 app.post('/barang/edit/:id', requireLogin, async (req, res) => {
     try {
         const id_barang = req.params.id;
         let { nama_barang, id_supplier, stok, harga } = req.body;
 
-        // JINAKKAN DI SINI: Jika supplier kosong, berikan nilai null asli (bukan string "")
         if (!id_supplier || id_supplier === '' || id_supplier === 'null' || id_supplier === 'undefined') {
             id_supplier = null;
         }
 
-        // Query update data ke database MySQL online kamu
         const query = `
             UPDATE barang 
             SET nama_barang = ?, id_supplier = ?, stok = ?, harga = ? 
             WHERE id_barang = ?
         `;
-        
         await db.execute(query, [nama_barang, id_supplier, stok, harga, id_barang]);
-        
-        // Kembalikan user ke halaman kelola barang setelah sukses
         res.redirect('/barang');
     } catch (e) {
-        console.error("Detail Error Edit Barang Pusat:", e);
         res.send("Error Update Data Barang Pusat: " + e.message);
+    }
+});
+
+// ==========================================
+// 4. ROUTE KELOLA SUPPLIER (SUDAH DI-FIX)
+// ==========================================
+app.get('/supplier', requireLogin, async (req, res) => {
+    try {
+        const [supplier] = await db.execute('SELECT * FROM supplier');
+        res.render('supplier', { user: req.session.user, supplier });
+    } catch (e) {
+        res.send("Error Menu Supplier: " + e.message);
+    }
+});
+
+app.post('/supplier/tambah', requireLogin, async (req, res) => {
+    try {
+        const { id_supplier, nama_supplier, telepon, alamat } = req.body;
+        const paramTelepon = (telepon && telepon.trim() !== '') ? telepon : null;
+        const paramAlamat = (alamat && alamat.trim() !== '') ? alamat : null;
+
+        // FIX: Menggunakan kolom 'no_telp' sesuai struktur awal database Aiven
+        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, no_telp, alamat) VALUES (?, ?, ?, ?)';
+        await db.execute(query, [id_supplier, nama_supplier, paramTelepon, paramAlamat]);
+        res.redirect('/supplier');
+    } catch (e) {
+        res.send("Error Simpan Supplier: " + e.message);
     }
 });
 
 app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
     try {
         const id_supplier = req.params.id;
-        const { nama_supplier, telepon } = req.body;
+        const { nama_supplier, telepon, alamat } = req.body;
 
-        const paramId      = id_supplier !== undefined ? id_supplier : null;
         const paramNama    = nama_supplier !== undefined ? nama_supplier : null;
         const paramTelepon = telepon !== undefined ? telepon : null;
+        const paramAlamat  = alamat !== undefined ? alamat : null;
 
-        // Hanya meng-update nama dan kontak saja
-        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ? WHERE id_supplier = ?';
-        await db.execute(query, [paramNama, paramTelepon, paramId]);
+        // FIX: Menggunakan kolom 'no_telp' dan menyertakan 'alamat' agar tidak terhapus saat diedit
+        const query = 'UPDATE supplier SET nama_supplier = ?, no_telp = ?, alamat = ? WHERE id_supplier = ?';
+        await db.execute(query, [paramNama, paramTelepon, paramAlamat, id_supplier]);
 
         res.redirect('/supplier');
     } catch (e) {
@@ -287,49 +261,7 @@ app.get('/transaksi/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// ROUTE POST: TAMBAH TRANSAKSI MASUK
-// ==========================================
-app.post('/transaksi/masuk', requireLogin, async (req, res) => {
-    try {
-        const { id_barang, jumlah_masuk, tanggal_masuk } = req.body;
-        
-        // 1. Masukkan data ke tabel riwayat transaksi (sesuaikan nama kolom database kamu)
-        const queryTransaksi = 'INSERT INTO transaksi (id_barang, tipe, jumlah, tanggal) VALUES (?, ?, ?, ?)';
-        await db.execute(queryTransaksi, [id_barang, 'masuk', jumlah_masuk, tanggal_masuk]);
-        
-        // 2. Update tambah stok barang otomatis
-        const queryBarang = 'UPDATE barang SET stok = stok + ? WHERE id_barang = ?';
-        await db.execute(queryBarang, [jumlah_masuk, id_barang]);
-
-        res.redirect('/transaksi');
-    } catch (e) {
-        res.send("Error Transaksi Masuk: " + e.message);
-    }
-});
-
-// ==========================================
-// ROUTE POST: TAMBAH TRANSAKSI KELUAR
-// ==========================================
-app.post('/transaksi/keluar', requireLogin, async (req, res) => {
-    try {
-        const { id_barang, jumlah_keluar, tanggal_keluar } = req.body;
-        
-        // 1. Masukkan data ke tabel riwayat transaksi
-        const queryTransaksi = 'INSERT INTO transaksi (id_barang, tipe, jumlah, tanggal) VALUES (?, ?, ?, ?)';
-        await db.execute(queryTransaksi, [id_barang, 'keluar', jumlah_keluar, tanggal_keluar]);
-        
-        // 2. Update kurangi stok barang otomatis
-        const queryBarang = 'UPDATE barang SET stok = stok - ? WHERE id_barang = ?';
-        await db.execute(queryBarang, [jumlah_keluar, id_barang]);
-
-        res.redirect('/transaksi');
-    } catch (e) {
-        res.send("Error Transaksi Keluar: " + e.message);
-    }
-});
-
-// ==========================================
-// 6. ROUTE CETAK LAPORAN (DENGAN TANGGAL)
+// 6. ROUTE CETAK LAPORAN
 // ==========================================
 app.get('/laporan', requireLogin, async (req, res) => {
     try {
@@ -339,6 +271,6 @@ app.get('/laporan', requireLogin, async (req, res) => {
     } catch (error) { res.send("Error menu laporan: " + error.message); }
 });
 
-// --- SERVER INSTANCE ---
+// --- SERVER INSTANCE (WAJIB DI PALING BAWAH) ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running smoothly on port ${PORT}`));
