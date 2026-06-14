@@ -142,7 +142,7 @@ app.get('/barang/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 4. ROUTE KELOLA SUPPLIER (MANUAL GENERATE ID)
+// 4. ROUTE KELOLA SUPPLIER (DENGAN KOLOM ALAMAT AKTIF)
 // ==========================================
 app.get('/supplier', requireLogin, async (req, res) => {
     try {
@@ -155,19 +155,20 @@ app.get('/supplier', requireLogin, async (req, res) => {
 
 app.post('/supplier/tambah', requireLogin, async (req, res) => {
     try {
-        // 1. Ambil data nama dan telepon dari form HTML kamu
-        const { nama_supplier, telepon } = req.body;
+        // Ambil nama_supplier, telepon, dan alamat dari form HTML
+        const { nama_supplier, telepon, alamat } = req.body;
 
-        // 2. GENERATE ID MANUAL: Menggunakan angka timestamp waktu (pasti unik dan berupa angka)
+        // Generate ID otomatis dari Detik Timestamp
         const id_supplier_otomatis = Math.floor(Date.now() / 1000); 
 
         const paramId      = id_supplier_otomatis;
         const paramNama    = nama_supplier !== undefined ? nama_supplier : null;
         const paramTelepon = telepon !== undefined ? telepon : null;
+        const paramAlamat  = alamat !== undefined ? alamat : null;
 
-        // 3. Masukkan ID, nama_supplier, dan kontak ke database kamu
-        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, kontak) VALUES (?, ?, ?)';
-        await db.execute(query, [paramId, paramNama, paramTelepon]);
+        // Kita masukkan paramAlamat ke kolom alamat di database kamu
+        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, kontak, alamat) VALUES (?, ?, ?, ?)';
+        await db.execute(query, [paramId, paramNama, paramTelepon, paramAlamat]);
         
         res.redirect('/supplier');
     } catch (e) {
@@ -179,14 +180,16 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
 app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
     try {
         const id_supplier = req.params.id;
-        const { nama_supplier, telepon } = req.body;
+        const { nama_supplier, telepon, alamat } = req.body;
 
         const paramId      = id_supplier !== undefined ? id_supplier : null;
         const paramNama    = nama_supplier !== undefined ? nama_supplier : null;
         const paramTelepon = telepon !== undefined ? telepon : null;
+        const paramAlamat  = alamat !== undefined ? alamat : null;
 
-        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ? WHERE id_supplier = ?';
-        await db.execute(query, [paramNama, paramTelepon, paramId]);
+        // Update juga kolom alamatnya di database
+        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ?, alamat = ? WHERE id_supplier = ?';
+        await db.execute(query, [paramNama, paramTelepon, paramAlamat, paramId]);
 
         res.redirect('/supplier');
     } catch (e) {
