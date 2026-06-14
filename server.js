@@ -142,7 +142,7 @@ app.get('/barang/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 4. ROUTE KELOLA SUPPLIER (BYPASS KOLOM ALAMAT)
+// 4. ROUTE KELOLA SUPPLIER (MANUAL GENERATE ID)
 // ==========================================
 app.get('/supplier', requireLogin, async (req, res) => {
     try {
@@ -155,15 +155,19 @@ app.get('/supplier', requireLogin, async (req, res) => {
 
 app.post('/supplier/tambah', requireLogin, async (req, res) => {
     try {
-        // Ambil nama_supplier dan telepon dari form HTML
+        // 1. Ambil data nama dan telepon dari form HTML kamu
         const { nama_supplier, telepon } = req.body;
 
+        // 2. GENERATE ID MANUAL: Menggunakan angka timestamp waktu (pasti unik dan berupa angka)
+        const id_supplier_otomatis = Math.floor(Date.now() / 1000); 
+
+        const paramId      = id_supplier_otomatis;
         const paramNama    = nama_supplier !== undefined ? nama_supplier : null;
         const paramTelepon = telepon !== undefined ? telepon : null;
 
-        // Hanya masukkan ke kolom nama_supplier dan kontak yang pasti ada di database
-        const query = 'INSERT INTO supplier (nama_supplier, kontak) VALUES (?, ?)';
-        await db.execute(query, [paramNama, paramTelepon]);
+        // 3. Masukkan ID, nama_supplier, dan kontak ke database kamu
+        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, kontak) VALUES (?, ?, ?)';
+        await db.execute(query, [paramId, paramNama, paramTelepon]);
         
         res.redirect('/supplier');
     } catch (e) {
@@ -181,7 +185,6 @@ app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
         const paramNama    = nama_supplier !== undefined ? nama_supplier : null;
         const paramTelepon = telepon !== undefined ? telepon : null;
 
-        // Update hanya untuk kolom nama_supplier dan kontak saja
         const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ? WHERE id_supplier = ?';
         await db.execute(query, [paramNama, paramTelepon, paramId]);
 
