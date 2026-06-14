@@ -142,6 +142,22 @@ app.get('/barang/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
+// ROUTE GET: MENAMPILKAN HALAMAN SUPPLIER (FIXED CANNOT GET)
+// ==========================================
+app.get('/supplier', requireLogin, async (req, res) => {
+    try {
+        // Ambil data supplier dari database cloud kamu
+        const [supplier] = await db.execute('SELECT * FROM supplier');
+        
+        // Render file views/supplier.ejs dan kirimkan data user & supplier
+        res.render('supplier', { user: req.session.user, supplier });
+    } catch (e) {
+        console.error("Error Menu Supplier:", e);
+        res.send("Error Menu Supplier: " + e.message);
+    }
+});
+
+// ==========================================
 // ROUTE POST: TAMBAH SUPPLIER BARU (FIXED ALAMAT KOSONG)
 // ==========================================
 app.post('/supplier/tambah', requireLogin, async (req, res) => {
