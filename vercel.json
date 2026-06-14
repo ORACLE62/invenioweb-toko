@@ -8,6 +8,18 @@
   ],
   "routes": [
     {
+      "src": "/supplier",
+      "dest": "server.js"
+    },
+    {
+      "src": "/supplier/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/transaksi/(.*)",
+      "dest": "server.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "server.js"
     }
