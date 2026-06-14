@@ -142,36 +142,29 @@ app.get('/barang/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 4. ROUTE KELOLA SUPPLIER (BYPASS ALAMAT RE-FIX)
+// ROUTE POST: TAMBAH SUPPLIER BARU (FIXED ALAMAT KOSONG)
 // ==========================================
-app.get('/supplier', requireLogin, async (req, res) => {
-    try {
-        const [supplier] = await db.execute('SELECT * FROM supplier');
-        res.render('supplier', { user: req.session.user, supplier });
-    } catch (e) {
-        res.send("Error Menu Supplier: " + e.message);
-    }
-});
-
 app.post('/supplier/tambah', requireLogin, async (req, res) => {
     try {
-        // Ambil data dari form HTML
-        const { nama_supplier, telepon } = req.body;
+        // Ambil nama sesuai atribut name yang dikirim dari form input HTML/EJS
+        const { id_supplier, nama_supplier, telepon, alamat } = req.body;
 
-        // Buat ID unik otomatis dari Timestamp detik
-        const id_supplier_otomatis = Math.floor(Date.now() / 1000); 
+        // Jembatan pengaman: jika ada input teks kosong, paksa menjadi null asli database
+        const paramTelepon = (telepon && telepon.trim() !== '') ? telepon : null;
+        const paramAlamat = (alamat && alamat.trim() !== '') ? alamat : null;
 
-        const paramId      = id_supplier_otomatis;
-        const paramNama    = nama_supplier !== undefined ? nama_supplier : null;
-        const paramTelepon = telepon !== undefined ? telepon : null;
-
-        // Hanya masukkan id, nama, dan kontak (alamat diabaikan agar tidak memicu error cloud)
-        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, kontak) VALUES (?, ?, ?)';
-        await db.execute(query, [paramId, paramNama, paramTelepon]);
+        // Pastikan urutan tanda tanya (?) pas dengan variabel di dalam array []
+        const query = `
+            INSERT INTO supplier (id_supplier, nama_supplier, telepon, alamat) 
+            VALUES (?, ?, ?, ?)
+        `;
         
+        await db.execute(query, [id_supplier, nama_supplier, paramTelepon, paramAlamat]);
+        
+        // Berhasil, kembalikan ke halaman supplier
         res.redirect('/supplier');
     } catch (e) {
-        console.error("Detail Error:", e);
+        console.error("Error Simpan Supplier:", e);
         res.send("Error Simpan Supplier: " + e.message);
     }
 });
