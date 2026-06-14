@@ -6,10 +6,9 @@
     <title>Kelola Transaksi - InvenioWeb</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-zinc-950 text-white font-sans min-h-screen flex flex-col md:flex-row">
+<body class="bg-zinc-950 text-white font-sans min-h-screen flex">
 
-    <!-- SIDEBAR: Laptop -->
-    <div class="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0">
+    <div class="w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex flex-col justify-between">
         <div>
             <div class="flex items-center gap-3 mb-8">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold">I</div>
@@ -23,137 +22,155 @@
                 <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Cetak Laporan</a>
             </nav>
         </div>
-        <div class="border-t border-zinc-800 pt-4">
-            <p class="text-xs text-zinc-500">Masuk sebagai:</p>
-            <p class="text-sm font-semibold text-zinc-200 mb-2"><%= user.nama %> (Admin)</p>
-            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
-        </div>
-    </div>
-
-    <!-- NAVBAR: HP -->
-    <div class="md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold">I</div>
-                <span class="font-bold text-lg tracking-wider">InvenioWeb</span>
-            </div>
-            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
-        </div>
-        <nav class="flex flex-wrap gap-2">
-            <a href="/dashboard" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Dashboard</a>
-            <a href="/barang" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Barang</a>
-            <a href="/supplier" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Supplier</a>
-            <a href="/transaksi" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium">Transaksi</a>
-            <a href="/laporan" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Laporan</a>
-        </nav>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="flex-grow p-4 md:p-10 overflow-y-auto w-full">
-        <header class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Log Transaksi Barang</h1>
-                <p class="text-zinc-400 text-sm mt-1">Pencatatan mutasi sirkulasi barang masuk (Restock) dan barang keluar.</p>
+                <p class="text-xs text-zinc-500">Masuk sebagai:</p>
+                <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (Admin)</p>
+                <div class="mt-1">
+                    <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium">Admin</span>
+                </div>
             </div>
-            <button onclick="toggleModal('modalTransaksi')" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition shadow-lg shadow-indigo-900/30 whitespace-nowrap">
-                📥 / 📤 Catat Transaksi Baru
-            </button>
+            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
+        </div>
+    </div>
+
+    <div class="flex-grow p-10 overflow-y-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold tracking-tight">Transaksi Inventoris Toko</h1>
+            <p class="text-zinc-400 text-sm mt-1">Pencatatan sirkulasi barang masuk (inbound) dan barang keluar (outbound) secara realtime.</p>
         </header>
 
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-x-auto shadow-2xl">
-            <table class="w-full text-left border-collapse min-w-[800px]">
-                <thead>
-                    <tr class="border-b border-zinc-800 bg-zinc-900/50 text-zinc-400 text-xs font-semibold uppercase tracking-wider">
-                        <th class="p-4">ID Log</th>
-                        <th class="p-4">Nama Barang</th>
-                        <th class="p-4 text-center">Jenis Alur</th>
-                        <th class="p-4 text-center">Jumlah Kuantitas</th>
-                        <th class="p-4">Tanggal Pencatatan</th>
-                        <th class="p-4 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-800 text-sm text-zinc-300">
-                    <% if (transaksi.length === 0) { %>
-                        <tr>
-                            <td colspan="6" class="p-8 text-center text-zinc-500 italic">Belum ada rekam transaksi mutasi barang.</td>
-                        </tr>
-                    <% } else { %>
-                        <% transaksi.forEach(t => { %>
-                            <tr class="hover:bg-zinc-800/30 transition">
-                                <td class="p-4 font-mono text-zinc-500"><%= t.id_transaksi %></td>
-                                <td class="p-4 font-medium text-white"><%= t.nama_barang %></td>
-                                <td class="p-4 text-center">
-                                    <span class="px-2.5 py-1 rounded text-xs font-bold <%= t.jenis === 'Masuk' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20' %>">
-                                        <%= t.jenis === 'Masuk' ? '📥 Masuk' : '📤 Keluar' %>
-                                    </span>
-                                </td>
-                                <td class="p-4 text-center font-bold font-mono"><%= t.jumlah %> Pcs</td>
-                                <td class="p-4 text-zinc-400 text-xs"><%= new Date(t.tanggal).toLocaleString('id-ID') %></td>
-                                <td class="p-4 text-center">
-                                    <a href="/transaksi/hapus/<%= t.id_transaksi %>" 
-                                       onclick="return confirm('⚠️ Batalkan transaksi ini?\nStok barang terkait akan disesuaikan kembali secara otomatis.')" 
-                                       class="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 px-2.5 py-1.5 rounded-md text-xs font-semibold transition">
-                                        🗑️ Hapus Log
-                                    </a>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- MODAL: TAMBAH TRANSAKSI -->
-    <div id="modalTransaksi" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
-            <div class="p-6 border-b border-zinc-800 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">🔄 Input Log Mutasi Barang</h3>
-                <button onclick="toggleModal('modalTransaksi')" class="text-zinc-400 hover:text-white transition text-xl">&times;</button>
-            </div>
-            <form action="/transaksi/tambah" method="POST" class="p-6 space-y-4">
-                <div>
-                     <label class="block text-xs text-zinc-400 mb-1">Pilih Produk Barang</label>
-                     <select name="id_barang" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white" required>
-                        <option value="" disabled selected class="text-zinc-500">-- Pilih Produk --</option>
-                        <% if (typeof barang !== 'undefined' && barang.length > 0) { %>
-                            <% barang.forEach(b => { %>
-                                <option value="<%= b.id_barang %>" class="bg-zinc-900 text-white">
-                                    <%= b.nama_barang %> (Sisa: <%= b.stok %> Pcs)
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+            
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-xl">📥</span>
+                    <h2 class="text-lg font-bold text-amber-400">Input Transaksi Barang Masuk</h2>
+                </div>
+                <form action="/transaksi/masuk" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">Pilih Produk Barang</label>
+                        <select name="id_barang" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white font-medium" required>
+                            <option value="" disabled selected class="text-zinc-500">-- Pilih Produk --</option>
+                            <% barang.forEach(item => { %>
+                                <option value="<%= item.id_barang %>" class="bg-zinc-900 text-white">
+                                    <%= item.nama_barang %> (Stok Sekarang: <%= item.stok %>)
                                 </option>
                             <% }) %>
-                        <% } %>
-                     </select>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-zinc-400 mb-1">Jumlah Masuk</label>
+                            <input type="number" name="jumlah" min="1" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white" placeholder="Contoh: 50" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-zinc-400 mb-1">Tanggal Masuk</label>
+                            <input type="date" name="tanggal" id="tanggal_masuk" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition shadow-lg shadow-amber-900/20 mt-2">
+                        Simpan Transaksi Masuk
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-xl">📤</span>
+                    <h2 class="text-lg font-bold text-rose-400">Input Transaksi Barang Keluar</h2>
                 </div>
-                <div>
-                     <label class="block text-xs text-zinc-400 mb-1">Jenis Alur Transaksi</label>
-                     <div class="grid grid-cols-2 gap-4">
-                         <label class="flex items-center justify-center gap-2 p-3 bg-zinc-950 border border-zinc-800 rounded-lg cursor-pointer hover:border-emerald-500 transition">
-                             <input type="radio" name="jenis" value="Masuk" checked class="accent-emerald-500">
-                             <span class="text-sm font-semibold text-emerald-400">📥 Barang Masuk</span>
-                         </label>
-                         <label class="flex items-center justify-center gap-2 p-3 bg-zinc-950 border border-zinc-800 rounded-lg cursor-pointer hover:border-rose-500 transition">
-                             <input type="radio" name="jenis" value="Keluar" class="accent-rose-500">
-                             <span class="text-sm font-semibold text-rose-400">📤 Barang Keluar</span>
-                         </label>
-                     </div>
-                </div>
-                <div>
-                    <label class="block text-xs text-zinc-400 mb-1">Jumlah Kuantitas (Pcs)</label>
-                    <input type="number" name="jumlah" min="1" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white" placeholder="Minimal 1" required>
-                </div>
-                <div class="pt-2 flex gap-3">
-                    <button type="button" onclick="toggleModal('modalTransaksi')" class="w-1/3 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm font-semibold transition">Batal</button>
-                    <button type="submit" class="w-2/3 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold transition">Eksekusi Mutasi</button>
-                </div>
-            </form>
+                <form action="/transaksi/keluar" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">Pilih Produk Barang</label>
+                        <select name="id_barang" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white font-medium" required>
+                            <option value="" disabled selected class="text-zinc-500">-- Pilih Produk --</option>
+                            <% barang.forEach(item => { %>
+                                <option value="<%= item.id_barang %>" class="bg-zinc-900 text-white">
+                                    <%= item.nama_barang %> (Stok Tersedia: <%= item.stok %>)
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-zinc-400 mb-1">Jumlah Keluar</label>
+                            <input type="number" name="jumlah" min="1" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white" placeholder="Contoh: 10" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-zinc-400 mb-1">Tanggal Keluar</label>
+                            <input type="date" name="tanggal" id="tanggal_keluar" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold transition shadow-lg shadow-rose-900/20 mt-2">
+                        Simpan Transaksi Keluar
+                    </button>
+                </form>
+            </div>
+
         </div>
+
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-2xl">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-lg">📜</span>
+                <h2 class="text-base font-bold text-zinc-200">Log Riwayat Transaksi Terbaru</h2>
+            </div>
+            <div class="border border-zinc-800 rounded-lg overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-zinc-800 bg-zinc-950 text-zinc-400 text-xs font-semibold uppercase tracking-wider">
+                            <th class="p-4">Waktu & Tanggal</th>
+                            <th class="p-4">Nama Produk</th>
+                            <th class="p-4 text-center">Tipe</th>
+                            <th class="p-4 text-center">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-800 text-sm text-zinc-300">
+                        <% if (typeof transaksi === 'undefined' || transaksi.length === 0) { %>
+                            <tr>
+                                <td colspan="4" class="p-8 text-center text-zinc-500 italic bg-zinc-900/50">
+                                    Belum ada log aktivitas transaksi masuk atau keluar hari ini.
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% transaksi.forEach(t => { %>
+                                <tr class="hover:bg-zinc-800/30 transition">
+                                    <td class="p-4 text-zinc-400 font-mono">
+                                        <%= new Date(t.tanggal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                                    </td>
+                                    <td class="p-4 font-semibold text-white"><%= t.nama_barang %></td>
+                                    <td class="p-4 text-center">
+                                        <span class="px-2.5 py-0.5 rounded text-xs font-bold <%= t.jenis_transaksi === 'masuk' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20' %>">
+                                            <%= t.jenis_transaksi === 'masuk' ? 'MASUK' : 'KELUAR' %>
+                                        </span>
+                                    </td>
+                                    <td class="p-4 text-center font-mono font-bold <%= t.jenis_transaksi === 'masuk' ? 'text-emerald-400' : 'text-rose-400' %>">
+                                        <%= t.jenis_transaksi === 'masuk' ? '+' : '-' %><%= t.jumlah %> Pcs
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        function toggleModal(idModal) {
-            document.getElementById(idModal).classList.toggle('hidden');
-        }
+        window.addEventListener('DOMContentLoaded', () => {
+            // Mengambil tanggal hari ini dengan zona waktu lokal (Format: YYYY-MM-DD)
+            const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
+            
+            // Pasang ke input element
+            const inputMasuk = document.getElementById('tanggal_masuk');
+            const inputKeluar = document.getElementById('tanggal_keluar');
+            
+            if(inputMasuk) inputMasuk.value = localISOTime;
+            if(inputKeluar) inputKeluar.value = localISOTime;
+        });
     </script>
+
 </body>
 </html>
