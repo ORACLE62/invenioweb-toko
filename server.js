@@ -176,6 +176,31 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
     }
 });
 
+// ==========================================
+// ROUTE POST PUTUSAN: UPDATE DATA BARANG LANGSUNG DI SERVER.JS
+// ==========================================
+app.post('/barang/edit/:id', requireLogin, async (req, res) => {
+    try {
+        const id_barang = req.params.id; // Menangkap ID barang dari URL
+        const { nama_barang, id_supplier, stok, harga } = req.body; // Menangkap data form input
+
+        // Query update data ke database MySQL online kamu
+        const query = `
+            UPDATE barang 
+            SET nama_barang = ?, id_supplier = ?, stok = ?, harga = ? 
+            WHERE id_barang = ?
+        `;
+        
+        await db.execute(query, [nama_barang, id_supplier, stok, harga, id_barang]);
+        
+        // Kembalikan user ke halaman kelola barang setelah sukses
+        res.redirect('/barang');
+    } catch (e) {
+        console.error("Detail Error Edit Barang Pusat:", e);
+        res.send("Error Update Data Barang Pusat: " + e.message);
+    }
+});
+
 app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
     try {
         const id_supplier = req.params.id;
