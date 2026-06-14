@@ -28,16 +28,13 @@ async function buatTabelOtomatis() {
     try {
         console.log("Sedang menghubungkan dan membuat tabel di Cloud Aiven...");
 
-        // 🔥 TOMBOL SAKTI: Hapus tabel transaksi lama yang cacat/error secara paksa
-        try { await db.execute(`DROP TABLE IF EXISTS transaksi`); } catch(e){}
-
-        // Buat ulang semua tabel utama dari nol
+        // Buat semua tabel utama
         await db.execute(`CREATE TABLE IF NOT EXISTS user (id_user INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, nama VARCHAR(100) NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS supplier (id_supplier VARCHAR(50) NOT NULL PRIMARY KEY, nama_supplier VARCHAR(100) NOT NULL, alamat TEXT, no_telp VARCHAR(20))`);
         await db.execute(`CREATE TABLE IF NOT EXISTS petugas (id_petugas VARCHAR(50) NOT NULL PRIMARY KEY, nama_petugas VARCHAR(100) NOT NULL, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, level ENUM('Admin','Petugas Gudang','Pimpinan') NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS barang (id_barang VARCHAR(50) NOT NULL PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, stok INT NOT NULL DEFAULT 0, harga DECIMAL(10,2) NOT NULL, id_supplier VARCHAR(50) DEFAULT NULL)`);
         
-        // 🚀 Buat tabel transaksi BARU yang sudah fix ada kolom masuk dan keluar
+        // 🚀 KUNCI UTAMA: Membuat tabel transaksi utuh dengan kolom masuk dan keluar langsung dari awal
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi (id_transaksi INT AUTO_INCREMENT PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, jenis_transaksi ENUM('masuk','keluar') NOT NULL, jumlah INT NOT NULL, tanggal DATE NOT NULL, masuk VARCHAR(50) DEFAULT 'masuk', keluar VARCHAR(50) DEFAULT 'keluar')`);
         
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_keluar (id_keluar VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_keluar DATE NOT NULL, jumlah_keluar INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
@@ -53,7 +50,6 @@ async function buatTabelOtomatis() {
     }
 }
 buatTabelOtomatis();
-
 // --- TRIK DARURAT TAMBAH KOLOM MASUK KELUAR ---
    setTimeout(async () => {
        try {
