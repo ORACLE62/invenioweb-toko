@@ -118,7 +118,7 @@
                                 <th class="p-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-800/60 text-sm text-zinc-300">
+                       <tbody class="divide-y divide-zinc-800/60 text-sm text-zinc-300">
     <% if (supplier.length === 0) { %>
         <tr>
             <td colspan="5" class="p-8 text-center text-zinc-600 italic">Belum ada data supplier.</td>
@@ -129,10 +129,12 @@
                 <td class="p-4 font-mono text-indigo-400 text-xs font-semibold"><%= s.id_supplier %></td>
                 <td class="p-4 font-medium text-white"><%= s.nama_supplier %></td>
                 <td class="p-4 font-mono text-xs text-zinc-400"><%= s.kontak || '-' %></td>
-                <td class="p-4 text-zinc-400 max-w-[180px] truncate">Terbuka</td>
+                <!-- KITA SAMARKAN DENGAN TANDA STRIP AGAR TAMPILAN TETAP CANTIK DAN RAPI -->
+                <td class="p-4 text-zinc-500 italic max-w-[180px] truncate">-</td>
                 <td class="p-4 text-center">
                     <div class="flex items-center justify-center gap-2">
-                        <button onclick="tampilkanFormEdit('<%= s.id_supplier %>', '<%= s.nama_supplier %>', '<%= s.kontak %>', 'Terbuka')" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded text-xs transition">✏️ Edit</button>
+                        <!-- PADA FUNGSI EDIT KITA DAFTARKAN STRIP KOSONG SAJA -->
+                        <button onclick="tampilkanFormEdit('<%= s.id_supplier %>', '<%= s.nama_supplier %>', '<%= s.kontak %>', '-')" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded text-xs transition">✏️ Edit</button>
                         <a href="/supplier/hapus/<%= s.id_supplier %>" onclick="return confirm('Hapus supplier?')" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-2.5 py-1 rounded text-xs transition">🗑️ Hapus</a>
                     </div>
                 </td>
