@@ -54,8 +54,8 @@ async function buatTabelOtomatis() {
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_masuk (id_masuk VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_masuk DATE NOT NULL, jumlah_masuk INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
 
         // Isi Data Login Default
-        await db.execute(`INSERT IGNORE INTO user (username, password, nama) VALUES ('admin', 'admin826', 'Naufal')`);
-        await db.execute(`INSERT IGNORE INTO petugas VALUES ('USR001', 'Naufal (Admin)', 'admin', 'admin826', 'Admin'), ('USR002', 'Chou (Gudang)', 'gudang', 'gudang1102', 'Petugas Gudang'), ('USR003', 'Siti (Pimpinan)', 'pimpinan', 'pimpinan82686', 'Pimpinan')`);
+       await db.execute(`REPLACE INTO user (username, password, nama) VALUES ('admin', 'admin123', 'Naufal')`);
+       await db.execute(`REPLACE INTO petugas VALUES ('USR001', 'Naufal (Admin)', 'admin', 'admin123', 'Admin'), ('USR002', 'Bambang (Gudang)', 'gudang', 'gudang123', 'Petugas Gudang'), ('USR003', 'Siti (Pimpinan)', 'pimpinan', 'pimpinan123', 'Pimpinan')`);
 
         console.log("🚀 Selesai! Semua tabel fresh dan bersih!");
     } catch (error) {
