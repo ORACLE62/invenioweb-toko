@@ -1,4 +1,5 @@
 const express = require('express');
+app.use(express.static('public'));
 const mysql = require('mysql2/promise');
 const session = require('express-session');
 const path = require('path');
