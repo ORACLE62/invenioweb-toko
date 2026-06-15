@@ -22,11 +22,17 @@
                 <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Cetak Laporan</a>
             </nav>
        </div>
-        <div class="border-t border-zinc-800 pt-4">
-            <p class="text-xs text-zinc-500">Masuk sebagai:</p>
-            <p class="text-sm font-semibold text-zinc-200 mb-2"><%= user.nama %> (Admin)</p>
+        <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
+            <div>
+                <p class="text-xs text-zinc-500">Masuk sebagai:</p>
+                <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (Admin)</p>
+                <div class="mt-1">
+                    <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium">Admin</span>
+                </div>
+            </div>
             <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
         </div>
+    </div>
     </div>
 
     <div class="md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
