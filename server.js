@@ -4,11 +4,6 @@ const session = require('express-session');
 const path = require('path');
 const app = express();
 
-const app = express(); // <-- Buat aplikasinya dulu di sini
-
-// BARU TARUH KODE STATISNYA DI BAWAH SINI
-app.use(express.static('public'));
-
 // --- CONFIGURATION MIDDLEWARE ---
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
