@@ -8,7 +8,6 @@
 </head>
 <body class="bg-zinc-950 text-white font-sans min-h-screen flex flex-col md:flex-row">
 
-    <!-- SIDEBAR FOR DESKTOP -->
     <div class="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0">
         <div>
             <div class="flex items-center gap-3 mb-8">
@@ -30,7 +29,6 @@
         </div>
     </div>
 
-    <!-- NAVIGATION FOR MOBILE -->
     <div class="md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -48,7 +46,6 @@
         </nav>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="flex-grow p-4 md:p-10 overflow-y-auto w-full space-y-8">
         <header>
             <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Kelola Mitra Supplier</h1>
@@ -56,7 +53,6 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            <!-- FORM TAMBAH SUPPLIER -->
             <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl shadow-xl lg:col-span-1">
                 <div class="flex items-center gap-2 mb-4">
                     <span>🤝</span>
@@ -81,7 +77,6 @@
                 </form>
             </div>
 
-            <!-- FORM EDIT SUPPLIER (HIDDEN BY DEFAULT) -->
             <div id="cardEditSupplier" class="bg-zinc-900/50 border border-amber-500/30 p-6 rounded-xl shadow-xl lg:col-span-1 hidden">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2">
@@ -111,7 +106,6 @@
                 </form>
             </div>
 
-            <!-- TABEL DATA SUPPLIER -->
             <div class="bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden lg:col-span-2 w-full">
                 <div class="overflow-x-auto w-full">
                     <table class="w-full text-left border-collapse min-w-[550px]">
@@ -152,7 +146,6 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
         function tampilkanFormEdit(id, nama, telp, alamat) {
             document.getElementById('edit_id_supplier').value = id;
