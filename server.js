@@ -198,8 +198,8 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
         const paramTelepon = (telepon && telepon.trim() !== '') ? telepon : null;
         const paramAlamat  = (alamat && alamat.trim() !== '') ? alamat : null;
 
-        // SEBELUMNYA 'no_telp', SEKARANG DIGANTI JADI 'telepon'
-        const query = 'INSERT INTO supplier (nama_supplier, telepon, alamat) VALUES (?, ?, ?)';
+        // KITA COBA GANTI NAMA KOLOMNYA JADI 'kontak'
+        const query = 'INSERT INTO supplier (nama_supplier, kontak, alamat) VALUES (?, ?, ?)';
         await db.execute(query, [paramNama, paramTelepon, paramAlamat]);
         
         res.redirect('/supplier');
@@ -217,8 +217,8 @@ app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
         const paramTelepon = telepon !== undefined ? telepon : null;
         const paramAlamat  = alamat !== undefined ? alamat : null;
 
-        // SEBELUMNYA 'no_telp = ?', SEKARANG DIGANTI JADI 'telepon = ?'
-        const query = 'UPDATE supplier SET nama_supplier = ?, telepon = ?, alamat = ? WHERE id_supplier = ?';
+        // KITA COBA GANTI NAMA KOLOMNYA JADI 'kontak = ?'
+        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ?, alamat = ? WHERE id_supplier = ?';
         await db.execute(query, [paramNama, paramTelepon, paramAlamat, id_supplier]);
 
         res.redirect('/supplier');
