@@ -183,10 +183,11 @@ app.post('/barang/edit/:id', requireLogin, async (req, res) => {
 // ==========================================
 app.get('/supplier', requireLogin, async (req, res) => {
     try {
-        const [supplier] = await db.execute('SELECT * FROM supplier');
-        res.render('supplier', { user: req.session.user, supplier });
+        // Mengintip struktur kolom asli dari tabel supplier di Aiven
+        const [kolom] = await db.execute('SHOW COLUMNS FROM supplier');
+        return res.json(kolom); 
     } catch (e) {
-        res.send("Error Menu Supplier: " + e.message);
+        res.send("Error Cek Kolom: " + e.message);
     }
 });
 
