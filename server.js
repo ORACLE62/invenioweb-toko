@@ -179,29 +179,29 @@ app.post('/barang/edit/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 4. ROUTE KELOLA SUPPLIER (SUDAH DI-FIX)
+// 4. ROUTE KELOLA SUPPLIER 
 // ==========================================
 app.get('/supplier', requireLogin, async (req, res) => {
     try {
-        // Mengintip struktur kolom asli dari tabel supplier di Aiven
-        const [kolom] = await db.execute('SHOW COLUMNS FROM supplier');
-        return res.json(kolom); 
+        const [supplier] = await db.execute('SELECT * FROM supplier');
+        res.render('supplier', { user: req.session.user, supplier });
     } catch (e) {
-        res.send("Error Cek Kolom: " + e.message);
+        res.send("Error Menu Supplier: " + e.message);
     }
 });
 
 app.post('/supplier/tambah', requireLogin, async (req, res) => {
     try {
-        const { nama_supplier, telepon, alamat } = req.body;
+        const { nama_supplier, telepon } = req.body;
         
-        const paramNama    = (nama_supplier && nama_supplier.trim() !== '') ? nama_supplier : null;
-        const paramTelepon = (telepon && telepon.trim() !== '') ? telepon : null;
-        const paramAlamat  = (alamat && alamat.trim() !== '') ? alamat : null;
+        // Karena id_supplier bertipe varchar(50) dan tidak auto-increment, kita generate otomatis pakai timestamp unik
+        const id_supplier = 'SPL-' + Date.now(); 
+        const paramNama   = (nama_supplier && nama_supplier.trim() !== '') ? nama_supplier : null;
+        const paramKontak = (telepon && telepon.trim() !== '') ? telepon : null;
 
-        // KITA COBA GANTI NAMA KOLOMNYA JADI 'kontak'
-        const query = 'INSERT INTO supplier (nama_supplier, kontak, alamat) VALUES (?, ?, ?)';
-        await db.execute(query, [paramNama, paramTelepon, paramAlamat]);
+        // Hanya memasukkan kolom yang benar-benar ada di database Aiven kamu
+        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, kontak) VALUES (?, ?, ?)';
+        await db.execute(query, [id_supplier, paramNama, paramKontak]);
         
         res.redirect('/supplier');
     } catch (e) {
@@ -212,15 +212,14 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
 app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
     try {
         const id_supplier = req.params.id;
-        const { nama_supplier, telepon, alamat } = req.body;
+        const { nama_supplier, telepon } = req.body;
 
-        const paramNama    = nama_supplier !== undefined ? nama_supplier : null;
-        const paramTelepon = telepon !== undefined ? telepon : null;
-        const paramAlamat  = alamat !== undefined ? alamat : null;
+        const paramNama   = nama_supplier !== undefined ? nama_supplier : null;
+        const paramKontak = telepon !== undefined ? telepon : null;
 
-        // KITA COBA GANTI NAMA KOLOMNYA JADI 'kontak = ?'
-        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ?, alamat = ? WHERE id_supplier = ?';
-        await db.execute(query, [paramNama, paramTelepon, paramAlamat, id_supplier]);
+        // Hanya mengupdate kolom yang tersedia
+        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ? WHERE id_supplier = ?';
+        await db.execute(query, [paramNama, paramKontak, id_supplier]);
 
         res.redirect('/supplier');
     } catch (e) {
