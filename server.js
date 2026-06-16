@@ -195,7 +195,7 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
         // Menangkap data dari form supplier.ejs
         const { nama_supplier, telepon, alamat } = req.body;
         
-        // Trik agar backend tetap bisa membaca data meskipun di file .ejs ditulis 'telepon', 'kontak', atau 'no_telp'
+        // Trik agar backend tetap aman membaca meskipun di file .ejs ditulis 'telepon' atau 'kontak'
         const inputTelepon = telepon || req.body.kontak || req.body.no_telp;
         
         const id_supplier = 'SPL-' + Date.now(); 
@@ -203,7 +203,7 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
         const paramKontak = (inputTelepon && inputTelepon.trim() !== '') ? inputTelepon : null;
         const paramAlamat = (alamat && alamat.trim() !== '') ? alamat : null;
 
-        // Memasukkan nama, kontak, dan alamat secara utuh ke database Aiven
+        // Memasukkan nama, kontak, dan alamat secara utuh ke database Aiven yang baru
         const query = 'INSERT INTO supplier (id_supplier, nama_supplier, kontak, alamat) VALUES (?, ?, ?, ?)';
         await db.execute(query, [id_supplier, paramNama, paramKontak, paramAlamat]);
         
