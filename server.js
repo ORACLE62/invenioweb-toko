@@ -194,13 +194,12 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
     try {
         const { nama_supplier, telepon, alamat } = req.body;
         
-        // Memastikan jika input kosong, diubah menjadi JS null agar dibaca SQL NULL
         const paramNama    = (nama_supplier && nama_supplier.trim() !== '') ? nama_supplier : null;
         const paramTelepon = (telepon && telepon.trim() !== '') ? telepon : null;
         const paramAlamat  = (alamat && alamat.trim() !== '') ? alamat : null;
 
-        // FIX: Menghapus id_supplier dari query agar di-generate otomatis oleh database (Auto Increment)
-        const query = 'INSERT INTO supplier (nama_supplier, no_telp, alamat) VALUES (?, ?, ?)';
+        // SEBELUMNYA 'no_telp', SEKARANG DIGANTI JADI 'telepon'
+        const query = 'INSERT INTO supplier (nama_supplier, telepon, alamat) VALUES (?, ?, ?)';
         await db.execute(query, [paramNama, paramTelepon, paramAlamat]);
         
         res.redirect('/supplier');
@@ -218,8 +217,8 @@ app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
         const paramTelepon = telepon !== undefined ? telepon : null;
         const paramAlamat  = alamat !== undefined ? alamat : null;
 
-        // FIX: Menggunakan kolom 'no_telp' dan menyertakan 'alamat' agar tidak terhapus saat diedit
-        const query = 'UPDATE supplier SET nama_supplier = ?, no_telp = ?, alamat = ? WHERE id_supplier = ?';
+        // SEBELUMNYA 'no_telp = ?', SEKARANG DIGANTI JADI 'telepon = ?'
+        const query = 'UPDATE supplier SET nama_supplier = ?, telepon = ?, alamat = ? WHERE id_supplier = ?';
         await db.execute(query, [paramNama, paramTelepon, paramAlamat, id_supplier]);
 
         res.redirect('/supplier');
