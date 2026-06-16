@@ -192,13 +192,17 @@ app.get('/supplier', requireLogin, async (req, res) => {
 
 app.post('/supplier/tambah', requireLogin, async (req, res) => {
     try {
-        const { id_supplier, nama_supplier, telepon, alamat } = req.body;
+        const { nama_supplier, telepon, alamat } = req.body;
+        
+        // Memastikan jika input kosong, diubah menjadi JS null agar dibaca SQL NULL
+        const paramNama    = (nama_supplier && nama_supplier.trim() !== '') ? nama_supplier : null;
         const paramTelepon = (telepon && telepon.trim() !== '') ? telepon : null;
-        const paramAlamat = (alamat && alamat.trim() !== '') ? alamat : null;
+        const paramAlamat  = (alamat && alamat.trim() !== '') ? alamat : null;
 
-        // FIX: Menggunakan kolom 'no_telp' sesuai struktur awal database Aiven
-        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, no_telp, alamat) VALUES (?, ?, ?, ?)';
-        await db.execute(query, [id_supplier, nama_supplier, paramTelepon, paramAlamat]);
+        // FIX: Menghapus id_supplier dari query agar di-generate otomatis oleh database (Auto Increment)
+        const query = 'INSERT INTO supplier (nama_supplier, no_telp, alamat) VALUES (?, ?, ?)';
+        await db.execute(query, [paramNama, paramTelepon, paramAlamat]);
+        
         res.redirect('/supplier');
     } catch (e) {
         res.send("Error Simpan Supplier: " + e.message);
