@@ -183,28 +183,29 @@ app.post('/barang/edit/:id', requireLogin, async (req, res) => {
 // ==========================================
 app.get('/supplier', requireLogin, async (req, res) => {
     try {
-        // PERINTAH UNTUK SUNTIK KOLOM ALAMAT KE DATABASENYA AIVEN
-        await db.execute('ALTER TABLE supplier ADD COLUMN alamat VARCHAR(255) NULL');
-        
-        return res.send("Sukses! Kolom alamat sudah resmi dibuat di database Aiven. Sekarang silakan ganti kode route ini ke Langkah 2 ya, Fal.");
+        const [supplier] = await db.execute('SELECT * FROM supplier');
+        res.render('supplier', { user: req.session.user, supplier });
     } catch (e) {
-        // Kalau muncul error 'Duplicate column', abaikan saja karena tandanya kolomnya sudah terbuat sebelumnya
-        res.send("Status Tambah Kolom: " + e.message);
+        res.send("Error Menu Supplier: " + e.message);
     }
 });
 
 app.post('/supplier/tambah', requireLogin, async (req, res) => {
     try {
-        const { nama_supplier, telepon } = req.body;
+        // Menangkap data dari form supplier.ejs
+        const { nama_supplier, telepon, alamat } = req.body;
         
-        // Karena id_supplier bertipe varchar(50) dan tidak auto-increment, kita generate otomatis pakai timestamp unik
+        // Trik agar backend tetap bisa membaca data meskipun di file .ejs ditulis 'telepon', 'kontak', atau 'no_telp'
+        const inputTelepon = telepon || req.body.kontak || req.body.no_telp;
+        
         const id_supplier = 'SPL-' + Date.now(); 
         const paramNama   = (nama_supplier && nama_supplier.trim() !== '') ? nama_supplier : null;
-        const paramKontak = (telepon && telepon.trim() !== '') ? telepon : null;
+        const paramKontak = (inputTelepon && inputTelepon.trim() !== '') ? inputTelepon : null;
+        const paramAlamat = (alamat && alamat.trim() !== '') ? alamat : null;
 
-        // Hanya memasukkan kolom yang benar-benar ada di database Aiven kamu
-        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, kontak) VALUES (?, ?, ?)';
-        await db.execute(query, [id_supplier, paramNama, paramKontak]);
+        // Memasukkan nama, kontak, dan alamat secara utuh ke database Aiven
+        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, kontak, alamat) VALUES (?, ?, ?, ?)';
+        await db.execute(query, [id_supplier, paramNama, paramKontak, paramAlamat]);
         
         res.redirect('/supplier');
     } catch (e) {
@@ -215,14 +216,16 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
 app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
     try {
         const id_supplier = req.params.id;
-        const { nama_supplier, telepon } = req.body;
+        const { nama_supplier, telepon, alamat } = req.body;
+        const inputTelepon = telepon || req.body.kontak || req.body.no_telp;
 
         const paramNama   = nama_supplier !== undefined ? nama_supplier : null;
-        const paramKontak = telepon !== undefined ? telepon : null;
+        const paramKontak = inputTelepon !== undefined ? inputTelepon : null;
+        const paramAlamat = alamat !== undefined ? alamat : null;
 
-        // Hanya mengupdate kolom yang tersedia
-        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ? WHERE id_supplier = ?';
-        await db.execute(query, [paramNama, paramKontak, id_supplier]);
+        // Mengupdate seluruh data telepon dan alamat di database Aiven saat diedit
+        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ?, alamat = ? WHERE id_supplier = ?';
+        await db.execute(query, [paramNama, paramKontak, paramAlamat, id_supplier]);
 
         res.redirect('/supplier');
     } catch (e) {
