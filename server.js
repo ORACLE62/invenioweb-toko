@@ -183,10 +183,13 @@ app.post('/barang/edit/:id', requireLogin, async (req, res) => {
 // ==========================================
 app.get('/supplier', requireLogin, async (req, res) => {
     try {
-        const [supplier] = await db.execute('SELECT * FROM supplier');
-        res.render('supplier', { user: req.session.user, supplier });
+        // PERINTAH UNTUK SUNTIK KOLOM ALAMAT KE DATABASENYA AIVEN
+        await db.execute('ALTER TABLE supplier ADD COLUMN alamat VARCHAR(255) NULL');
+        
+        return res.send("Sukses! Kolom alamat sudah resmi dibuat di database Aiven. Sekarang silakan ganti kode route ini ke Langkah 2 ya, Fal.");
     } catch (e) {
-        res.send("Error Menu Supplier: " + e.message);
+        // Kalau muncul error 'Duplicate column', abaikan saja karena tandanya kolomnya sudah terbuat sebelumnya
+        res.send("Status Tambah Kolom: " + e.message);
     }
 });
 
