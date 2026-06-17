@@ -244,63 +244,68 @@ app.get('/supplier/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 5. ROUTE TRANSAKSI (MASUK, KELUAR, HAPUS)
+// 5. ROUTE TRANSAKSI (MASUK, KELUAR, HAPUS) - FIX SINKRON
 // ==========================================
 app.get('/transaksi', requireLogin, async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT * FROM barang');
+        // Mengambil semua data transaksi disjoin dengan nama barang
         const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang ORDER BY t.tanggal DESC, t.id_transaksi DESC');
         res.render('transaksi', { user: req.session.user, barang, transaksi });
-    } catch (e) { res.send("Error Menu Transaksi: " + e.message); }
-});
-
-// ROUTE PENYELAMAT: Mengarahkan jika form di EJS mengarah ke /transaksi/tambah
-app.post('/transaksi/tambah', requireLogin, async (req, res) => {
-    try {
-        const { id_barang, jumlah, jenis_transaksi, tanggal } = req.body;
-        
-        // Cek tipe transaksi dari form
-        const tipe = jenis_transaksi || 'masuk'; 
-        const op = (tipe === 'masuk') ? '+' : '-';
-
-        await db.execute('INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal) VALUES (?, ?, ?, ?)', [id_barang, tipe, jumlah, tanggal]);
-        await db.execute(`UPDATE barang SET stok = stok ${op} ? WHERE id_barang = ?`, [jumlah, id_barang]);
-        
-        res.redirect('/transaksi');
     } catch (e) { 
-        res.send("Error Transaksi Tambah: " + e.message); 
+        res.send("Error Menu Transaksi: " + e.message); 
     }
 });
 
+// ROUTE TRANSAKSI MASUK
 app.post('/transaksi/masuk', requireLogin, async (req, res) => {
     try {
         const { id_barang, jumlah, tanggal } = req.body;
+        
+        // Memastikan string "masuk" di-insert ke kolom jenis_transaksi
         await db.execute('INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal) VALUES (?, "masuk", ?, ?)', [id_barang, jumlah, tanggal]);
+        
+        // Menambah stok barang karena barang masuk
         await db.execute('UPDATE barang SET stok = stok + ? WHERE id_barang = ?', [jumlah, id_barang]);
+        
         res.redirect('/transaksi');
-    } catch (e) { res.send("Error Transaksi Masuk: " + e.message); }
+    } catch (e) { 
+        res.send("Error Transaksi Masuk: " + e.message); 
+    }
 });
 
+// ROUTE TRANSAKSI KELUAR
 app.post('/transaksi/keluar', requireLogin, async (req, res) => {
     try {
         const { id_barang, jumlah, tanggal } = req.body;
+        
+        // Memastikan string "keluar" di-insert ke kolom jenis_transaksi
         await db.execute('INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal) VALUES (?, "keluar", ?, ?)', [id_barang, jumlah, tanggal]);
+        
+        // Mengurangi stok barang karena barang keluar
         await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
+        
         res.redirect('/transaksi');
-    } catch (e) { res.send("Error Transaksi Keluar: " + e.message); }
+    } catch (e) { 
+        res.send("Error Transaksi Keluar: " + e.message); 
+    }
 });
 
+// ROUTE HAPUS TRANSAKSI
 app.get('/transaksi/hapus/:id', requireLogin, async (req, res) => {
     try {
         const [t] = await db.execute('SELECT * FROM transaksi WHERE id_transaksi = ?', [req.params.id]);
         if (t.length > 0) {
             const { id_barang, jenis_transaksi, jumlah } = t[0];
+            // Kebalikan logikanya saat dihapus: jika dulu 'masuk' maka stok dikurangi, jika 'keluar' maka stok dikembalikan/ditambah
             const op = (jenis_transaksi === 'masuk') ? '-' : '+';
             await db.execute(`UPDATE barang SET stok = stok ${op} ? WHERE id_barang = ?`, [jumlah, id_barang]);
             await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [req.params.id]);
         }
         res.redirect('/transaksi');
-    } catch (e) { res.send("Error Hapus Transaksi: " + e.message); }
+    } catch (e) { 
+        res.send("Error Hapus Transaksi: " + e.message); 
+    }
 });
 
 // ==========================================
