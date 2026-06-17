@@ -9,7 +9,6 @@
 </head>
 <body class="bg-zinc-950 text-white font-sans min-h-screen flex flex-col md:flex-row">
 
-    <!-- SIDEBAR: Laptop -->
     <div class="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0">
         <div>
             <div class="flex items-center gap-3 mb-8">
@@ -24,7 +23,7 @@
                 <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Cetak Laporan</a>
             </nav>
         </div>
-       <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
+        <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
             <div>
                 <p class="text-xs text-zinc-500">Masuk sebagai:</p>
                 <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (Admin)</p>
@@ -35,9 +34,7 @@
             <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
         </div>
     </div>
-    </div>
 
-    <!-- NAVBAR: HP -->
     <div class="md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -55,28 +52,21 @@
         </nav>
     </div>
 
-    <!-- MAIN CONTENT AREA -->
     <div class="flex-grow p-4 md:p-10 overflow-y-auto w-full space-y-8">
         
-        <!-- JUDUL HALAMAN -->
         <header>
             <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Transaksi Inventoris Toko</h1>
             <p class="text-zinc-400 text-sm mt-1">Pencatatan sirkulasi barang masuk (inbound) dan barang keluar (outbound) secara realtime.</p>
         </header>
 
-        <!-- CONTAINER DUA FORM INPUT (Grid responsif: 1 kolom di HP, 2 kolom di Laptop) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
-            <!-- CARD 1: INPUT BARANG MASUK (ORANYE) -->
             <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl shadow-xl">
                 <div class="flex items-center gap-2 mb-4">
                     <span>📥</span>
                     <h2 class="text-base font-bold text-amber-500">Input Transaksi Barang Masuk</h2>
                 </div>
-                <form action="/transaksi/tambah" method="POST" class="space-y-4">
-                    <!-- Jenis Otomatis Masuk -->
-                    <input type="hidden" name="jenis" value="Masuk">
-                    
+                <form action="/transaksi/masuk" method="POST" class="space-y-4">
                     <div>
                         <label class="block text-xs text-zinc-500 mb-1">Pilih Produk Barang</label>
                         <select name="id_barang" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-amber-500 outline-none text-white" required>
@@ -108,16 +98,12 @@
                 </form>
             </div>
 
-            <!-- CARD 2: INPUT BARANG KELUAR (MERAH) -->
             <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl shadow-xl">
                 <div class="flex items-center gap-2 mb-4">
                     <span>📤</span>
                     <h2 class="text-base font-bold text-rose-500">Input Transaksi Barang Keluar</h2>
                 </div>
-                <form action="/transaksi/tambah" method="POST" class="space-y-4">
-                    <!-- Jenis Otomatis Keluar -->
-                    <input type="hidden" name="jenis" value="Keluar">
-                    
+                <form action="/transaksi/keluar" method="POST" class="space-y-4">
                     <div>
                         <label class="block text-xs text-zinc-500 mb-1">Pilih Produk Barang</label>
                         <select name="id_barang" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-rose-500 outline-none text-white" required>
@@ -151,7 +137,6 @@
 
         </div>
 
-        <!-- TABEL LOG RIWAYAT TRANSAKSI TERBARU -->
         <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-2xl">
             <div class="flex items-center gap-2 mb-4">
                 <span>📜</span>
@@ -182,8 +167,8 @@
                                     <td class="py-3.5 text-zinc-400 text-xs"><%= new Date(t.tanggal).toLocaleString('id-ID') %></td>
                                     <td class="py-3.5 font-medium text-white"><%= t.nama_barang %></td>
                                     <td class="py-3.5 text-center">
-                                        <span class="px-2 py-0.5 rounded text-xs font-bold <%= t.jenis === 'Masuk' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20' %>">
-                                            <%= t.jenis === 'Masuk' ? 'MASUK' : 'KELUAR' %>
+                                        <span class="px-2 py-0.5 rounded text-xs font-bold <%= t.jenis_transaksi === 'masuk' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20' %>">
+                                            <%= t.jenis_transaksi === 'masuk' ? 'MASUK' : 'KELUAR' %>
                                         </span>
                                     </td>
                                     <td class="py-3.5 text-center font-bold font-mono text-zinc-100"><%= t.jumlah %> Pcs</td>
@@ -204,7 +189,6 @@
 
     </div>
 
-    <!-- SCRIPT OTOMATIS COCOKKAN INPUT TANGGAL HARI INI -->
     <script>
         document.querySelectorAll('input[type="date"]').forEach(input => {
             if(!input.value) {
