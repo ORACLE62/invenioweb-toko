@@ -192,18 +192,18 @@ app.get('/supplier', requireLogin, async (req, res) => {
 
 app.post('/supplier/tambah', requireLogin, async (req, res) => {
     try {
+        // Menangkap data dari form supplier.ejs
         const { nama_supplier, telepon, alamat } = req.body;
         
-        // Trik toleransi jika di form ejs dikirim dengan atribut berbeda
+        // Trik agar backend tetap aman membaca meskipun di file .ejs ditulis 'telepon' atau 'kontak'
         const inputTelepon = telepon || req.body.kontak || req.body.no_telp;
         
-        // Membuat ID unik manual karena id_supplier di Aiven bertipe VARCHAR
         const id_supplier = 'SPL-' + Date.now(); 
         const paramNama   = (nama_supplier && nama_supplier.trim() !== '') ? nama_supplier : null;
         const paramKontak = (inputTelepon && inputTelepon.trim() !== '') ? inputTelepon : null;
         const paramAlamat = (alamat && alamat.trim() !== '') ? alamat : null;
 
-        // Query memasukkan data secara utuh ke database Aiven
+        // Memasukkan nama, kontak, dan alamat secara utuh ke database Aiven yang baru
         const query = 'INSERT INTO supplier (id_supplier, nama_supplier, kontak, alamat) VALUES (?, ?, ?, ?)';
         await db.execute(query, [id_supplier, paramNama, paramKontak, paramAlamat]);
         
@@ -223,7 +223,7 @@ app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
         const paramKontak = inputTelepon !== undefined ? inputTelepon : null;
         const paramAlamat = alamat !== undefined ? alamat : null;
 
-        // Update semua data termasuk kontak dan alamat baru
+        // Mengupdate seluruh data telepon dan alamat di database Aiven saat diedit
         const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ?, alamat = ? WHERE id_supplier = ?';
         await db.execute(query, [paramNama, paramKontak, paramAlamat, id_supplier]);
 
