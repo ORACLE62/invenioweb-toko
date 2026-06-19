@@ -313,9 +313,9 @@ app.get('/transaksi/hapus/:id', requireLogin, async (req, res) => {
 // ==========================================
 app.get('/laporan', requireLogin, async (req, res) => {
     try {
-        // 1. Ambil data Stok Gudang + Nama Supplier
+        // 1. Query Stok Gudang (Mengubah s.nama menjadi s.nama_supplier)
         const [stokGudang] = await db.execute(`
-            SELECT b.*, COALESCE(s.nama, 'Tanpa Supplier') as nama_supplier 
+            SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
             FROM barang b 
             LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
         `);
