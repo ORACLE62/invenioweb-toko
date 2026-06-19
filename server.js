@@ -309,40 +309,35 @@ app.get('/transaksi/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 6. ROUTE LAPORAN (OTOMATIS TERPISAH PER HARI) - SINKRON
+// 6. ROUTE LAPORAN (TAHUNAN & MUTASI HARIAN WITH SUPPLIER) - FIX SINKRON
 // ==========================================
 app.get('/laporan', requireLogin, async (req, res) => {
     try {
-        // 1. Query Stok Gudang (Mengubah s.nama menjadi s.nama_supplier)
+        // 1. Ambil data Laporan Stok Gudang Tahunan + Nama Supplier
         const [stokGudang] = await db.execute(`
             SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
             FROM barang b 
             LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
         `);
 
-        // 2. Ambil semua data transaksi, urutkan dari tanggal terbaru
+        // 2. Ambil data semua transaksi + JOIN Nama Barang + JOIN Nama Supplier
         const [allTransaksi] = await db.execute(`
-            SELECT t.*, b.nama_barang 
+            SELECT t.*, b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier
             FROM transaksi t 
             JOIN barang b ON t.id_barang = b.id_barang 
+            LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
             ORDER BY t.tanggal DESC, t.id_transaksi DESC
         `);
 
         // 3. LOGIKA GROUPING: Memisahkan transaksi berdasarkan tanggal (YYYY-MM-DD)
         const laporanPerHari = {};
         allTransaksi.forEach(t => {
-            // Ambil format tanggalnya saja (tanpa jam)
             const tglKey = new Date(t.tanggal).toISOString().split('T')[0];
             
-            // Jika tanggal ini belum ada di object, buat wadah baru
             if (!laporanPerHari[tglKey]) {
-                laporanPerHari[tglKey] = {
-                    masuk: [],
-                    keluar: []
-                };
+                laporanPerHari[tglKey] = { masuk: [], keluar: [] };
             }
             
-            // Masukkan ke kelompok masuk atau keluar
             if (t.jenis_transaksi === 'masuk') {
                 laporanPerHari[tglKey].masuk.push(t);
             } else {
@@ -353,14 +348,52 @@ app.get('/laporan', requireLogin, async (req, res) => {
         res.render('laporan', { 
             user: req.session.user, 
             stokGudang, 
-            laporanPerHari // Data yang sudah terkelompok per tanggal
+            laporanPerHari 
         });
     } catch (e) {
         res.send("Error Halaman Laporan: " + e.message);
     }
 });
 
-// ROUTE POST: EDIT TRANSAKSI DARI LAPORAN
+// ==========================================================
+// 🚀 ROUTE BARU: AKSI EDIT & HAPUS BARANG (DARI LAPORAN TAHUNAN)
+// ==========================================================
+
+// ROUTE POST: EDIT BARANG LANGSUNG DARI LAPORAN TAHUNAN
+app.post('/laporan/barang/edit/:id', requireLogin, async (req, res) => {
+    try {
+        const id_barang = req.params.id;
+        const { nama_barang, stok, harga } = req.body;
+        
+        await db.execute(
+            'UPDATE barang SET nama_barang = ?, stok = ?, harga = ? WHERE id_barang = ?', 
+            [nama_barang, stok, harga, id_barang]
+        );
+        res.redirect('/laporan');
+    } catch (e) {
+        res.send("Error Edit Barang di Laporan: " + e.message);
+    }
+});
+
+// ROUTE GET: HAPUS BARANG LANGSUNG DARI LAPORAN TAHUNAN
+app.get('/laporan/barang/hapus/:id', requireLogin, async (req, res) => {
+    try {
+        const id_barang = req.params.id;
+        
+        // Hapus transaksi yang berelasi dengan barang ini dulu agar tidak error foreign key
+        await db.execute('DELETE FROM transaksi WHERE id_barang = ?', [id_barang]);
+        // Baru hapus barangnya
+        await db.execute('DELETE FROM barang WHERE id_barang = ?', [id_barang]);
+        
+        res.redirect('/laporan');
+    } catch (e) {
+        res.send("Error Hapus Barang di Laporan: " + e.message);
+    }
+});
+
+// ==========================================================
+// ⚙️ ROUTE AKSI EDIT & HAPUS MUTASI HARIAN (TETAP SINKRON)
+// ==========================================================
 app.post('/laporan/edit/:id', requireLogin, async (req, res) => {
     try {
         const id_transaksi = req.params.id;
@@ -386,7 +419,6 @@ app.post('/laporan/edit/:id', requireLogin, async (req, res) => {
     }
 });
 
-// ROUTE GET: HAPUS TRANSAKSI DARI LAPORAN
 app.get('/laporan/hapus/:id', requireLogin, async (req, res) => {
     try {
         const id_transaksi = req.params.id;
