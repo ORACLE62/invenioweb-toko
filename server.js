@@ -41,24 +41,31 @@ async function buatTabelOtomatis() {
     try {
         console.log("Sedang menghubungkan dan membuat tabel di Cloud Aiven...");
 
-        // Buat semua tabel utama
-        await db.execute(`CREATE TABLE IF NOT EXISTS user (id_user INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, nama VARCHAR(100) NOT NULL)`);
+        // UPDATE: Menambahkan kolom 'role' dan 'status_aktif' langsung di skema tabel user
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS user (
+                id_user INT AUTO_INCREMENT PRIMARY KEY, 
+                username VARCHAR(50) NOT NULL UNIQUE, 
+                password VARCHAR(255) NOT NULL, 
+                nama VARCHAR(100) NOT NULL,
+                role ENUM('admin', 'gudang', 'pimpinan') DEFAULT 'gudang',
+                status_aktif TINYINT DEFAULT 0
+            )
+        `);
         
-        // FIX: Kolom nomor telepon disamakan menjadi 'no_telp' agar konsisten
         await db.execute(`CREATE TABLE IF NOT EXISTS supplier (id_supplier VARCHAR(50) NOT NULL PRIMARY KEY, nama_supplier VARCHAR(100) NOT NULL, alamat TEXT, no_telp VARCHAR(20))`);
-        
         await db.execute(`CREATE TABLE IF NOT EXISTS petugas (id_petugas VARCHAR(50) NOT NULL PRIMARY KEY, nama_petugas VARCHAR(100) NOT NULL, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, level ENUM('Admin','Petugas Gudang','Pimpinan') NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS barang (id_barang VARCHAR(50) NOT NULL PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, stok INT NOT NULL DEFAULT 0, harga DECIMAL(10,2) NOT NULL, id_supplier VARCHAR(50) DEFAULT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi (id_transaksi INT AUTO_INCREMENT PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, jenis_transaksi ENUM('masuk','keluar') NOT NULL, jumlah INT NOT NULL, tanggal DATE NOT NULL, masuk VARCHAR(50) DEFAULT 'masuk', keluar VARCHAR(50) DEFAULT 'keluar')`);
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_keluar (id_keluar VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_keluar DATE NOT NULL, jumlah_keluar INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_masuk (id_masuk VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_masuk DATE NOT NULL, jumlah_masuk INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
 
-        // Isi Data Login Default (PAKSA REFRESH)
-        await db.execute(`REPLACE INTO user (username, password, nama) VALUES 
-            ('admin', 'admin123', 'Naufal'),
-            ('gudang', 'gudang1102', 'Chou (Gudang)'),
-            ('pimpinan', 'pimpinan82686', 'Siti (Pimpinan)')
-            `);
+        // UPDATE: Data default disesuaikan dengan kolom baru (status_aktif = 1 artinya langsung aktif bisa login)
+        await db.execute(`REPLACE INTO user (id_user, username, password, nama, role, status_aktif) VALUES 
+            (1, 'admin', 'admin123', 'Naufal', 'admin', 1),
+            (2, 'gudang', 'gudang1102', 'Chou (Gudang)', 'gudang', 1),
+            (3, 'pimpinan', 'pimpinan82686', 'Siti (Pimpinan)', 'pimpinan', 1)
+        `);
 
         console.log("🚀 Selesai! Semua tabel fresh dan bersih!");
     } catch (error) {
@@ -67,16 +74,19 @@ async function buatTabelOtomatis() {
 }
 buatTabelOtomatis();
 
-// --- TRIK DARURAT TAMBAH KOLOM MASUK KELUAR ---
+// --- TRIK DARURAT MODIFIKASI TABEL JIKA SUDAH ADA ---
 setTimeout(async () => {
     try {
-        await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS masuk VARCHAR(50) DEFAULT 'masuk'`);
-        await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS keluar VARCHAR(50) DEFAULT 'keluar'`);
-        console.log("🚀 Kolom penyelamat berhasil ditambahkan ke Aiven!");
+        // Trik ini untuk memastikan jika tabel user sudah ada di Aiven, kolom baru tetap dipaksa masuk
+        await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS role ENUM('admin', 'gudang', 'pimpinan') DEFAULT 'gudang'`);
+        await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 0`);
+        // Pastikan akun admin utama (Naufal) statusnya aktif agar tidak terkunci keluar
+        await db.execute(`UPDATE user SET role = 'admin', status_aktif = 1 WHERE id_user = 1 OR username = 'admin'`);
+        console.log("🚀 Kolom role & status_aktif aman/berhasil diverifikasi!");
     } catch (e) {
-        console.log("Kolom sudah ada atau aman.");
+        console.log("Modifikasi kolom user aman.");
     }
-}, 5000);    
+}, 6000);
 
 // --- PROTECT ROUTE MIDDLEWARE ---
 const requireLogin = (req, res, next) => {
@@ -84,25 +94,104 @@ const requireLogin = (req, res, next) => {
 };
 
 // ==========================================
-// 1. ROUTE AUTHENTICATION
+// 1. ROUTE AUTHENTICATION & SECURITY MULTI-ROLE
 // ==========================================
+
+// Middleware Baru: Menyaring hak akses halaman berdasarkan role user
+const requireRole = (roles) => {
+    return (req, res, next) => {
+        if (!req.session.user) return res.redirect('/login');
+        if (!roles.includes(req.session.user.role)) {
+            return res.send("<script>alert('Hak akses ditolak! Akun Anda tidak diizinkan membuka halaman ini.'); window.location='/dashboard';</script>");
+        }
+        next();
+    };
+};
+
 app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => res.render('login', { error: null }));
+
+// UPDATE LOGIN: Memvalidasi role dan status_aktif (harus disetujui admin)
 app.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         const [users] = await db.execute('SELECT * FROM user WHERE username = ? AND password = ?', [username, password]);
+        
         if (users.length > 0) { 
-            req.session.user = users[0]; 
+            const akun = users[0];
+            
+            // Validasi persetujuan admin
+            if (akun.status_aktif === 0) {
+                return res.send("<script>alert('Akun Anda belum diaktifkan oleh Admin. Mohon hubungi pihak administrator.'); window.location='/login';</script>");
+            }
+
+            // Daftarkan session
+            req.session.user = {
+                id_user: akun.id_user,
+                username: akun.username,
+                nama: akun.nama,
+                role: akun.role
+            }; 
             res.redirect('/dashboard'); 
         } else { 
             res.render('login', { error: 'Username atau Password salah!' }); 
         }
     } catch (e) { res.send("Error Login: " + e.message); }
 });
+
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/login');
+});
+
+// ROUTE BARU: Halaman Pendaftaran Akun (Create New Account)
+app.get('/register', (req, res) => {
+    res.render('register');
+});
+
+app.post('/register', async (req, res) => {
+    try {
+        const { username, nama, password, role } = req.body;
+        const [cek] = await db.execute('SELECT * FROM user WHERE username = ?', [username]);
+        
+        if (cek.length > 0) {
+            return res.send("<script>alert('Username sudah terdaftar! Gunakan nama lain.'); window.location='/register';</script>");
+        }
+
+        // Simpan ke database dengan status_aktif = 0 (menunggu verifikasi admin)
+        await db.execute(
+            'INSERT INTO user (username, nama, password, role, status_aktif) VALUES (?, ?, ?, ?, 0)',
+            [username, nama, password, role]
+        );
+        res.send("<script>alert('Akun berhasil dibuat! Silakan hubungi Admin untuk mengaktifkan akses masuk Anda.'); window.location='/login';</script>");
+    } catch (e) {
+        res.send("Error Register Akun: " + e.message);
+    }
+});
+
+// ROUTE BARU KHUSUS ADMIN: Mengelola & memberi izin pendaftar baru
+app.get('/admin/users', requireLogin, requireRole(['admin']), async (req, res) => {
+    try {
+        // Ambil data semua user kecuali akun admin yang sedang login saat ini
+        const [listUsers] = await db.execute('SELECT * FROM user WHERE id_user != ?', [req.session.user.id_user]);
+        res.render('admin_users', { user: req.session.user, users: listUsers });
+    } catch (e) {
+        res.send("Error Admin Panel: " + e.message);
+    }
+});
+
+app.get('/admin/users/aktifkan/:id', requireLogin, requireRole(['admin']), async (req, res) => {
+    try {
+        await db.execute('UPDATE user SET status_aktif = 1 WHERE id_user = ?', [req.params.id]);
+        res.redirect('/admin/users');
+    } catch (e) { res.send(e.message); }
+});
+
+app.get('/admin/users/nonaktifkan/:id', requireLogin, requireRole(['admin']), async (req, res) => {
+    try {
+        await db.execute('UPDATE user SET status_aktif = 0 WHERE id_user = ?', [req.params.id]);
+        res.redirect('/admin/users');
+    } catch (e) { res.send(e.message); }
 });
 
 // ==========================================
@@ -125,9 +214,9 @@ app.get('/dashboard', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 3. ROUTE KELOLA BARANG
+// 3. ROUTE KELOLA BARANG (KHUSUS GUDANG & PIMPINAN)
 // ==========================================
-app.get('/barang', requireLogin, async (req, res) => {
+app.get('/barang', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT b.*, s.nama_supplier FROM barang b LEFT JOIN supplier s ON b.id_supplier = s.id_supplier');
         const [supplier] = await db.execute('SELECT * FROM supplier');
@@ -135,7 +224,7 @@ app.get('/barang', requireLogin, async (req, res) => {
     } catch (e) { res.send("Error Menu Barang: " + e.message); }
 });
 
-app.post('/barang/tambah', requireLogin, async (req, res) => {
+app.post('/barang/tambah', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         let { nama_barang, id_supplier, stok, harga } = req.body;
         const id_barang = 'BRG-' + Date.now(); 
@@ -149,7 +238,7 @@ app.post('/barang/tambah', requireLogin, async (req, res) => {
     } catch (e) { res.send("Error Simpan Barang: " + e.message); }
 });
 
-app.get('/barang/hapus/:id', requireLogin, async (req, res) => {
+app.get('/barang/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         await db.execute('DELETE FROM transaksi WHERE id_barang = ?', [req.params.id]);
         await db.execute('DELETE FROM barang WHERE id_barang = ?', [req.params.id]);
@@ -157,7 +246,7 @@ app.get('/barang/hapus/:id', requireLogin, async (req, res) => {
     } catch (e) { res.send("Error Hapus Barang: " + e.message); }
 });
 
-app.post('/barang/edit/:id', requireLogin, async (req, res) => {
+app.post('/barang/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_barang = req.params.id;
         let { nama_barang, id_supplier, stok, harga } = req.body;
@@ -179,9 +268,9 @@ app.post('/barang/edit/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 4. ROUTE KELOLA SUPPLIER 
+// 4. ROUTE KELOLA SUPPLIER (KHUSUS GUDANG & PIMPINAN)
 // ==========================================
-app.get('/supplier', requireLogin, async (req, res) => {
+app.get('/supplier', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const [supplier] = await db.execute('SELECT * FROM supplier');
         res.render('supplier', { user: req.session.user, supplier });
@@ -190,12 +279,9 @@ app.get('/supplier', requireLogin, async (req, res) => {
     }
 });
 
-app.post('/supplier/tambah', requireLogin, async (req, res) => {
+app.post('/supplier/tambah', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
-        // Menangkap data dari form supplier.ejs
         const { nama_supplier, telepon, alamat } = req.body;
-        
-        // Trik agar backend tetap aman membaca meskipun di file .ejs ditulis 'telepon' atau 'kontak'
         const inputTelepon = telepon || req.body.kontak || req.body.no_telp;
         
         const id_supplier = 'SPL-' + Date.now(); 
@@ -203,8 +289,7 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
         const paramKontak = (inputTelepon && inputTelepon.trim() !== '') ? inputTelepon : null;
         const paramAlamat = (alamat && alamat.trim() !== '') ? alamat : null;
 
-        // Memasukkan nama, kontak, dan alamat secara utuh ke database Aiven yang baru
-        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, kontak, alamat) VALUES (?, ?, ?, ?)';
+        const query = 'INSERT INTO supplier (id_supplier, nama_supplier, no_telp, alamat) VALUES (?, ?, ?, ?)';
         await db.execute(query, [id_supplier, paramNama, paramKontak, paramAlamat]);
         
         res.redirect('/supplier');
@@ -213,7 +298,7 @@ app.post('/supplier/tambah', requireLogin, async (req, res) => {
     }
 });
 
-app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
+app.post('/supplier/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_supplier = req.params.id;
         const { nama_supplier, telepon, alamat } = req.body;
@@ -223,8 +308,7 @@ app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
         const paramKontak = inputTelepon !== undefined ? inputTelepon : null;
         const paramAlamat = alamat !== undefined ? alamat : null;
 
-        // Mengupdate seluruh data telepon dan alamat di database Aiven saat diedit
-        const query = 'UPDATE supplier SET nama_supplier = ?, kontak = ?, alamat = ? WHERE id_supplier = ?';
+        const query = 'UPDATE supplier SET nama_supplier = ?, no_telp = ?, alamat = ? WHERE id_supplier = ?';
         await db.execute(query, [paramNama, paramKontak, paramAlamat, id_supplier]);
 
         res.redirect('/supplier');
@@ -233,7 +317,7 @@ app.post('/supplier/edit/:id', requireLogin, async (req, res) => {
     }
 });
 
-app.get('/supplier/hapus/:id', requireLogin, async (req, res) => {
+app.get('/supplier/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         await db.execute('UPDATE barang SET id_supplier = NULL WHERE id_supplier = ?', [req.params.id]);
         await db.execute('DELETE FROM supplier WHERE id_supplier = ?', [req.params.id]);
@@ -244,12 +328,11 @@ app.get('/supplier/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 5. ROUTE TRANSAKSI (MASUK, KELUAR, HAPUS) - FIX SINKRON
+// 5. ROUTE TRANSAKSI (KHUSUS GUDANG & PIMPINAN)
 // ==========================================
-app.get('/transaksi', requireLogin, async (req, res) => {
+app.get('/transaksi', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT * FROM barang');
-        // Mengambil semua data transaksi disjoin dengan nama barang
         const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang ORDER BY t.tanggal DESC, t.id_transaksi DESC');
         res.render('transaksi', { user: req.session.user, barang, transaksi });
     } catch (e) { 
@@ -257,70 +340,48 @@ app.get('/transaksi', requireLogin, async (req, res) => {
     }
 });
 
-// ROUTE TRANSAKSI MASUK
-app.post('/transaksi/masuk', requireLogin, async (req, res) => {
+app.post('/transaksi/masuk', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const { id_barang, jumlah, tanggal } = req.body;
-        
-        // Memastikan string "masuk" di-insert ke kolom jenis_transaksi
         await db.execute('INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal) VALUES (?, "masuk", ?, ?)', [id_barang, jumlah, tanggal]);
-        
-        // Menambah stok barang karena barang masuk
         await db.execute('UPDATE barang SET stok = stok + ? WHERE id_barang = ?', [jumlah, id_barang]);
-        
         res.redirect('/transaksi');
-    } catch (e) { 
-        res.send("Error Transaksi Masuk: " + e.message); 
-    }
+    } catch (e) { res.send("Error Transaksi Masuk: " + e.message); }
 });
 
-// ROUTE TRANSAKSI KELUAR
-app.post('/transaksi/keluar', requireLogin, async (req, res) => {
+app.post('/transaksi/keluar', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const { id_barang, jumlah, tanggal } = req.body;
-        
-        // Memastikan string "keluar" di-insert ke kolom jenis_transaksi
         await db.execute('INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal) VALUES (?, "keluar", ?, ?)', [id_barang, jumlah, tanggal]);
-        
-        // Mengurangi stok barang karena barang keluar
         await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
-        
         res.redirect('/transaksi');
-    } catch (e) { 
-        res.send("Error Transaksi Keluar: " + e.message); 
-    }
+    } catch (e) { res.send("Error Transaksi Keluar: " + e.message); }
 });
 
-// ROUTE HAPUS TRANSAKSI
-app.get('/transaksi/hapus/:id', requireLogin, async (req, res) => {
+app.get('/transaksi/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const [t] = await db.execute('SELECT * FROM transaksi WHERE id_transaksi = ?', [req.params.id]);
         if (t.length > 0) {
             const { id_barang, jenis_transaksi, jumlah } = t[0];
-            // Kebalikan logikanya saat dihapus: jika dulu 'masuk' maka stok dikurangi, jika 'keluar' maka stok dikembalikan/ditambah
             const op = (jenis_transaksi === 'masuk') ? '-' : '+';
             await db.execute(`UPDATE barang SET stok = stok ${op} ? WHERE id_barang = ?`, [jumlah, id_barang]);
             await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [req.params.id]);
         }
         res.redirect('/transaksi');
-    } catch (e) { 
-        res.send("Error Hapus Transaksi: " + e.message); 
-    }
+    } catch (e) { res.send("Error Hapus Transaksi: " + e.message); }
 });
 
 // ==========================================
-// 6. ROUTE LAPORAN (TAHUNAN & MUTASI HARIAN WITH SUPPLIER) - FIX SINKRON
+// 6. ROUTE LAPORAN (KHUSUS GUDANG & PIMPINAN)
 // ==========================================
-app.get('/laporan', requireLogin, async (req, res) => {
+app.get('/laporan', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
-        // 1. Ambil data Laporan Stok Gudang Tahunan + Nama Supplier
         const [stokGudang] = await db.execute(`
             SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
             FROM barang b 
             LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
         `);
 
-        // 2. Ambil data semua transaksi + JOIN Nama Barang + JOIN Nama Supplier
         const [allTransaksi] = await db.execute(`
             SELECT t.*, b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier
             FROM transaksi t 
@@ -329,15 +390,12 @@ app.get('/laporan', requireLogin, async (req, res) => {
             ORDER BY t.tanggal DESC, t.id_transaksi DESC
         `);
 
-        // 3. LOGIKA GROUPING: Memisahkan transaksi berdasarkan tanggal (YYYY-MM-DD)
         const laporanPerHari = {};
         allTransaksi.forEach(t => {
             const tglKey = new Date(t.tanggal).toISOString().split('T')[0];
-            
             if (!laporanPerHari[tglKey]) {
                 laporanPerHari[tglKey] = { masuk: [], keluar: [] };
             }
-            
             if (t.jenis_transaksi === 'masuk') {
                 laporanPerHari[tglKey].masuk.push(t);
             } else {
@@ -345,56 +403,29 @@ app.get('/laporan', requireLogin, async (req, res) => {
             }
         });
 
-        res.render('laporan', { 
-            user: req.session.user, 
-            stokGudang, 
-            laporanPerHari 
-        });
-    } catch (e) {
-        res.send("Error Halaman Laporan: " + e.message);
-    }
+        res.render('laporan', { user: req.session.user, stokGudang, laporanPerHari });
+    } catch (e) { res.send("Error Halaman Laporan: " + e.message); }
 });
 
-// ==========================================================
-// 🚀 ROUTE BARU: AKSI EDIT & HAPUS BARANG (DARI LAPORAN TAHUNAN)
-// ==========================================================
-
-// ROUTE POST: EDIT BARANG LANGSUNG DARI LAPORAN TAHUNAN
-app.post('/laporan/barang/edit/:id', requireLogin, async (req, res) => {
+app.post('/laporan/barang/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_barang = req.params.id;
         const { nama_barang, stok, harga } = req.body;
-        
-        await db.execute(
-            'UPDATE barang SET nama_barang = ?, stok = ?, harga = ? WHERE id_barang = ?', 
-            [nama_barang, stok, harga, id_barang]
-        );
+        await db.execute('UPDATE barang SET nama_barang = ?, stok = ?, harga = ? WHERE id_barang = ?', [nama_barang, stok, harga, id_barang]);
         res.redirect('/laporan');
-    } catch (e) {
-        res.send("Error Edit Barang di Laporan: " + e.message);
-    }
+    } catch (e) { res.send("Error Edit Barang di Laporan: " + e.message); }
 });
 
-// ROUTE GET: HAPUS BARANG LANGSUNG DARI LAPORAN TAHUNAN
-app.get('/laporan/barang/hapus/:id', requireLogin, async (req, res) => {
+app.get('/laporan/barang/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_barang = req.params.id;
-        
-        // Hapus transaksi yang berelasi dengan barang ini dulu agar tidak error foreign key
         await db.execute('DELETE FROM transaksi WHERE id_barang = ?', [id_barang]);
-        // Baru hapus barangnya
         await db.execute('DELETE FROM barang WHERE id_barang = ?', [id_barang]);
-        
         res.redirect('/laporan');
-    } catch (e) {
-        res.send("Error Hapus Barang di Laporan: " + e.message);
-    }
+    } catch (e) { res.send("Error Hapus Barang di Laporan: " + e.message); }
 });
 
-// ==========================================================
-// ⚙️ ROUTE AKSI EDIT & HAPUS MUTASI HARIAN (TETAP SINKRON)
-// ==========================================================
-app.post('/laporan/edit/:id', requireLogin, async (req, res) => {
+app.post('/laporan/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_transaksi = req.params.id;
         const { jumlah_baru, tanggal_baru } = req.body;
@@ -412,28 +443,22 @@ app.post('/laporan/edit/:id', requireLogin, async (req, res) => {
         } else {
             await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [selisih, id_barang]);
         }
-
         res.redirect('/laporan');
-    } catch (e) {
-        res.send("Error Edit Transaksi Laporan: " + e.message);
-    }
+    } catch (e) { res.send("Error Edit Transaksi Laporan: " + e.message); }
 });
 
-app.get('/laporan/hapus/:id', requireLogin, async (req, res) => {
+app.get('/laporan/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_transaksi = req.params.id;
         const [t] = await db.execute('SELECT * FROM transaksi WHERE id_transaksi = ?', [id_transaksi]);
         if (t.length > 0) {
             const { id_barang, jenis_transaksi, jumlah } = t[0];
             const op = (jenis_transaksi === 'masuk') ? '-' : '+';
-            
             await db.execute(`UPDATE barang SET stok = stok ${op} ? WHERE id_barang = ?`, [jumlah, id_barang]);
             await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [id_transaksi]);
         }
         res.redirect('/laporan');
-    } catch (e) {
-        res.send("Error Hapus Transaksi Laporan: " + e.message);
-    }
+    } catch (e) { res.send("Error Hapus Transaksi Laporan: " + e.message); }
 });
 
 // --- SERVER INSTANCE (WAJIB DI PALING BAWAH) ---
