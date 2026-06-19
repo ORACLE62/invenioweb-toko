@@ -145,25 +145,31 @@ app.get('/logout', (req, res) => {
 });
 
 // ROUTE BARU: Halaman Pendaftaran Akun (Create New Account)
-app.get('/register', (req, res) => {
-    res.render('register');
-});
-
 app.post('/register', async (req, res) => {
     try {
         const { username, nama, password, role } = req.body;
+
+        // --- TRIK REPARASI OTOMATIS: Tambahkan kolom jika belum ada sebelum insert ---
+        try {
+            await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS role ENUM('admin', 'gudang', 'pimpinan') DEFAULT 'gudang'`);
+            await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 0`);
+        } catch (errCol) {
+            // Abaikan jika kolom ternyata sudah berhasil dibuat
+        }
+
         const [cek] = await db.execute('SELECT * FROM user WHERE username = ?', [username]);
-        
         if (cek.length > 0) {
             return res.send("<script>alert('Username sudah terdaftar! Gunakan nama lain.'); window.location='/register';</script>");
         }
 
-        // Simpan ke database dengan status_aktif = 0 (menunggu verifikasi admin)
+        // UPDATE: Sesuai keinginanmu, jika ingin akun yang BARU DAFTAR bisa LANGSUNG LOGIN tanpa nunggu persetujuan Admin,
+        // ubah nilai paling akhir (status_aktif) dari 0 menjadi 1 pada query di bawah ini:
         await db.execute(
-            'INSERT INTO user (username, nama, password, role, status_aktif) VALUES (?, ?, ?, ?, 0)',
+            'INSERT INTO user (username, nama, password, role, status_aktif) VALUES (?, ?, ?, ?, 1)',
             [username, nama, password, role]
         );
-        res.send("<script>alert('Akun berhasil dibuat! Silakan hubungi Admin untuk mengaktifkan akses masuk Anda.'); window.location='/login';</script>");
+        
+        res.send("<script>alert('Akun berhasil dibuat! Kamu bisa langsung login sekarang.'); window.location='/login';</script>");
     } catch (e) {
         res.send("Error Register Akun: " + e.message);
     }
