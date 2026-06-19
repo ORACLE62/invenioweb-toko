@@ -2,50 +2,260 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Daftar Akun Baru</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Account - InvenioWeb</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .register-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); width: 350px; }
-        h2 { text-align: center; margin-bottom: 20px; color: #333; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        button:hover { background: #218838; }
-        .login-link { text-align: center; margin-top: 15px; font-size: 14px; }
-        .login-link a { color: #007bff; text-decoration: none; }
+        /* --- RESET & BASE STYLE --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #121214;
+            color: #e1e1e6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- BACKGROUND KANVAS BINTANG BERGERAK --- */
+        #starfield {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- BENTO CARD CONTAINER --- */
+        .register-card {
+            background: rgba(24, 24, 27, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 40px 30px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            text-align: center;
+        }
+
+        /* --- LOGO & TEXT --- */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .brand-name {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 28px;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- FORM ELEMENTS --- */
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(39, 39, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: rgba(236, 72, 153, 0.5);
+            background: rgba(39, 39, 42, 0.9);
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+        }
+
+        .form-group input::placeholder {
+            color: #52525b;
+        }
+
+        /* --- BUTTONS --- */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #ff9ebb, #ec4899);
+            color: #121214;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3);
+        }
+
+        /* --- FOOTER LINKS --- */
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+            margin: 24px 0;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: #71717a;
+        }
+
+        .footer-text a {
+            color: #ff9ebb;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .footer-text a:hover {
+            color: #ec4899;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
-<div class="register-container">
-    <h2>Registrasi Akun</h2>
-    <form action="/register" method="POST">
-        <div class="form-group">
-            <label>Nama Lengkap</label>
-            <input type="text" name="nama" placeholder="Masukkan nama lengkap" required>
-        </div>
-        <div class="form-group">
-            <label>Username</label>
-            <input type="text" name="username" placeholder="Masukkan username" required>
-        </div>
-        <div class="form-group">
-            <label>Password</label>
-            <input type="password" name="password" placeholder="Masukkan password" required>
-        </div>
-        <div class="form-group">
-            <label>Pilih Role / Hak Akses</label>
-            <select name="role" required>
-                <option value="gudang">Petugas Gudang</option>
-                <option value="pimpinan">Pimpinan</option>
-            </select>
-        </div>
-        <button type="submit">Daftar Sekarang</button>
-    </form>
-    <div class="login-link">
-        Sudah punya akun? <a href="/login">Login di sini</a>
-    </div>
-</div>
+    <canvas id="starfield"></canvas>
 
+    <div class="register-card">
+        <div class="logo-container">
+            <div class="logo-icon">I</div>
+        </div>
+        <div class="brand-name">InvenioWeb</div>
+        <h2>Sign up to IWS</h2>
+        
+        <form action="/register" method="POST">
+            <div class="form-group">
+                <input type="text" name="nama" placeholder="Full Name" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <input type="text" name="username" placeholder="Username" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+            
+            <input type="hidden" name="role" value="gudang">
+
+            <button type="submit" class="btn-submit">Create Account</button>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="footer-text">
+            Already have an account? <a href="/login">Sign in</a>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        // Atur ulang ukuran jika browser di-resize
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initStars();
+        });
+
+        const numStars = 120;
+        let stars = [];
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 1.5,
+                    // Kecepatan gerak lambat & halus ke arah atas-kiri
+                    speedX: (Math.random() * -0.2) - 0.05,
+                    speedY: (Math.random() * -0.2) - 0.05,
+                    opacity: Math.random()
+                });
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Menggambar setiap bintang berkelap-kelip
+            stars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Update posisi bintang
+                star.x += star.speedX;
+                star.y += star.speedY;
+
+                // Efek kelap-kelip halus
+                star.opacity += (Math.random() * 0.04) - 0.02;
+                if (star.opacity < 0.2) star.opacity = 0.2;
+                if (star.opacity > 0.8) star.opacity = 0.8;
+
+                // Loop kembali bintang jika keluar layar bebas
+                if (star.x < 0) star.x = width;
+                if (star.y < 0) star.y = height;
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        initStars();
+        animate();
+    </script>
 </body>
 </html>
