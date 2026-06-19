@@ -41,7 +41,7 @@ async function buatTabelOtomatis() {
     try {
         console.log("Sedang menghubungkan dan membuat tabel di Cloud Aiven...");
 
-        // UPDATE: Menambahkan kolom 'role' dan 'status_aktif' langsung di skema tabel user
+        // Membuat tabel user dengan default status_aktif = 1 (Langsung Aktif)
         await db.execute(`
             CREATE TABLE IF NOT EXISTS user (
                 id_user INT AUTO_INCREMENT PRIMARY KEY, 
@@ -49,7 +49,7 @@ async function buatTabelOtomatis() {
                 password VARCHAR(255) NOT NULL, 
                 nama VARCHAR(100) NOT NULL,
                 role ENUM('admin', 'gudang', 'pimpinan') DEFAULT 'gudang',
-                status_aktif TINYINT DEFAULT 0
+                status_aktif TINYINT DEFAULT 1
             )
         `);
         
@@ -60,7 +60,7 @@ async function buatTabelOtomatis() {
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_keluar (id_keluar VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_keluar DATE NOT NULL, jumlah_keluar INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_masuk (id_masuk VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_masuk DATE NOT NULL, jumlah_masuk INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
 
-        // UPDATE: Data default disesuaikan dengan kolom baru (status_aktif = 1 artinya langsung aktif bisa login)
+        // Data default (status_aktif = 1 artinya langsung aktif bisa login)
         await db.execute(`REPLACE INTO user (id_user, username, password, nama, role, status_aktif) VALUES 
             (1, 'admin', 'admin123', 'Naufal', 'admin', 1),
             (2, 'gudang', 'gudang1102', 'Chou (Gudang)', 'gudang', 1),
@@ -77,16 +77,16 @@ buatTabelOtomatis();
 // --- TRIK DARURAT MODIFIKASI TABEL JIKA SUDAH ADA ---
 setTimeout(async () => {
     try {
-        // Trik ini untuk memastikan jika tabel user sudah ada di Aiven, kolom baru tetap dipaksa masuk
+        // Memastikan kolom baru terbuat jika tabel user sudah terlanjur ada di database cloud
         await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS role ENUM('admin', 'gudang', 'pimpinan') DEFAULT 'gudang'`);
-        await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 0`);
-        // Pastikan akun admin utama (Naufal) statusnya aktif agar tidak terkunci keluar
+        await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
+        // Pastikan akun admin utama (Naufal) tetap aktif
         await db.execute(`UPDATE user SET role = 'admin', status_aktif = 1 WHERE id_user = 1 OR username = 'admin'`);
         console.log("🚀 Kolom role & status_aktif aman/berhasil diverifikasi!");
     } catch (e) {
         console.log("Modifikasi kolom user aman.");
     }
-}, 6000);
+}, 6000); 
 
 // --- PROTECT ROUTE MIDDLEWARE ---
 const requireLogin = (req, res, next) => {
@@ -97,7 +97,7 @@ const requireLogin = (req, res, next) => {
 // 1. ROUTE AUTHENTICATION & SECURITY MULTI-ROLE
 // ==========================================
 
-// Middleware Baru: Menyaring hak akses halaman berdasarkan role user
+// Menyaring hak akses halaman berdasarkan role user
 const requireRole = (roles) => {
     return (req, res, next) => {
         if (!req.session.user) return res.redirect('/login');
@@ -111,7 +111,7 @@ const requireRole = (roles) => {
 app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => res.render('login', { error: null }));
 
-// UPDATE LOGIN: Memvalidasi role dan status_aktif (harus disetujui admin)
+// LOGIN VALIDATION
 app.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -120,9 +120,9 @@ app.post('/login', async (req, res) => {
         if (users.length > 0) { 
             const akun = users[0];
             
-            // Validasi persetujuan admin
+            // Validasi status aktif
             if (akun.status_aktif === 0) {
-                return res.send("<script>alert('Akun Anda belum diaktifkan oleh Admin. Mohon hubungi pihak administrator.'); window.location='/login';</script>");
+                return res.send("<script>alert('Akun Anda dinonaktifkan. Mohon hubungi pihak administrator.'); window.location='/login';</script>");
             }
 
             // Daftarkan session
@@ -144,35 +144,47 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
-// ROUTE BARU: Halaman Pendaftaran Akun (Create New Account)
+// GET REGISTER PAGE
 app.get('/register', (req, res) => {
     res.render('register');
 });
 
+// POST REGISTER AKUN - AUTO AKTIF & ANTI ERROR KOLOM MISSING
 app.post('/register', async (req, res) => {
     try {
-        const { username, nama, password, role } = req.body;
+        const { username, nama, password } = req.body;
+        const defaultRole = 'gudang'; // Menetapkan default role sebagai gudang
+
+        // Trik Reparasi Tambahan: Buat kolom secara instan jika phpMyAdmin belum ter-update
+        try {
+            await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS role ENUM('admin', 'gudang', 'pimpinan') DEFAULT 'gudang'`);
+            await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
+        } catch (errCol) {
+            // Lewati jika kolom sudah terlanjur ada
+        }
+
+        // Cek duplikasi username
         const [cek] = await db.execute('SELECT * FROM user WHERE username = ?', [username]);
-        
         if (cek.length > 0) {
             return res.send("<script>alert('Username sudah terdaftar! Gunakan nama lain.'); window.location='/register';</script>");
         }
 
-        // Simpan ke database dengan status_aktif = 0 (menunggu verifikasi admin)
+        // Masukkan data ke database dengan status_aktif = 1 (LANGSUNG AKTIF BISA LOGIN)
         await db.execute(
-            'INSERT INTO user (username, nama, password, role, status_aktif) VALUES (?, ?, ?, ?, 0)',
-            [username, nama, password, role]
+            'INSERT INTO user (username, nama, password, role, status_aktif) VALUES (?, ?, ?, ?, 1)',
+            [username, nama, password, defaultRole]
         );
-        res.send("<script>alert('Akun berhasil dibuat! Silakan hubungi Admin untuk mengaktifkan akses masuk Anda.'); window.location='/login';</script>");
+        
+        res.send("<script>alert('Akun berhasil dibuat! Status akun AKTIF, kamu bisa langsung login.'); window.location='/login';</script>");
     } catch (e) {
+        console.error(e);
         res.send("Error Register Akun: " + e.message);
     }
 });
 
-// ROUTE BARU KHUSUS ADMIN: Mengelola & memberi izin pendaftar baru
+// ROUTE PANEL ADMIN MANAJEMEN USER
 app.get('/admin/users', requireLogin, requireRole(['admin']), async (req, res) => {
     try {
-        // Ambil data semua user kecuali akun admin yang sedang login saat ini
         const [listUsers] = await db.execute('SELECT * FROM user WHERE id_user != ?', [req.session.user.id_user]);
         res.render('admin_users', { user: req.session.user, users: listUsers });
     } catch (e) {
@@ -214,7 +226,7 @@ app.get('/dashboard', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 3. ROUTE KELOLA BARANG (KHUSUS GUDANG & PIMPINAN)
+// 3. ROUTE KELOLA BARANG
 // ==========================================
 app.get('/barang', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
@@ -268,7 +280,7 @@ app.post('/barang/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']), 
 });
 
 // ==========================================
-// 4. ROUTE KELOLA SUPPLIER (KHUSUS GUDANG & PIMPINAN)
+// 4. ROUTE KELOLA SUPPLIER
 // ==========================================
 app.get('/supplier', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
@@ -328,7 +340,7 @@ app.get('/supplier/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan'])
 });
 
 // ==========================================
-// 5. ROUTE TRANSAKSI (KHUSUS GUDANG & PIMPINAN)
+// 5. ROUTE TRANSAKSI
 // ==========================================
 app.get('/transaksi', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
@@ -372,7 +384,7 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']
 });
 
 // ==========================================
-// 6. ROUTE LAPORAN (KHUSUS GUDANG & PIMPINAN)
+// 6. ROUTE LAPORAN
 // ==========================================
 app.get('/laporan', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
     try {
