@@ -309,14 +309,99 @@ app.get('/transaksi/hapus/:id', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 6. ROUTE CETAK LAPORAN
+// 6. ROUTE LAPORAN (OTOMATIS TERPISAH PER HARI) - SINKRON
 // ==========================================
 app.get('/laporan', requireLogin, async (req, res) => {
     try {
-        const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang ORDER BY t.tanggal DESC');
-        const [barang] = await db.execute('SELECT * FROM barang');
-        res.render('laporan', { user: req.session.user, transaksi, barang });
-    } catch (error) { res.send("Error menu laporan: " + error.message); }
+        // 1. Ambil data Stok Gudang + Nama Supplier
+        const [stokGudang] = await db.execute(`
+            SELECT b.*, COALESCE(s.nama, 'Tanpa Supplier') as nama_supplier 
+            FROM barang b 
+            LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
+        `);
+
+        // 2. Ambil semua data transaksi, urutkan dari tanggal terbaru
+        const [allTransaksi] = await db.execute(`
+            SELECT t.*, b.nama_barang 
+            FROM transaksi t 
+            JOIN barang b ON t.id_barang = b.id_barang 
+            ORDER BY t.tanggal DESC, t.id_transaksi DESC
+        `);
+
+        // 3. LOGIKA GROUPING: Memisahkan transaksi berdasarkan tanggal (YYYY-MM-DD)
+        const laporanPerHari = {};
+        allTransaksi.forEach(t => {
+            // Ambil format tanggalnya saja (tanpa jam)
+            const tglKey = new Date(t.tanggal).toISOString().split('T')[0];
+            
+            // Jika tanggal ini belum ada di object, buat wadah baru
+            if (!laporanPerHari[tglKey]) {
+                laporanPerHari[tglKey] = {
+                    masuk: [],
+                    keluar: []
+                };
+            }
+            
+            // Masukkan ke kelompok masuk atau keluar
+            if (t.jenis_transaksi === 'masuk') {
+                laporanPerHari[tglKey].masuk.push(t);
+            } else {
+                laporanPerHari[tglKey].keluar.push(t);
+            }
+        });
+
+        res.render('laporan', { 
+            user: req.session.user, 
+            stokGudang, 
+            laporanPerHari // Data yang sudah terkelompok per tanggal
+        });
+    } catch (e) {
+        res.send("Error Halaman Laporan: " + e.message);
+    }
+});
+
+// ROUTE POST: EDIT TRANSAKSI DARI LAPORAN
+app.post('/laporan/edit/:id', requireLogin, async (req, res) => {
+    try {
+        const id_transaksi = req.params.id;
+        const { jumlah_baru, tanggal_baru } = req.body;
+
+        const [old] = await db.execute('SELECT * FROM transaksi WHERE id_transaksi = ?', [id_transaksi]);
+        if (old.length === 0) return res.redirect('/laporan');
+        
+        const { id_barang, jenis_transaksi, jumlah: jumlah_lama } = old[0];
+        const selisih = parseInt(jumlah_baru) - parseInt(jumlah_lama);
+
+        await db.execute('UPDATE transaksi SET jumlah = ?, tanggal = ? WHERE id_transaksi = ?', [jumlah_baru, tanggal_baru, id_transaksi]);
+
+        if (jenis_transaksi === 'masuk') {
+            await db.execute('UPDATE barang SET stok = stok + ? WHERE id_barang = ?', [selisih, id_barang]);
+        } else {
+            await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [selisih, id_barang]);
+        }
+
+        res.redirect('/laporan');
+    } catch (e) {
+        res.send("Error Edit Transaksi Laporan: " + e.message);
+    }
+});
+
+// ROUTE GET: HAPUS TRANSAKSI DARI LAPORAN
+app.get('/laporan/hapus/:id', requireLogin, async (req, res) => {
+    try {
+        const id_transaksi = req.params.id;
+        const [t] = await db.execute('SELECT * FROM transaksi WHERE id_transaksi = ?', [id_transaksi]);
+        if (t.length > 0) {
+            const { id_barang, jenis_transaksi, jumlah } = t[0];
+            const op = (jenis_transaksi === 'masuk') ? '-' : '+';
+            
+            await db.execute(`UPDATE barang SET stok = stok ${op} ? WHERE id_barang = ?`, [jumlah, id_barang]);
+            await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [id_transaksi]);
+        }
+        res.redirect('/laporan');
+    } catch (e) {
+        res.send("Error Hapus Transaksi Laporan: " + e.message);
+    }
 });
 
 // --- SERVER INSTANCE (WAJIB DI PALING BAWAH) ---
