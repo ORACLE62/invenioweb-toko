@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Barang - InvenioWeb</title>
-    <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
+    <link class="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-zinc-950 text-white font-sans min-h-screen flex flex-col md:flex-row">
 
-    <!-- SIDEBAR -->
     <div class="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0">
         <div>
             <div class="flex items-center gap-3 mb-8">
@@ -26,34 +25,43 @@
         </div>
         
         <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
-    <div>
-        <p class="text-xs text-zinc-500">Masuk sebagai:</p>
-        
-        <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
-            <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)</p>
-            <div class="mt-1">
-                <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium"><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %></span>
-            </div>
-        <% } else { %>
-            <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
-        <% } %>
+            <div>
+                <p class="text-xs text-zinc-500">Masuk sebagai:</p>
+                
+                <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
+                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)</p>
+                    <div class="mt-1">
+                        <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium"><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %></span>
+                    </div>
+                <% } else { %>
+                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
+                <% } %>
 
-        <% if (user.role === 'admin') { %>
-            <div class="mt-2">
-                <a href="/admin/users" class="inline-block text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded border border-red-500/30 font-medium transition">Kelola User</a>
+                <% if (user.role === 'admin') { %>
+                    <div class="mt-2">
+                        <a href="/admin/users" class="inline-block text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded border border-red-500/30 font-medium transition">Kelola User</a>
+                    </div>
+                <% } %>
             </div>
-        <% } %>
+            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition shrink-0 ml-2">Logout</a>
+        </div>
     </div>
-    <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition shrink-0 ml-2">Logout</a>
 
-    <!-- NAVBAR KHUSUS HP -->
     <div class="md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold">I</div>
                 <span class="font-bold text-lg tracking-wider">InvenioWeb</span>
             </div>
-            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-zinc-400">
+                    <%= user.nama %>
+                    <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
+                        ( <%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %> )
+                    <% } %>
+                </span>
+                <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
+            </div>
         </div>
         <nav class="flex flex-wrap gap-2">
             <a href="/dashboard" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Dashboard</a>
@@ -61,11 +69,13 @@
             <a href="/supplier" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Supplier</a>
             <a href="/transaksi" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Transaksi</a>
             <a href="/laporan" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Laporan</a>
+            <% if (user.role === 'admin') { %>
+                <a href="/admin/users" class="px-3 py-1.5 bg-red-900/50 text-red-400 rounded-lg text-xs font-medium border border-red-500/20">Kelola User</a>
+            <% } %>
         </nav>
     </div>
 
-    <!-- KONTEN UTAMA TABLE -->
-    <div class="flex-grow p-4 md:p-10 overflow-y-auto w-full">
+    <div class="flex-grow p-6 md:p-10 overflow-y-auto w-full">
         <header class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Kelola Stok Barang Retail</h1>
@@ -76,7 +86,6 @@
             </button>
         </header>
 
-        <!-- Table Container -->
         <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-x-auto shadow-2xl">
             <table class="w-full text-left border-collapse min-w-[700px]">
                 <thead>
@@ -126,7 +135,6 @@
         </div>
     </div>
 
-    <!-- MODAL 1: TAMBAH BARANG -->
     <div id="modalBarang" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
         <div class="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
             <div class="p-6 border-b border-zinc-800 flex justify-between items-center">
@@ -140,7 +148,6 @@
                 </div>
                 <div>
                      <label class="block text-xs text-zinc-400 mb-1">Mitra Supplier Pasokan</label>
-                     <!-- FIX: Menggunakan value kosong "" bukan string "null" agar terbaca NULL di database -->
                      <select name="id_supplier" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white">
                         <option value="" selected class="bg-zinc-900 text-zinc-400">-- Tanpa Mitra Supplier --</option>
                         <% if (typeof supplier !== 'undefined' && supplier.length > 0) { %>
@@ -170,7 +177,6 @@
         </div>
     </div>
 
-    <!-- MODAL 2: EDIT DATA BARANG -->
     <div id="modalEditBarang" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
         <div class="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
             <div class="p-6 border-b border-zinc-800 flex justify-between items-center">
@@ -186,7 +192,6 @@
                 </div>
                 <div>
                      <label class="block text-xs text-zinc-400 mb-1">Mitra Supplier Pasokan</label>
-                     <!-- FIX: Menggunakan value kosong "" untuk menghapus relasi supplier -->
                      <select name="id_supplier" id="edit_id_supplier" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white">
                         <option value="" class="bg-zinc-900 text-zinc-400">-- Tanpa Mitra Supplier --</option>
                         <% if (typeof supplier !== 'undefined' && supplier.length > 0) { %>
@@ -228,7 +233,6 @@
             document.getElementById('edit_stok').value = stok;
             document.getElementById('edit_harga').value = harga;
             
-            // FIX: Validasi seleksi dropdown agar akurat memetakan ID asli atau mengosongkannya ("")
             const selectSupplier = document.getElementById('edit_id_supplier');
             if (idSupplier && idSupplier !== 'null' && idSupplier !== 'undefined' && idSupplier !== '') {
                 selectSupplier.value = idSupplier;
@@ -236,7 +240,6 @@
                 selectSupplier.value = "";
             }
             
-            // Mengarahkan form action secara dinamis ke rute server.js pusat
             document.getElementById('formEditBarang').action = '/barang/edit/' + id;
 
             toggleModal('modalEditBarang');
