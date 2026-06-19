@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Mutasi & Stok - InvenioWeb</title>
+    <title>Laporan Komprehensif - InvenioWeb</title>
     <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-zinc-950 text-white font-sans min-h-screen flex flex-col md:flex-row">
 
+    <!-- SIDEBAR -->
     <div class="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0">
         <div>
             <div class="flex items-center gap-3 mb-8">
@@ -32,15 +33,17 @@
         </div>
     </div>
 
+    <!-- MAIN CONTENT -->
     <div class="flex-grow p-4 md:p-10 overflow-y-auto w-full space-y-8">
         
         <header>
-            <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Laporan Mutasi & Stok Gudang</h1>
-            <p class="text-zinc-400 text-sm mt-1">Sirkulasi riwayat inventoris komoditas barang terkelompok otomatis per hari.</p>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Laporan Mutasi & Akumulasi Stok Gudang</h1>
+            <p class="text-zinc-400 text-sm mt-1">Sistem rekapitulasi data komoditas tahunan dan pencatatan sirkulasi harian.</p>
         </header>
 
+        <!-- KELOMPOK 1: LAPORAN AKUMULASI STOK TAHUNAN (BISA EDIT & HAPUS DATA MASTER BARANG) -->
         <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl">
-            <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2">📋 Status Kumulatif Komoditas</h2>
+            <h2 class="text-base font-bold text-indigo-400 mb-4 flex items-center gap-2">📊 Laporan Akumulasi Komoditas Gudang (Tahunan)</h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
@@ -49,6 +52,7 @@
                             <th class="pb-3">Mitra Penyuplai (Supplier)</th>
                             <th class="pb-3 text-center">Stok Terkini</th>
                             <th class="pb-3">Harga Satuan</th>
+                            <th class="pb-3 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
@@ -58,6 +62,10 @@
                                 <td class="py-3 text-zinc-400"><%= g.nama_supplier %></td>
                                 <td class="py-3 text-center font-bold <%= g.stok < 0 ? 'text-red-400' : 'text-zinc-200' %>"><%= g.stok %> Pcs</td>
                                 <td class="py-3 font-mono">Rp <%= g.harga.toLocaleString('id-ID') %></td>
+                                <td class="py-3 text-center space-x-2 text-xs">
+                                    <button onclick="openModalBarang('<%= g.id_barang %>', '<%= g.nama_barang %>', '<%= g.stok %>', '<%= g.harga %>')" class="text-indigo-400 hover:underline">Edit</button>
+                                    <a href="/laporan/barang/hapus/<%= g.id_barang %>" onclick="return confirm('⚠️ HAPUS BARANG MASTER?\nSeluruh riwayat transaksi barang ini juga akan ikut dihapus secara permanen!')" class="text-rose-400 hover:underline">Hapus</a>
+                                </td>
                             </tr>
                         <% }) %>
                     </tbody>
@@ -65,6 +73,7 @@
             </div>
         </div>
 
+        <!-- KELOMPOK 2: RIWAYAT MUTASI HARIAN (SEKARANG DISERTAI NAMA MITRA SUPPLIER) -->
         <div class="space-y-8">
             <h2 class="text-base font-bold text-zinc-400 border-b border-zinc-800 pb-2">🗓️ Riwayat Mutasi Harian</h2>
             
@@ -84,23 +93,30 @@
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             
+                            <!-- TABEL BARANG MASUK -->
                             <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800/60">
-                                <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-1">📥 Barang Masuk</h4>
+                                <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">📥 Barang Masuk</h4>
                                 <table class="w-full text-xs text-left">
                                     <thead>
-                                        <tr class="border-b border-zinc-800 text-zinc-500 font-bold uppercase"><th class="pb-2">Nama Produk</th><th class="pb-2 text-center">Jumlah</th><th class="pb-2 text-center">Aksi</th></tr>
+                                        <tr class="border-b border-zinc-800 text-zinc-500 font-bold uppercase">
+                                            <th class="pb-2">Nama Produk</th>
+                                            <th class="pb-2">Mitra Penyuplai</th>
+                                            <th class="pb-2 text-center">Jumlah</th>
+                                            <th class="pb-2 text-center">Aksi</th>
+                                        </tr>
                                     </thead>
                                     <tbody class="divide-y divide-zinc-900 text-zinc-300">
                                         <% if (laporanPerHari[tanggal].masuk.length === 0) { %>
-                                            <tr><td colspan="3" class="py-3 text-center text-zinc-600 italic">Tidak ada transaksi masuk.</td></tr>
+                                            <tr><td colspan="4" class="py-3 text-center text-zinc-600 italic">Tidak ada transaksi masuk.</td></tr>
                                         <% } else { %>
                                             <% laporanPerHari[tanggal].masuk.forEach(bm => { %>
                                                 <tr>
                                                     <td class="py-2.5 font-medium text-white"><%= bm.nama_barang %></td>
+                                                    <td class="py-2.5 text-zinc-400"><%= bm.nama_supplier %></td>
                                                     <td class="py-2.5 text-center text-amber-400 font-bold font-mono">+<%= bm.jumlah %> Pcs</td>
                                                     <td class="py-2.5 text-center space-x-2">
                                                         <button onclick="openModalEdit('<%= bm.id_transaksi %>', '<%= bm.jumlah %>', '<%= tanggal %>')" class="text-indigo-400 hover:underline">Edit</button>
-                                                        <a href="/laporan/hapus/<%= bm.id_transaksi %>" onclick="return confirm('Hapus record ini? Stok barang gudang akan disesuaikan kembali.')" class="text-rose-400 hover:underline">Hapus</a>
+                                                        <a href="/laporan/hapus/<%= bm.id_transaksi %>" onclick="return confirm('Hapus record ini? Stok gudang akan otomatis disesuaikan.')" class="text-rose-400 hover:underline">Hapus</a>
                                                     </td>
                                                 </tr>
                                             <% }) %>
@@ -109,23 +125,30 @@
                                 </table>
                             </div>
 
+                            <!-- TABEL BARANG KELUAR -->
                             <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800/60">
-                                <h4 class="text-xs font-bold text-rose-500 uppercase tracking-wider mb-2 flex items-center gap-1">📤 Barang Keluar</h4>
+                                <h4 class="text-xs font-bold text-rose-500 uppercase tracking-wider mb-2">📤 Barang Keluar</h4>
                                 <table class="w-full text-xs text-left">
                                     <thead>
-                                        <tr class="border-b border-zinc-800 text-zinc-500 font-bold uppercase"><th class="pb-2">Nama Produk</th><th class="pb-2 text-center">Jumlah</th><th class="pb-2 text-center">Aksi</th></tr>
+                                        <tr class="border-b border-zinc-800 text-zinc-500 font-bold uppercase">
+                                            <th class="pb-2">Nama Produk</th>
+                                            <th class="pb-2">Mitra Penyuplai</th>
+                                            <th class="pb-2 text-center">Jumlah</th>
+                                            <th class="pb-2 text-center">Aksi</th>
+                                        </tr>
                                     </thead>
                                     <tbody class="divide-y divide-zinc-900 text-zinc-300">
                                         <% if (laporanPerHari[tanggal].keluar.length === 0) { %>
-                                            <tr><td colspan="3" class="py-3 text-center text-zinc-600 italic">Tidak ada transaksi keluar.</td></tr>
+                                            <tr><td colspan="4" class="py-3 text-center text-zinc-600 italic">Tidak ada transaksi keluar.</td></tr>
                                         <% } else { %>
                                             <% laporanPerHari[tanggal].keluar.forEach(bk => { %>
                                                 <tr>
                                                     <td class="py-2.5 font-medium text-white"><%= bk.nama_barang %></td>
+                                                    <td class="py-2.5 text-zinc-400"><%= bk.nama_supplier %></td>
                                                     <td class="py-2.5 text-center text-rose-400 font-bold font-mono">-${bk.jumlah} Pcs</td>
                                                     <td class="py-2.5 text-center space-x-2">
                                                         <button onclick="openModalEdit('<%= bk.id_transaksi %>', '<%= bk.jumlah %>', '<%= tanggal %>')" class="text-indigo-400 hover:underline">Edit</button>
-                                                        <a href="/laporan/hapus/<%= bk.id_transaksi %>" onclick="return confirm('Hapus record ini? Stok barang gudang akan disesuaikan kembali.')" class="text-rose-400 hover:underline">Hapus</a>
+                                                        <a href="/laporan/hapus/<%= bk.id_transaksi %>" onclick="return confirm('Hapus record ini? Stok gudang akan otomatis disesuaikan.')" class="text-rose-400 hover:underline">Hapus</a>
                                                     </td>
                                                 </tr>
                                             <% }) %>
@@ -142,6 +165,32 @@
 
     </div>
 
+    <!-- MODAL POP-UP 1: EDIT BARANG TAHUNAN -->
+    <div id="modalBarang" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-sm shadow-2xl">
+            <h3 class="text-base font-bold mb-4">✏️ Edit Master Barang Gudang</h3>
+            <form id="formBarang" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">Nama Barang</label>
+                    <input type="text" id="barangNama" name="nama_barang" class="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-sm text-white focus:border-indigo-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">Stok Gudang</label>
+                    <input type="number" id="barangStok" name="stok" class="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-sm text-white focus:border-indigo-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">Harga Satuan (Rp)</label>
+                    <input type="number" id="barangHarga" name="harga" class="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-sm text-white focus:border-indigo-500 outline-none" required>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModalBarang()" class="px-4 py-2 bg-zinc-800 text-xs text-zinc-400 hover:text-white rounded">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-xs text-white font-semibold rounded hover:bg-indigo-500">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL POP-UP 2: EDIT MUTASI HARIAN -->
     <div id="modalEdit" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-sm shadow-2xl">
             <h3 class="text-base font-bold mb-4">✏️ Edit Jumlah Transaksi</h3>
@@ -163,6 +212,19 @@
     </div>
 
     <script>
+        // Modal Handling untuk Master Barang Gudang
+        function openModalBarang(id, nama, stok, harga) {
+            document.getElementById('formBarang').action = '/laporan/barang/edit/' + id;
+            document.getElementById('barangNama').value = nama;
+            document.getElementById('barangStok').value = stok;
+            document.getElementById('barangHarga').value = harga;
+            document.getElementById('modalBarang').classList.remove('hidden');
+        }
+        function closeModalBarang() {
+            document.getElementById('modalBarang').classList.add('hidden');
+        }
+
+        // Modal Handling untuk Transaksi Harian
         function openModalEdit(id, jumlah, tanggal) {
             document.getElementById('formEdit').action = '/laporan/edit/' + id;
             document.getElementById('inputJumlah').value = jumlah;
