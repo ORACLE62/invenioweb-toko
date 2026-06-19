@@ -1,119 +1,271 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign in - InvenioWeb</title>
-    <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Sign In - InvenioWeb</title>
     <style>
-        /* Efek background radial gradient halus seperti pada gambar */
+        /* --- RESET & BASE STYLE --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
         body {
-            background: radial-gradient(circle at 80% 20%, #13111c 0%, #09090b 60%);
+            background-color: #121214;
+            color: #e1e1e6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- BACKGROUND KANVAS BINTANG BERGERAK --- */
+        #starfield {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- BENTO CARD CONTAINER --- */
+        .login-card {
+            background: rgba(24, 24, 27, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 40px 30px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            text-align: center;
+        }
+
+        /* --- LOGO & TEXT --- */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .logo-icon {
+            /* Perpaduan Gradasi Hijau - Biru */
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .brand-name {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 28px;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- ERROR ALERT POPUP --- */
+        .error-alert {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        /* --- FORM ELEMENTS --- */
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(39, 39, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+
+        /* Fokus input melunak ke arah warna hijau/biru laut */
+        .form-group input:focus {
+            outline: none;
+            border-color: rgba(16, 185, 129, 0.5);
+            background: rgba(39, 39, 42, 0.9);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        .form-group input::placeholder {
+            color: #52525b;
+        }
+
+        /* --- BUTTONS --- */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            /* Gradasi Hijau Muda ke Biru sesuai permintaan */
+            background: linear-gradient(90deg, #34d399, #3b82f6);
+            color: #121214;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        /* --- FOOTER LINKS --- */
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+            margin: 24px 0;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: #71717a;
+        }
+
+        .footer-text a {
+            color: #34d399;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .footer-text a:hover {
+            color: #3b82f6;
+            text-decoration: underline;
         }
     </style>
 </head>
-<body class="text-zinc-200 flex items-center justify-center min-h-screen p-4 font-sans antialiased">
+<body>
 
-    <!-- CARD UTAMA -->
-    <div class="bg-[#121115] border border-zinc-800/40 p-10 rounded-2xl w-full max-w-[460px] shadow-2xl">
-        
-        <!-- LOGO & HEADER -->
-        <div class="flex items-center gap-3 mb-8">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500 via-indigo-500 to-pink-500 flex items-center justify-center font-bold text-white text-base shadow-lg shadow-indigo-500/10">I</div>
-            <span class="font-semibold text-zinc-400 text-sm tracking-wide">InvenioWeb</span>
+    <canvas id="starfield"></canvas>
+
+    <div class="login-card">
+        <div class="logo-container">
+            <div class="logo-icon">I</div>
         </div>
-
-        <h1 class="text-3xl font-bold tracking-tight text-white mb-8">Sign in to IWS</h1>
-
-        <!-- NOTIFIKASI ERROR -->
-        <% if (typeof error !== 'undefined' && error) { %>
-            <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-lg text-xs mb-4 text-center">
+        <div class="brand-name">InvenioWeb</div>
+        <h2>Sign in to IWS</h2>
+        
+        <% if (error) { %>
+            <div class="error-alert">
                 <%= error %>
             </div>
         <% } %>
 
-        <!-- FORM LOGIN -->
-        <form action="/login" method="POST" class="space-y-5">
-            
-            <!-- INPUT USERNAME -->
-            <div>
-                <label class="block text-xs font-semibold text-zinc-400 mb-2">Username / Email</label>
-                <input type="text" name="username" 
-                       class="w-full bg-[#18171c] border border-zinc-800/80 rounded-lg p-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-700 transition" 
-                       placeholder="Masukkan username Anda..." required>
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <input type="text" name="username" placeholder="Username" required autocomplete="off">
             </div>
-            
-            <!-- INPUT PASSWORD (DENGAN TOMBOL MATA) -->
-            <div>
-                <label class="block text-xs font-semibold text-zinc-400 mb-2">Password</label>
-                <div class="relative">
-                    <input type="password" id="passwordInput" name="password" 
-                           class="w-full bg-[#18171c] border border-zinc-800/80 rounded-lg p-3 pr-12 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-700 transition" 
-                           placeholder="••••••••" required>
-                    
-                    <!-- TOMBOL MATA INTERAKTIF -->
-                    <button type="button" onclick="togglePassword()" 
-                            class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-500 hover:text-zinc-300 transition focus:outline-none">
-                        <!-- Ikon Mata Terbuka -->
-                        <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0Z" />
-                        </svg>
-                        <!-- Ikon Mata Tertutup (Hidden di awal) -->
-                        <svg id="eyeClose" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 hidden">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 11-4.243-4.243m4.242 4.242L9.88 9.88" />
-                        </svg>
-                    </button>
-                </div>
+            <div class="form-group">
+                <input type="password" name="password" placeholder="Password" required>
             </div>
 
-            <!-- TOMBOL LOG IN GRADIENT -->
-            <button type="submit" 
-                    class="w-full bg-gradient-to-r from-[#ffebd2] via-[#f7a2c4] to-[#f472b6] text-black font-bold uppercase tracking-wider text-xs py-3.5 rounded-lg hover:opacity-90 transition shadow-lg mt-2">
-                LOG IN
-            </button>
+            <button type="submit" class="btn-submit">LOG IN</button>
         </form>
 
-        <!-- PEMISAH OR -->
-        <div class="relative flex py-5 items-center my-2">
-            <div class="flex-grow border-t border-zinc-800/60"></div>
-            <span class="flex-shrink mx-4 text-zinc-600 text-xs tracking-widest font-medium">OR</span>
-            <div class="flex-grow border-t border-zinc-800/60"></div>
-        </div>
+        <div class="divider"></div>
 
-       <!-- GANTI BAGIAN DI BAWAH INI -->
-        <div class="flex gap-4"> 
-            <a href="/register" class="w-full block text-center bg-gradient-to-r from-[#febed2] via-[#f7a2c4] to-[#f472b6] text-black font-bold uppercase tracking-wider text-xs py-3.5 rounded-lg hover:opacity-90 transition shadow-lg mt-2 mb-6">
-                CREATE NEW ACCOUNT
-            </a>
-        </div>
-
-        <!-- FOOTER BAWAH -->
-        <div class="flex justify-center gap-4 text-xs text-zinc-600 font-medium">
-            <a href="#" class="hover:text-zinc-400 transition">Terms of Use</a>
-            <span>|</span>
-            <a href="#" class="hover:text-zinc-400 transition">Privacy Policy</a>
+        <div class="footer-text">
+            Don't have an account? <a href="/register">Create Account</a>
         </div>
     </div>
 
-    <!-- SCRIPT LOGIKA MATA -->
     <script>
-        function togglePassword() {
-            const input = document.getElementById('passwordInput');
-            const eyeOpen = document.getElementById('eyeOpen');
-            const eyeClose = document.getElementById('eyeClose');
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
 
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeOpen.classList.add('hidden');
-                eyeClose.classList.remove('hidden');
-            } else {
-                input.type = 'password';
-                eyeOpen.classList.remove('hidden');
-                eyeClose.classList.add('hidden');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initStars();
+        });
+
+        const numStars = 120;
+        let stars = [];
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 1.5,
+                    speedX: (Math.random() * -0.2) - 0.05,
+                    speedY: (Math.random() * -0.2) - 0.05,
+                    opacity: Math.random()
+                });
             }
         }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            stars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                star.x += star.speedX;
+                star.y += star.speedY;
+
+                star.opacity += (Math.random() * 0.04) - 0.02;
+                if (star.opacity < 0.2) star.opacity = 0.2;
+                if (star.opacity > 0.8) star.opacity = 0.8;
+
+                if (star.x < 0) star.x = width;
+                if (star.y < 0) star.y = height;
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        initStars();
+        animate();
     </script>
 </body>
 </html>
