@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - Manajemen User</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #343a40; color: white; padding: 15px 20px; border-radius: 5px; margin-bottom: 20px; }
+        .header a { color: #ffc107; text-decoration: none; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background-color: #007bff; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        .badge { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .badge-success { background: #28a745; color: white; }
+        .badge-danger { background: #dc3545; color: white; }
+        .btn { padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 14px; color: white; font-weight: bold; }
+        .btn-success { background: #28a745; }
+        .btn-danger { background: #dc3545; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>Manajemen Akses Pengguna (Admin: <%= user.nama %>)</h2>
+    <div>
+        <a href="/dashboard" style="margin-right: 20px;">Ke Dashboard</a>
+        <a href="/logout" style="color: #dc3545;">Logout</a>
+    </div>
+</div>
+
+<h3>Daftar Pengguna Aplikasi</h3>
+<table>
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>Nama</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Aksi Izin Akses</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% users.forEach((u, index) => { %>
+            <tr>
+                <td><%= index + 1 %></td>
+                <td><%= u.nama %></td>
+                <td><%= u.username %></td>
+                <td><strong style="text-transform: uppercase;"><%= u.role %></strong></td>
+                <td>
+                    <% if (u.status_aktif === 1) { %>
+                        <span class="badge badge-success">Aktif (Bisa Login)</span>
+                    <% } else { %>
+                        <span class="badge badge-danger">Pending (Terkunci)</span>
+                    <% } %>
+                </td>
+                <td>
+                    <% if (u.status_aktif === 0) { %>
+                        <a href="/admin/users/aktifkan/<%= u.id_user %>" class="btn btn-success" onclick="return confirm('Aktifkan akun ini?')">Berikan Izin Aktif</a>
+                    <% } else { %>
+                        <a href="/admin/users/nonaktifkan/<%= u.id_user %>" class="btn btn-danger" onclick="return confirm('Nonaktifkan akun ini?')">Cabut Izin / Kunci</a>
+                    <% } %>
+                </td>
+            </tr>
+        <% }) %>
+        <% if (users.length === 0) { %>
+            <tr>
+                <td colspan="6" style="text-align: center; color: #999;">Belum ada user lain terdaftar.</td>
+            </tr>
+        <% } %>
+    </tbody>
+</table>
+
+</body>
+</html>
