@@ -59,7 +59,6 @@
         }
 
         .logo-icon {
-            /* Perpaduan Gradasi Hijau - Biru */
             background: linear-gradient(135deg, #10b981, #3b82f6);
             color: white;
             font-weight: bold;
@@ -104,6 +103,7 @@
         .form-group {
             margin-bottom: 18px;
             text-align: left;
+            position: relative; /* Diperlukan agar penempatan tombol mata bisa pas di kanan input */
         }
 
         .form-group input {
@@ -117,7 +117,12 @@
             transition: all 0.2s ease;
         }
 
-        /* Fokus input melunak ke arah warna hijau/biru laut */
+        /* Padding kanan ekstra khusus untuk input password agar teks tidak tertabrak tombol mata */
+        .form-group input[type="password"],
+        .form-group input[type="text"]#password {
+            padding-right: 48px;
+        }
+
         .form-group input:focus {
             outline: none;
             border-color: rgba(16, 185, 129, 0.5);
@@ -129,11 +134,35 @@
             color: #52525b;
         }
 
+        /* --- TOMBOL MATA (PASSWORD TOGGLE) --- */
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #71717a;
+            padding: 4px;
+            transition: color 0.2s ease;
+        }
+
+        .toggle-password:hover {
+            color: #a1a1aa;
+        }
+
+        .toggle-password focus {
+            outline: none;
+        }
+
         /* --- BUTTONS --- */
         .btn-submit {
             width: 100%;
             padding: 14px;
-            /* Gradasi Hijau Muda ke Biru sesuai permintaan */
             background: linear-gradient(90deg, #34d399, #3b82f6);
             color: #121214;
             border: none;
@@ -178,8 +207,10 @@
 </head>
 <body>
 
+    <!-- Kanvas Efek Bintang -->
     <canvas id="starfield"></canvas>
 
+    <!-- Bento Box Login -->
     <div class="login-card">
         <div class="logo-container">
             <div class="logo-icon">I</div>
@@ -197,8 +228,22 @@
             <div class="form-group">
                 <input type="text" name="username" placeholder="Username" required autocomplete="off">
             </div>
+            
             <div class="form-group">
-                <input type="password" name="password" placeholder="Password" required>
+                <input type="password" name="password" id="password" placeholder="Password" required>
+                <!-- Tombol Mata Interaktif Menggunakan SVG Line Icons -->
+                <button type="button" class="toggle-password" id="togglePasswordBtn">
+                    <!-- Ikon Mata Terbuka (Default) -->
+                    <svg id="eyeOpenIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <!-- Ikon Mata Tertutup / Coret (Sembunyi secara default) -->
+                    <svg id="eyeClosedIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                </button>
             </div>
 
             <button type="submit" class="btn-submit">LOG IN</button>
@@ -211,6 +256,7 @@
         </div>
     </div>
 
+    <!-- --- ENGINE EFFECT BINTANG BERGERAK (HTML5 CANVAS) --- -->
     <script>
         const canvas = document.getElementById('starfield');
         const ctx = canvas.getContext('2d');
@@ -266,6 +312,25 @@
 
         initStars();
         animate();
+
+        // --- LOGIKA TOGGLE MATA PASSWORD DI SINI ---
+        const passwordInput = document.getElementById('password');
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const eyeOpenIcon = document.getElementById('eyeOpenIcon');
+        const eyeClosedIcon = document.getElementById('eyeClosedIcon');
+
+        togglePasswordBtn.addEventListener('click', function () {
+            // Cek tipe input saat ini
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text'; // Ubah jadi teks biasa agar terlihat
+                eyeOpenIcon.style.display = 'none'; // Sembunyikan ikon mata terbuka
+                eyeClosedIcon.style.display = 'block'; // Tampilkan ikon mata dicoret
+            } else {
+                passwordInput.type = 'password'; // Kembalikan jadi password tersembunyi
+                eyeOpenIcon.style.display = 'block'; // Tampilkan ikon mata terbuka
+                eyeClosedIcon.style.display = 'none'; // Sembunyikan ikon mata dicoret
+            }
+        });
     </script>
 </body>
 </html>
