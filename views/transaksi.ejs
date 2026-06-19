@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transaksi Inventoris Toko - InvenioWeb</title>
-    <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
+    <link class="flex shrink-0" rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-zinc-950 text-white font-sans min-h-screen flex flex-col md:flex-row">
@@ -32,9 +32,15 @@
                 <p class="text-xs text-zinc-500">Masuk sebagai:</p>
                 <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
                 <div class="mt-1">
-                    <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium">
-                        <%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>
-                    </span>
+                    <% if (user.role === 'admin') { %>
+                        <span class="text-xs bg-red-500/20 text-red-400 px-2.5 py-0.5 rounded border border-red-500/30 font-medium">Admin</span>
+                    <% } else if (user.role === 'gudang') { %>
+                        <span class="text-xs bg-blue-500/20 text-blue-400 px-2.5 py-0.5 rounded border border-blue-500/30 font-medium">Gudang</span>
+                    <% } else if (user.role === 'pimpinan') { %>
+                        <span class="text-xs bg-amber-500/20 text-amber-400 px-2.5 py-0.5 rounded border border-amber-500/30 font-medium">Pimpinan</span>
+                    <% } else { %>
+                        <span class="text-xs bg-zinc-500/20 text-zinc-400 px-2.5 py-0.5 rounded border border-zinc-500/30 font-medium"><%= user.role %></span>
+                    <% } %>
                 </div>
             </div>
             <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition shrink-0 ml-2">Logout</a>
