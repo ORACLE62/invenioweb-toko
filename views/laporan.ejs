@@ -3,24 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Laporan - InvenioWeb</title>
+    <title>Laporan Mutasi & Stok - InvenioWeb</title>
     <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* CSS khusus biar waktu di-print, sidebar dan tombol download-nya ilang otomatis */
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; color: black !important; }
-            .print-card { border: 1px solid #d4d4d8 !important; background: transparent !important; color: black !important; }
-            .print-table th { background-color: #f4f4f5 !important; color: black !important; border-bottom: 2px solid #e4e4e7 !important; }
-            .print-table td { border-bottom: 1px solid #e4e4e7 !important; color: black !important; }
-        }
-    </style>
 </head>
 <body class="bg-zinc-950 text-white font-sans min-h-screen flex flex-col md:flex-row">
 
-    <!-- SIDEBAR: Laptop (Hilang pas diprint) -->
-    <div class="no-print hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0">
+    <div class="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0">
         <div>
             <div class="flex items-center gap-3 mb-8">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold">I</div>
@@ -34,73 +23,155 @@
                 <a href="/laporan" class="block px-4 py-2.5 bg-indigo-600 rounded-lg text-sm font-medium transition">Cetak Laporan</a>
             </nav>
         </div>
-        <div class="border-t border-zinc-800 pt-4 text-xs text-zinc-500">
-            InvenioWeb v1.0.0
-        </div>
-    </div>
-
-    <!-- NAVBAR: HP (Hilang pas diprint) -->
-    <div class="no-print md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
-        <div class="flex items-center justify-between mb-4">
-            <span class="font-bold text-lg tracking-wider">InvenioWeb</span>
-            <a href="/logout" class="text-xs text-red-400 font-medium">Logout</a>
-        </div>
-        <nav class="flex flex-wrap gap-2">
-            <a href="/dashboard" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Dashboard</a>
-            <a href="/barang" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Barang</a>
-            <a href="/supplier" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Supplier</a>
-            <a href="/transaksi" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Transaksi</a>
-            <a href="/laporan" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium">Laporan</a>
-        </nav>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="flex-grow p-4 md:p-10 overflow-y-auto w-full">
-        <header class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-800 pb-6 print:border-zinc-300">
+        <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white print:text-black">Laporan Mutasi & Stok Gudang</h1>
-                <p class="text-zinc-400 text-sm mt-1 print:text-zinc-600">Dokumen resmi sirkulasi inventaris barang InvenioWeb.</p>
+                <p class="text-xs text-zinc-500">Masuk sebagai:</p>
+                <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
             </div>
-            <button onclick="window.print()" class="no-print w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20">
-                🖨️ Cetak / Unduh PDF
-            </button>
+            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 transition">Logout</a>
+        </div>
+    </div>
+
+    <div class="flex-grow p-4 md:p-10 overflow-y-auto w-full space-y-8">
+        
+        <header>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Laporan Mutasi & Stok Gudang</h1>
+            <p class="text-zinc-400 text-sm mt-1">Sirkulasi riwayat inventoris komoditas barang terkelompok otomatis per hari.</p>
         </header>
 
-        <!-- AREA TABEL LAPORAN RINGKASAN -->
-        <div class="print-card bg-zinc-900 border border-zinc-800 rounded-xl overflow-x-auto p-4 md:p-6 mb-6">
-            <h2 class="text-lg font-bold mb-4 print:text-black">📋 Status Kumulatif Komoditas</h2>
-            <table class="print-table w-full text-left border-collapse min-w-[600px]">
-                <thead>
-                    <tr class="border-b border-zinc-800 text-zinc-400 text-xs font-semibold uppercase tracking-wider">
-                        <th class="pb-3">Nama Produk</th>
-                        <th class="pb-3">Mitra Penyuplai</th>
-                        <th class="pb-3 text-center">Stok Terkini</th>
-                        <th class="pb-3">Harga Satuan</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-800/60 text-sm text-zinc-300 print:text-black">
-                    <% if (barang.length === 0) { %>
-                        <tr>
-                            <td colspan="4" class="p-4 text-center italic text-zinc-500">Tidak ada komoditas terdaftar.</td>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl">
+            <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2">📋 Status Kumulatif Komoditas</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="border-b border-zinc-800 text-zinc-500 text-xs font-bold uppercase">
+                            <th class="pb-3">Nama Produk</th>
+                            <th class="pb-3">Mitra Penyuplai (Supplier)</th>
+                            <th class="pb-3 text-center">Stok Terkini</th>
+                            <th class="pb-3">Harga Satuan</th>
                         </tr>
-                    <% } else { %>
-                        <% barang.forEach(b => { %>
-                            <tr>
-                                <td class="py-3 font-medium text-white print:text-black"><%= b.nama_barang %></td>
-                                <td class="py-3 text-zinc-400 print:text-zinc-700"><%= b.nama_supplier || 'Tanpa Supplier' %></td>
-                                <td class="py-3 text-center font-bold font-mono"><%= b.stok %> Pcs</td>
-                                <td class="py-3 font-mono">Rp <%= b.harga.toLocaleString('id-ID') %></td>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
+                        <% stokGudang.forEach(g => { %>
+                            <tr class="hover:bg-zinc-800/10">
+                                <td class="py-3 font-medium text-white"><%= g.nama_barang %></td>
+                                <td class="py-3 text-zinc-400"><%= g.nama_supplier %></td>
+                                <td class="py-3 text-center font-bold <%= g.stok < 0 ? 'text-red-400' : 'text-zinc-200' %>"><%= g.stok %> Pcs</td>
+                                <td class="py-3 font-mono">Rp <%= g.harga.toLocaleString('id-ID') %></td>
                             </tr>
                         <% }) %>
-                    <% } %>
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="print-card bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-xs text-zinc-500 print:text-zinc-600 flex justify-between">
-            <p>Diekstrak secara otomatis oleh sistem.</p>
-            <p>Waktu Unduh: <%= new Date().toLocaleString('id-ID') %></p>
+        <div class="space-y-8">
+            <h2 class="text-base font-bold text-zinc-400 border-b border-zinc-800 pb-2">🗓️ Riwayat Mutasi Harian</h2>
+            
+            <% if (Object.keys(laporanPerHari).length === 0) { %>
+                <div class="bg-zinc-900/50 border border-zinc-800 p-8 text-center text-zinc-500 italic rounded-xl">
+                    Belum ada riwayat aktivitas transaksi masuk atau keluar di dalam sistem.
+                </div>
+            <% } else { %>
+                <% Object.keys(laporanPerHari).forEach(tanggal => { %>
+                    <div class="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 space-y-4 shadow-md">
+                        <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+                            <h3 class="text-sm font-bold text-indigo-400 flex items-center gap-2">
+                                📅 Laporan Hari: <%= new Date(tanggal).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
+                            </h3>
+                            <span class="text-xs bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-mono"><%= tanggal %></span>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            
+                            <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800/60">
+                                <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-1">📥 Barang Masuk</h4>
+                                <table class="w-full text-xs text-left">
+                                    <thead>
+                                        <tr class="border-b border-zinc-800 text-zinc-500 font-bold uppercase"><th class="pb-2">Nama Produk</th><th class="pb-2 text-center">Jumlah</th><th class="pb-2 text-center">Aksi</th></tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-zinc-900 text-zinc-300">
+                                        <% if (laporanPerHari[tanggal].masuk.length === 0) { %>
+                                            <tr><td colspan="3" class="py-3 text-center text-zinc-600 italic">Tidak ada transaksi masuk.</td></tr>
+                                        <% } else { %>
+                                            <% laporanPerHari[tanggal].masuk.forEach(bm => { %>
+                                                <tr>
+                                                    <td class="py-2.5 font-medium text-white"><%= bm.nama_barang %></td>
+                                                    <td class="py-2.5 text-center text-amber-400 font-bold font-mono">+<%= bm.jumlah %> Pcs</td>
+                                                    <td class="py-2.5 text-center space-x-2">
+                                                        <button onclick="openModalEdit('<%= bm.id_transaksi %>', '<%= bm.jumlah %>', '<%= tanggal %>')" class="text-indigo-400 hover:underline">Edit</button>
+                                                        <a href="/laporan/hapus/<%= bm.id_transaksi %>" onclick="return confirm('Hapus record ini? Stok barang gudang akan disesuaikan kembali.')" class="text-rose-400 hover:underline">Hapus</a>
+                                                    </td>
+                                                </tr>
+                                            <% }) %>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800/60">
+                                <h4 class="text-xs font-bold text-rose-500 uppercase tracking-wider mb-2 flex items-center gap-1">📤 Barang Keluar</h4>
+                                <table class="w-full text-xs text-left">
+                                    <thead>
+                                        <tr class="border-b border-zinc-800 text-zinc-500 font-bold uppercase"><th class="pb-2">Nama Produk</th><th class="pb-2 text-center">Jumlah</th><th class="pb-2 text-center">Aksi</th></tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-zinc-900 text-zinc-300">
+                                        <% if (laporanPerHari[tanggal].keluar.length === 0) { %>
+                                            <tr><td colspan="3" class="py-3 text-center text-zinc-600 italic">Tidak ada transaksi keluar.</td></tr>
+                                        <% } else { %>
+                                            <% laporanPerHari[tanggal].keluar.forEach(bk => { %>
+                                                <tr>
+                                                    <td class="py-2.5 font-medium text-white"><%= bk.nama_barang %></td>
+                                                    <td class="py-2.5 text-center text-rose-400 font-bold font-mono">-${bk.jumlah} Pcs</td>
+                                                    <td class="py-2.5 text-center space-x-2">
+                                                        <button onclick="openModalEdit('<%= bk.id_transaksi %>', '<%= bk.jumlah %>', '<%= tanggal %>')" class="text-indigo-400 hover:underline">Edit</button>
+                                                        <a href="/laporan/hapus/<%= bk.id_transaksi %>" onclick="return confirm('Hapus record ini? Stok barang gudang akan disesuaikan kembali.')" class="text-rose-400 hover:underline">Hapus</a>
+                                                    </td>
+                                                </tr>
+                                            <% }) %>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                <% }) %>
+            <% } %>
+        </div>
+
+    </div>
+
+    <div id="modalEdit" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-sm shadow-2xl">
+            <h3 class="text-base font-bold mb-4">✏️ Edit Jumlah Transaksi</h3>
+            <form id="formEdit" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">Jumlah/Kuantitas Baru</label>
+                    <input type="number" id="inputJumlah" name="jumlah_baru" min="1" class="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-sm text-white focus:border-indigo-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">Tanggal</label>
+                    <input type="date" id="inputTanggal" name="tanggal_baru" class="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-sm text-white focus:border-indigo-500 outline-none" required>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModalEdit()" class="px-4 py-2 bg-zinc-800 text-xs text-zinc-400 hover:text-white rounded">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-xs text-white font-semibold rounded hover:bg-indigo-500">Simpan Perubahan</button>
+                </div>
+            </form>
         </div>
     </div>
+
+    <script>
+        function openModalEdit(id, jumlah, tanggal) {
+            document.getElementById('formEdit').action = '/laporan/edit/' + id;
+            document.getElementById('inputJumlah').value = jumlah;
+            document.getElementById('inputTanggal').value = tanggal;
+            document.getElementById('modalEdit').classList.remove('hidden');
+        }
+        function closeModalEdit() {
+            document.getElementById('modalEdit').classList.add('hidden');
+        }
+    </script>
 </body>
 </html>
