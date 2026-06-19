@@ -26,16 +26,26 @@
         </div>
         
         <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
-            <div>
-                <p class="text-xs text-zinc-500">Masuk sebagai:</p>
-                <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (Admin)</p>
-                <div class="mt-1">
-                    <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium">Admin</span>
-                </div>
+    <div>
+        <p class="text-xs text-zinc-500">Masuk sebagai:</p>
+        
+        <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
+            <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)</p>
+            <div class="mt-1">
+                <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium"><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %></span>
             </div>
-            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
-        </div>
+        <% } else { %>
+            <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
+        <% } %>
+
+        <% if (user.role === 'admin') { %>
+            <div class="mt-2">
+                <a href="/admin/users" class="inline-block text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded border border-red-500/30 font-medium transition">Kelola User</a>
+            </div>
+        <% } %>
     </div>
+    <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition shrink-0 ml-2">Logout</a>
+</div>
 
     <!-- NAVBAR KHUSUS HP -->
     <div class="md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
