@@ -26,22 +26,18 @@
                 <% } %>
             </nav>
         </div>
+        
         <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
             <div>
                 <p class="text-xs text-zinc-500">Masuk sebagai:</p>
-                <p class="text-sm font-semibold text-zinc-200">
-                    <%= user.nama %> 
-                    <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
-                        (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)
-                    <% } %>
-                </p>
+                <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
                 <div class="mt-1">
                     <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium">
                         <%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>
                     </span>
                 </div>
             </div>
-            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
+            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition shrink-0 ml-2">Logout</a>
         </div>
     </div>
 
@@ -51,7 +47,12 @@
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold">I</div>
                 <span class="font-bold text-lg tracking-wider">InvenioWeb</span>
             </div>
-            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-zinc-400">
+                    <%= user.nama %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)
+                </span>
+                <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
+            </div>
         </div>
         <nav class="flex flex-wrap gap-2">
             <a href="/dashboard" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Dashboard</a>
@@ -60,7 +61,7 @@
             <a href="/transaksi" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium">Transaksi</a>
             <a href="/laporan" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Laporan</a>
             <% if (user.role === 'admin') { %>
-                <a href="/admin/users" class="px-3 py-1.5 bg-red-900/40 text-red-400 rounded-lg text-xs font-medium border border-red-500/20">User</a>
+                <a href="/admin/users" class="px-3 py-1.5 bg-red-900/50 text-red-400 rounded-lg text-xs font-medium border border-red-500/20">Kelola User</a>
             <% } %>
         </nav>
     </div>
