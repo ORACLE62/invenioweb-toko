@@ -211,6 +211,16 @@ app.get('/admin/users/nonaktifkan/:id', requireLogin, requireRole(['admin']), as
     } catch (e) { res.send(e.message); }
 });
 
+// --- INI ADALAH ROUTE BARU UNTUK HAPUS AKUN PERMANEN ---
+app.get('/admin/users/hapus/:id', requireLogin, requireRole(['admin']), async (req, res) => {
+    try {
+        await db.execute('DELETE FROM user WHERE id_user = ?', [req.params.id]);
+        res.redirect('/admin/users');
+    } catch (e) { 
+        res.send("Error saat menghapus user: " + e.message); 
+    }
+});
+
 // ==========================================
 // 2. ROUTE DASHBOARD
 // ==========================================
