@@ -46,14 +46,14 @@ async function buatTabelOtomatis() {
     try {
         console.log("Sedang menghubungkan dan membuat tabel di Cloud Aiven...");
 
-        // Membuat tabel user dengan default status_aktif = 1 (Langsung Aktif)
+        // Membuat tabel user dengan default status_aktif = 1 (Langsung Aktif) & enum baru 'user'
         await db.execute(`
             CREATE TABLE IF NOT EXISTS user (
                 id_user INT AUTO_INCREMENT PRIMARY KEY, 
                 username VARCHAR(50) NOT NULL UNIQUE, 
                 password VARCHAR(255) NOT NULL, 
                 nama VARCHAR(100) NOT NULL,
-                role ENUM('admin', 'gudang', 'pimpinan') DEFAULT 'gudang',
+                role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user',
                 status_aktif TINYINT DEFAULT 1
             )
         `);
@@ -82,8 +82,8 @@ buatTabelOtomatis();
 // --- TRIK DARURAT MODIFIKASI TABEL JIKA SUDAH ADA ---
 setTimeout(async () => {
     try {
-        // Memastikan kolom baru terbuat jika tabel user sudah terlanjur ada di database cloud
-        await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS role ENUM('admin', 'gudang', 'pimpinan') DEFAULT 'gudang'`);
+        // Memastikan tipe ENUM kolom di database cloud ikut mendukung opsi 'user'
+        await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
         await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
         // Pastikan akun admin utama (Naufal) tetap aktif
         await db.execute(`UPDATE user SET role = 'admin', status_aktif = 1 WHERE id_user = 1 OR username = 'admin'`);
@@ -154,18 +154,18 @@ app.get('/register', (req, res) => {
     res.render('register');
 });
 
-// POST REGISTER AKUN - AUTO AKTIF & ANTI ERROR KOLOM MISSING
+// POST REGISTER AKUN - AUTO AKTIF & DISET SEBAGAI USER NORMAL (BUKAN PETUGAS)
 app.post('/register', async (req, res) => {
     try {
         const { username, nama, password } = req.body;
-        const defaultRole = 'gudang'; // Menetapkan default role sebagai gudang
+        const defaultRole = 'user'; // Mengubah default role pendaftar baru menjadi 'user'
 
-        // Trik Reparasi Tambahan: Buat kolom secara instan jika phpMyAdmin belum ter-update
+        // Trik Reparasi Tambahan: Sinkronisasi tipe ENUM kolom jika belum ter-update
         try {
-            await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS role ENUM('admin', 'gudang', 'pimpinan') DEFAULT 'gudang'`);
+            await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
             await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
         } catch (errCol) {
-            // Lewati jika kolom sudah terlanjur ada
+            // Lewati jika kolom sudah sesuai
         }
 
         // Cek duplikasi username
@@ -174,7 +174,7 @@ app.post('/register', async (req, res) => {
             return res.send("<script>alert('Username sudah terdaftar! Gunakan nama lain.'); window.location='/register';</script>");
         }
 
-        // Masukkan data ke database dengan status_aktif = 1 (LANGSUNG AKTIF BISA LOGIN)
+        // Masukkan data ke database dengan status_aktif = 1 (LANGSUNG AKTIF BISA LOGIN sebagai user biasa)
         await db.execute(
             'INSERT INTO user (username, nama, password, role, status_aktif) VALUES (?, ?, ?, ?, 1)',
             [username, nama, password, defaultRole]
@@ -231,7 +231,7 @@ app.get('/dashboard', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 3. ROUTE KELOLA BARANG (Sudah Ditambahkan Akses 'admin')
+// 3. ROUTE KELOLA BARANG
 // ==========================================
 app.get('/barang', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
@@ -285,7 +285,7 @@ app.post('/barang/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimp
 });
 
 // ==========================================
-// 4. ROUTE KELOLA SUPPLIER (Sudah Ditambahkan Akses 'admin')
+// 4. ROUTE KELOLA SUPPLIER
 // ==========================================
 app.get('/supplier', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
@@ -345,7 +345,7 @@ app.get('/supplier/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
 });
 
 // ==========================================
-// 5. ROUTE TRANSAKSI (Sudah Ditambahkan Akses 'admin')
+// 5. ROUTE TRANSAKSI
 // ==========================================
 app.get('/transaksi', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
@@ -389,7 +389,7 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'p
 });
 
 // ==========================================
-// 6. ROUTE LAPORAN (Sudah Ditambahkan Akses 'admin')
+// 6. ROUTE LAPORAN
 // ==========================================
 app.get('/laporan', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
