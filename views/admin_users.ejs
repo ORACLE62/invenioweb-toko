@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InvenioWeb - Manajemen Pengguna</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Efek Gerakan Background Gradasi */
@@ -18,6 +17,12 @@
         @keyframes pulseGlow {
             0%, 100% { opacity: 0.3; transform: scale(1); }
             50% { opacity: 0.9; transform: scale(1.1); }
+        }
+
+        /* Animasi Kerlip Bintang Kecil */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
         }
 
         .bg-animated-space {
@@ -53,6 +58,77 @@
             animation: pulseGlow 6s ease-in-out infinite;
         }
 
+        /* Styling Bintang Manual */
+        .star {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ================= EFEK GLITCH TEXT ================= */
+        .glitch-wrapper {
+            position: relative;
+        }
+
+        .glitch-text {
+            position: relative;
+            animation: glitch 4s infinite;
+        }
+
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -2px 0 #ff007c;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -2px 0 #00fff6, 2px 2px #ff007c;
+            animation: glitch-anim2 1s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(31px, 9999px, 94px, 0); }
+            10% { clip: rect(112px, 9999px, 76px, 0); }
+            20% { clip: rect(85px, 9999px, 5px, 0); }
+            30% { clip: rect(27px, 9999px, 115px, 0); }
+            40% { clip: rect(73px, 9999px, 29px, 0); }
+            50% { clip: rect(118px, 9999px, 140px, 0); }
+            60% { clip: rect(9px, 9999px, 43px, 0); }
+            70% { clip: rect(68px, 9999px, 92px, 0); }
+            80% { clip: rect(12px, 9999px, 85px, 0); }
+            90% { clip: rect(95px, 9999px, 111px, 0); }
+            100% { clip: rect(14px, 9999px, 25px, 0); }
+        }
+
+        @keyframes glitch-anim2 {
+            0% { clip: rect(76px, 9999px, 116px, 0); }
+            11% { clip: rect(52px, 9999px, 3px, 0); }
+            22% { clip: rect(90px, 9999px, 13px, 0); }
+            33% { clip: rect(122px, 9999px, 84px, 0); }
+            44% { clip: rect(3px, 9999px, 44px, 0); }
+            55% { clip: rect(109px, 9999px, 145px, 0); }
+            66% { clip: rect(22px, 9999px, 63px, 0); }
+            77% { clip: rect(81px, 9999px, 119px, 0); }
+            88% { clip: rect(4px, 9999px, 51px, 0); }
+            100% { clip: rect(133px, 9999px, 72px, 0); }
+        }
+
         /* Custom Scrollbar agar Senada */
         ::-webkit-scrollbar {
             width: 8px;
@@ -71,22 +147,28 @@
 </head>
 <body class="bg-animated-space text-gray-100 min-h-screen font-sans flex flex-col">
 
-    <!-- Ornamen Estetik Latar Belakang -->
     <div class="retro-glow-orb"></div>
     <div class="retro-glow-orb-left"></div>
 
-    <!-- HEADER / NAVIGATION -->
+    <div class="star" style="top: 12%; left: 15%; width: 3px; height: 3px; animation-delay: 0.5s;"></div>
+    <div class="star" style="top: 25%; left: 45%; width: 2px; height: 2px; animation-delay: 1.2s;"></div>
+    <div class="star" style="top: 18%; left: 78%; width: 4px; height: 4px; animation-delay: 0.2s; background-color: #e9d5ff;"></div>
+    <div class="star" style="top: 45%; left: 88%; width: 2px; height: 2px; animation-delay: 2s;"></div>
+    <div class="star" style="top: 65%; left: 12%; width: 3px; height: 3px; animation-delay: 1.5s;"></div>
+    <div class="star" style="top: 80%; left: 35%; width: 2px; height: 2px; animation-delay: 0.8s;"></div>
+    <div class="star" style="top: 55%; left: 60%; width: 3px; height: 3px; animation-delay: 2.3s;"></div>
+    <div class="star" style="top: 88%; left: 82%; width: 4px; height: 4px; animation-delay: 1.1s; background-color: #d8b4fe;"></div>
+
     <header class="relative z-10 border-b border-purple-900/40 bg-black/40 backdrop-blur-md sticky top-0">
         <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <!-- Icon Efek Neon -->
                 <div class="p-2 bg-purple-600/20 border border-purple-500/40 rounded-lg shadow-[0_0_15px_rgba(168,85,247,0.4)]">
-                    <svg class="w-6 height-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                     </svg>
                 </div>
-                <div>
-                    <h1 class="text-xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-400 to-indigo-400 drop-shadow-[0_2px_8px_rgba(168,85,247,0.3)]">
+                <div class="glitch-wrapper">
+                    <h1 data-text="MANAJEMEN AKSES PENGGUNA" class="glitch-text text-xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-400 to-indigo-400 drop-shadow-[0_2px_8px_rgba(168,85,247,0.3)]">
                         MANAJEMEN AKSES PENGGUNA
                     </h1>
                     <p class="text-xs text-purple-300/70 font-mono">Administrator: <span class="text-purple-400 font-bold"><%= user.nama %></span></p>
@@ -104,10 +186,8 @@
         </div>
     </header>
 
-    <!-- MAIN CONTENT -->
     <main class="relative z-10 flex-grow max-w-7xl w-full mx-auto px-6 py-10">
         
-        <!-- Kartu Utama Penampung Tabel -->
         <div class="bg-black/40 border border-purple-900/30 rounded-2xl p-6 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
             
             <div class="flex justify-between items-center mb-6">
@@ -120,7 +200,6 @@
                 </span>
             </div>
 
-            <!-- Wrapper Tabel Responsif -->
             <div class="overflow-x-auto rounded-xl border border-gray-800/60">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -144,16 +223,12 @@
                         
                         <% users.forEach((u, index) => { %>
                             <tr class="hover:bg-purple-950/20 transition duration-200">
-                                <!-- Nomor -->
                                 <td class="py-4 px-5 text-center font-mono text-gray-400"><%= index + 1 %></td>
                                 
-                                <!-- Nama -->
                                 <td class="py-4 px-5 font-semibold text-gray-200"><%= u.nama %></td>
                                 
-                                <!-- Username -->
                                 <td class="py-4 px-5 font-mono text-purple-300"><%= u.username %></td>
                                 
-                                <!-- Role dengan Badge Keren Berwarna-warni -->
                                 <td class="py-4 px-5">
                                     <% if(u.role === 'admin') { %>
                                         <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase font-mono tracking-wide shadow-[0_0_10px_rgba(244,63,94,0.1)]">
@@ -170,7 +245,6 @@
                                     <% } %>
                                 </td>
                                 
-                                <!-- Status Aktif -->
                                 <td class="py-4 px-5 text-center">
                                     <% if(u.status_aktif === 1) { %>
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -185,7 +259,6 @@
                                     <% } %>
                                 </td>
                                 
-                                <!-- Tombol Aksi Kunci / Buka -->
                                 <td class="py-4 px-5 text-center">
                                     <% if(u.status_aktif === 1) { %>
                                         <a href="/admin/users/nonaktifkan/<%= u.id_user %>" 
@@ -209,7 +282,6 @@
         </div>
     </main>
 
-    <!-- FOOTER -->
     <footer class="relative z-10 text-center py-6 text-xs text-purple-400/40 font-mono border-t border-purple-900/20 bg-black/20 backdrop-blur-sm">
         &copy; 2026 InvenioWeb Core Engine &bull; Designed Futuristically
     </footer>
