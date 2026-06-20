@@ -1,6 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
-const session = require('cookie-session'); // DIUBAH: Menggunakan cookie-session agar aman di Vercel
+const session = require('cookie-session'); // Menggunakan cookie-session stateless (Anti-Crash Vercel)
 const path = require('path');
 const app = express();
 
@@ -22,7 +22,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// DIUBAH: Konfigurasi cookie-session pengganti express-session (Stateless & Anti-Crash Vercel)
+// Konfigurasi cookie-session pengganti express-session
 app.use(session({
     name: 'session_invenio',
     keys: ['invenioweb_secret_key_super_secret'], // Kunci enkripsi data session di cookie browser
@@ -58,7 +58,7 @@ async function buatTabelOtomatis() {
         await db.execute(`CREATE TABLE IF NOT EXISTS petugas (id_petugas VARCHAR(50) NOT NULL PRIMARY KEY, nama_petugas VARCHAR(100) NOT NULL, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, level ENUM('Admin','Petugas Gudang','Pimpinan') NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS barang (id_barang VARCHAR(50) NOT NULL PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, stok INT NOT NULL DEFAULT 0, harga DECIMAL(10,2) NOT NULL, id_supplier VARCHAR(50) DEFAULT NULL)`);
         
-        // DIUBAH: Ditambahkan id_user INT DEFAULT NULL agar mencatat relasi pembeli di tabel transaksi
+        // Ditambahkan id_user INT DEFAULT NULL agar mencatat relasi pembeli di tabel transaksi
         await db.execute(`
             CREATE TABLE IF NOT EXISTS transaksi (
                 id_transaksi INT AUTO_INCREMENT PRIMARY KEY, 
@@ -96,7 +96,7 @@ setTimeout(async () => {
         await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
         await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
         
-        // DIUBAH: Tambahan alter darurat agar kolom id_user otomatis masuk ke transaksi jika tabel sudah terlanjur ada di database cloud
+        // Tambahan alter darurat agar kolom id_user otomatis masuk ke transaksi jika tabel sudah terlanjur ada di database cloud
         await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS id_user INT DEFAULT NULL`);
 
         // Pastikan akun admin utama (Naufal) tetap aktif
@@ -105,7 +105,7 @@ setTimeout(async () => {
     } catch (e) {
         console.log("Modifikasi kolom user aman.");
     }
-}, 6000); 
+}, 5000); 
 
 // --- PROTECT ROUTE MIDDLEWARE ---
 const requireLogin = (req, res, next) => {
@@ -149,7 +149,7 @@ app.post('/login', async (req, res) => {
                 return res.send("<script>alert('Akun Anda dinonaktifkan. Mohon hubungi pihak administrator.'); window.location='/login';</script>");
             }
 
-            // DIUBAH: Daftarkan data ke cookie-session secara langsung (Otomatis disimpan & dikirim ke browser aman)
+            // Daftarkan data ke cookie-session secara langsung (Otomatis disimpan & dikirim ke browser aman)
             req.session.user = {
                 id_user: akun.id_user,
                 username: akun.username,
@@ -157,7 +157,7 @@ app.post('/login', async (req, res) => {
                 role: akun.role || 'user'
             }; 
             
-            // DIUBAH: Langsung lakukan redirect karena cookie-session menulis data secara tersinkronisasi tanpa callback .save()
+            // Langsung lakukan redirect karena cookie-session menulis data secara tersinkronisasi tanpa callback .save()
             if (akun.role === 'user') {
                 return res.redirect('/beli-barang'); 
             } else {
@@ -174,7 +174,7 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-    req.session = null; // DIUBAH: Cara menghapus sesi pada cookie-session cukup dengan mengubah nilainya menjadi null
+    req.session = null; // Cara menghapus sesi pada cookie-session cukup dengan mengubah nilainya menjadi null
     res.redirect('/login');
 });
 
@@ -245,7 +245,7 @@ app.get('/admin/users/nonaktifkan/:id', requireLogin, requireRole(['admin']), as
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- INI ADALAH ROUTE BARU UNTUK HAPUS AKUN PERMANEN ---
+// --- ROUTE BARU UNTUK HAPUS AKUN PERMANEN ---
 app.get('/admin/users/hapus/:id', requireLogin, requireRole(['admin']), async (req, res) => {
     try {
         await db.execute('DELETE FROM user WHERE id_user = ?', [req.params.id]);
@@ -561,7 +561,7 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
         // 2. Kurangi stok barang di database
         await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
 
-        // 3. DIUBAH: Catat transaksi keluar secara terstruktur lengkap dengan menyisipkan ID user dari data session aman
+        // 3. Catat transaksi keluar secara terstruktur lengkap dengan menyisipkan ID user dari data session aman
         await db.execute(
             'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, "keluar", ?, ?, ?, ?)',
             [id_barang, jumlah, tanggalHariIni, `Dibeli oleh ${req.session.user.nama}`, req.session.user.id_user]
@@ -570,7 +570,7 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
         res.send("<script>alert('Pembelian berhasil! Stok otomatis terpotong.'); window.location='/beli-barang';</script>");
 
     } catch (e) {
-        res.status(500).send("Error Proses Pembelian: " + e.message);
+        res.status(500).send("Error Process Pembelian: " + e.message);
     }
 });
 
