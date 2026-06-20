@@ -2,75 +2,217 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Panel - Manajemen User</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvenioWeb - Manajemen Pengguna</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: #343a40; color: white; padding: 15px 20px; border-radius: 5px; margin-bottom: 20px; }
-        .header a { color: #ffc107; text-decoration: none; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 5px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
-        th { background-color: #007bff; color: white; }
-        tr:hover { background-color: #f1f1f1; }
-        .badge { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; }
-        .badge-success { background: #28a745; color: white; }
-        .badge-danger { background: #dc3545; color: white; }
-        .btn { padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 14px; color: white; font-weight: bold; }
-        .btn-success { background: #28a745; }
-        .btn-danger { background: #dc3545; }
+        /* Efek Gerakan Background Gradasi */
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Efek Kedip Bintang Perlahan */
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.1); }
+        }
+
+        .bg-animated-space {
+            background: linear-gradient(-45deg, #090514, #120a2a, #1a0b36, #05020a);
+            background-size: 400% 400%;
+            animation: gradientMove 15s ease infinite;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Ornamen Cahaya Besar Seperti Gambar Retro Discord */
+        .retro-glow-orb {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, rgba(0,0,0,0) 70%);
+            top: 20%;
+            right: -10%;
+            z-index: 0;
+            pointer-events: none;
+            animation: pulseGlow 8s ease-in-out infinite;
+        }
+
+        .retro-glow-orb-left {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(0,0,0,0) 70%);
+            bottom: -10%;
+            left: -5%;
+            z-index: 0;
+            pointer-events: none;
+            animation: pulseGlow 6s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar agar Senada */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090514;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4c1d95;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6d28d9;
+        }
     </style>
 </head>
-<body>
+<body class="bg-animated-space text-gray-100 min-h-screen font-sans flex flex-col">
 
-<div class="header">
-    <h2>Manajemen Akses Pengguna (Admin: <%= user.nama %>)</h2>
-    <div>
-        <a href="/dashboard" style="margin-right: 20px;">Ke Dashboard</a>
-        <a href="/logout" style="color: #dc3545;">Logout</a>
-    </div>
-</div>
+    <!-- Ornamen Estetik Latar Belakang -->
+    <div class="retro-glow-orb"></div>
+    <div class="retro-glow-orb-left"></div>
 
-<h3>Daftar Pengguna Aplikasi</h3>
-<table>
-    <thead>
-        <tr>
-            <th>No</th>
-            <th>Nama</th>
-            <th>Username</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Aksi Izin Akses</th>
-        </tr>
-    </thead>
-    <tbody>
-        <% users.forEach((u, index) => { %>
-            <tr>
-                <td><%= index + 1 %></td>
-                <td><%= u.nama %></td>
-                <td><%= u.username %></td>
-                <td><strong style="text-transform: uppercase;"><%= u.role %></strong></td>
-                <td>
-                    <% if (u.status_aktif === 1) { %>
-                        <span class="badge badge-success">Aktif (Bisa Login)</span>
-                    <% } else { %>
-                        <span class="badge badge-danger">Pending (Terkunci)</span>
-                    <% } %>
-                </td>
-                <td>
-                    <% if (u.status_aktif === 0) { %>
-                        <a href="/admin/users/aktifkan/<%= u.id_user %>" class="btn btn-success" onclick="return confirm('Aktifkan akun ini?')">Berikan Izin Aktif</a>
-                    <% } else { %>
-                        <a href="/admin/users/nonaktifkan/<%= u.id_user %>" class="btn btn-danger" onclick="return confirm('Nonaktifkan akun ini?')">Cabut Izin / Kunci</a>
-                    <% } %>
-                </td>
-            </tr>
-        <% }) %>
-        <% if (users.length === 0) { %>
-            <tr>
-                <td colspan="6" style="text-align: center; color: #999;">Belum ada user lain terdaftar.</td>
-            </tr>
-        <% } %>
-    </tbody>
-</table>
+    <!-- HEADER / NAVIGATION -->
+    <header class="relative z-10 border-b border-purple-900/40 bg-black/40 backdrop-blur-md sticky top-0">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <!-- Icon Efek Neon -->
+                <div class="p-2 bg-purple-600/20 border border-purple-500/40 rounded-lg shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+                    <svg class="w-6 height-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-400 to-indigo-400 drop-shadow-[0_2px_8px_rgba(168,85,247,0.3)]">
+                        MANAJEMEN AKSES PENGGUNA
+                    </h1>
+                    <p class="text-xs text-purple-300/70 font-mono">Administrator: <span class="text-purple-400 font-bold"><%= user.nama %></span></p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 font-medium text-sm">
+                <a href="/dashboard" class="px-4 py-2 rounded-lg bg-gray-800/60 border border-gray-700 hover:border-purple-500 text-gray-300 hover:text-white transition duration-300 backdrop-blur-sm">
+                    Ke Dashboard
+                </a>
+                <a href="/logout" class="px-4 py-2 rounded-lg bg-red-950/40 border border-red-800/60 hover:bg-red-900 text-red-300 hover:text-white transition duration-300 backdrop-blur-sm">
+                    Logout
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="relative z-10 flex-grow max-w-7xl w-full mx-auto px-6 py-10">
+        
+        <!-- Kartu Utama Penampung Tabel -->
+        <div class="bg-black/40 border border-purple-900/30 rounded-2xl p-6 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+            
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping"></span>
+                    <h2 class="text-lg font-bold tracking-wide text-gray-200">Daftar Pengguna Aplikasi</h2>
+                </div>
+                <span class="text-xs font-mono bg-purple-950/60 text-purple-300 px-3 py-1.5 rounded-full border border-purple-800/40">
+                    Total: <%= users.length %> Pengguna
+                </span>
+            </div>
+
+            <!-- Wrapper Tabel Responsif -->
+            <div class="overflow-x-auto rounded-xl border border-gray-800/60">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gradient-to-r from-purple-950/70 to-indigo-950/70 text-purple-300 uppercase text-xs tracking-wider font-mono border-b border-purple-900/50">
+                            <th class="py-4 px-5 text-center w-16">No</th>
+                            <th class="py-4 px-5">Nama Lengkap</th>
+                            <th class="py-4 px-5">Username</th>
+                            <th class="py-4 px-5">Hak Akses (Role)</th>
+                            <th class="py-4 px-5 text-center">Status Sesi</th>
+                            <th class="py-4 px-5 text-center w-48">Aksi Izin Akses</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-900/60 text-sm">
+                        <% if(users.length === 0) { %>
+                            <tr>
+                                <td colspan="6" class="py-10 text-center text-gray-500 font-mono">
+                                    Belum ada pengguna lain yang mendaftar.
+                                </td>
+                            </tr>
+                        <% } %>
+                        
+                        <% users.forEach((u, index) => { %>
+                            <tr class="hover:bg-purple-950/20 transition duration-200">
+                                <!-- Nomor -->
+                                <td class="py-4 px-5 text-center font-mono text-gray-400"><%= index + 1 %></td>
+                                
+                                <!-- Nama -->
+                                <td class="py-4 px-5 font-semibold text-gray-200"><%= u.nama %></td>
+                                
+                                <!-- Username -->
+                                <td class="py-4 px-5 font-mono text-purple-300"><%= u.username %></td>
+                                
+                                <!-- Role dengan Badge Keren Berwarna-warni -->
+                                <td class="py-4 px-5">
+                                    <% if(u.role === 'admin') { %>
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase font-mono tracking-wide shadow-[0_0_10px_rgba(244,63,94,0.1)]">
+                                            👑 Admin
+                                        </span>
+                                    <% } else if(u.role === 'pimpinan') { %>
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase font-mono tracking-wide shadow-[0_0_10px_rgba(245,158,11,0.1)]">
+                                            ⭐ Pimpinan
+                                        </span>
+                                    <% } else { %>
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 uppercase font-mono tracking-wide shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                                            📦 Gudang
+                                        </span>
+                                    <% } %>
+                                </td>
+                                
+                                <!-- Status Aktif -->
+                                <td class="py-4 px-5 text-center">
+                                    <% if(u.status_aktif === 1) { %>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                            Aktif (Bisa Login)
+                                        </span>
+                                    <% } else { %>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                                            Terkunci / Suspend
+                                        </span>
+                                    <% } %>
+                                </td>
+                                
+                                <!-- Tombol Aksi Kunci / Buka -->
+                                <td class="py-4 px-5 text-center">
+                                    <% if(u.status_aktif === 1) { %>
+                                        <a href="/admin/users/nonaktifkan/<%= u.id_user %>" 
+                                           onclick="return confirm('Apakah Anda yakin ingin memblokir akses user <%= u.nama %>?')"
+                                           class="inline-block w-full text-center py-1.5 px-3 text-xs font-semibold rounded-lg bg-red-950/60 text-red-400 border border-red-800/50 hover:bg-red-600 hover:text-white transition duration-200 shadow-md">
+                                            🔒 Cabut Izin / Kunci
+                                        </a>
+                                    <% } else { %>
+                                        <a href="/admin/users/aktifkan/<%= u.id_user %>" 
+                                           class="inline-block w-full text-center py-1.5 px-3 text-xs font-semibold rounded-lg bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 hover:bg-emerald-600 hover:text-white transition duration-200 shadow-md">
+                                            🔓 Aktifkan Kembali
+                                        </a>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="relative z-10 text-center py-6 text-xs text-purple-400/40 font-mono border-t border-purple-900/20 bg-black/20 backdrop-blur-sm">
+        &copy; 2026 InvenioWeb Core Engine &bull; Designed Futuristically
+    </footer>
 
 </body>
 </html>
