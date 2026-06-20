@@ -22,10 +22,15 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(session({ 
-    secret: 'invenioweb_single_secret_key', 
-    resave: false, 
-    saveUninitialized: true 
+app.use(session({
+    secret: 'invenioweb_secret_key', // Ganti dengan secret key Anda
+    resave: false,
+    saveUninitialized: false, // Ubah ke false agar tidak membuat sesi kosong terus-menerus
+    cookie: { 
+        maxAge: 1000 * 60 * 60 * 24, // Sesi aktif selama 24 jam (1 hari)
+        secure: false, // JANGAN set TRUE jika Anda masih pakai HTTP / localhost biasa
+        httpOnly: true
+    }
 }));
 
 // --- DATABASE CONNECTION TO CLOUD AIVEN ---
@@ -226,9 +231,9 @@ app.get('/dashboard', requireLogin, async (req, res) => {
 });
 
 // ==========================================
-// 3. ROUTE KELOLA BARANG
+// 3. ROUTE KELOLA BARANG (Sudah Ditambahkan Akses 'admin')
 // ==========================================
-app.get('/barang', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.get('/barang', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT b.*, s.nama_supplier FROM barang b LEFT JOIN supplier s ON b.id_supplier = s.id_supplier');
         const [supplier] = await db.execute('SELECT * FROM supplier');
@@ -236,7 +241,7 @@ app.get('/barang', requireLogin, requireRole(['gudang', 'pimpinan']), async (req
     } catch (e) { res.send("Error Menu Barang: " + e.message); }
 });
 
-app.post('/barang/tambah', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.post('/barang/tambah', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         let { nama_barang, id_supplier, stok, harga } = req.body;
         const id_barang = 'BRG-' + Date.now(); 
@@ -250,7 +255,7 @@ app.post('/barang/tambah', requireLogin, requireRole(['gudang', 'pimpinan']), as
     } catch (e) { res.send("Error Simpan Barang: " + e.message); }
 });
 
-app.get('/barang/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.get('/barang/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         await db.execute('DELETE FROM transaksi WHERE id_barang = ?', [req.params.id]);
         await db.execute('DELETE FROM barang WHERE id_barang = ?', [req.params.id]);
@@ -258,7 +263,7 @@ app.get('/barang/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), 
     } catch (e) { res.send("Error Hapus Barang: " + e.message); }
 });
 
-app.post('/barang/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.post('/barang/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_barang = req.params.id;
         let { nama_barang, id_supplier, stok, harga } = req.body;
@@ -280,9 +285,9 @@ app.post('/barang/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']), 
 });
 
 // ==========================================
-// 4. ROUTE KELOLA SUPPLIER
+// 4. ROUTE KELOLA SUPPLIER (Sudah Ditambahkan Akses 'admin')
 // ==========================================
-app.get('/supplier', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.get('/supplier', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [supplier] = await db.execute('SELECT * FROM supplier');
         res.render('supplier', { user: req.session.user, supplier });
@@ -291,7 +296,7 @@ app.get('/supplier', requireLogin, requireRole(['gudang', 'pimpinan']), async (r
     }
 });
 
-app.post('/supplier/tambah', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.post('/supplier/tambah', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const { nama_supplier, telepon, alamat } = req.body;
         const inputTelepon = telepon || req.body.kontak || req.body.no_telp;
@@ -310,7 +315,7 @@ app.post('/supplier/tambah', requireLogin, requireRole(['gudang', 'pimpinan']), 
     }
 });
 
-app.post('/supplier/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.post('/supplier/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_supplier = req.params.id;
         const { nama_supplier, telepon, alamat } = req.body;
@@ -329,7 +334,7 @@ app.post('/supplier/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan'])
     }
 });
 
-app.get('/supplier/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.get('/supplier/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         await db.execute('UPDATE barang SET id_supplier = NULL WHERE id_supplier = ?', [req.params.id]);
         await db.execute('DELETE FROM supplier WHERE id_supplier = ?', [req.params.id]);
@@ -340,9 +345,9 @@ app.get('/supplier/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan'])
 });
 
 // ==========================================
-// 5. ROUTE TRANSAKSI
+// 5. ROUTE TRANSAKSI (Sudah Ditambahkan Akses 'admin')
 // ==========================================
-app.get('/transaksi', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.get('/transaksi', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT * FROM barang');
         const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang ORDER BY t.tanggal DESC, t.id_transaksi DESC');
@@ -352,7 +357,7 @@ app.get('/transaksi', requireLogin, requireRole(['gudang', 'pimpinan']), async (
     }
 });
 
-app.post('/transaksi/masuk', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.post('/transaksi/masuk', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const { id_barang, jumlah, tanggal } = req.body;
         await db.execute('INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal) VALUES (?, "masuk", ?, ?)', [id_barang, jumlah, tanggal]);
@@ -361,7 +366,7 @@ app.post('/transaksi/masuk', requireLogin, requireRole(['gudang', 'pimpinan']), 
     } catch (e) { res.send("Error Transaksi Masuk: " + e.message); }
 });
 
-app.post('/transaksi/keluar', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.post('/transaksi/keluar', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const { id_barang, jumlah, tanggal } = req.body;
         await db.execute('INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal) VALUES (?, "keluar", ?, ?)', [id_barang, jumlah, tanggal]);
@@ -370,7 +375,7 @@ app.post('/transaksi/keluar', requireLogin, requireRole(['gudang', 'pimpinan']),
     } catch (e) { res.send("Error Transaksi Keluar: " + e.message); }
 });
 
-app.get('/transaksi/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [t] = await db.execute('SELECT * FROM transaksi WHERE id_transaksi = ?', [req.params.id]);
         if (t.length > 0) {
@@ -384,9 +389,9 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']
 });
 
 // ==========================================
-// 6. ROUTE LAPORAN
+// 6. ROUTE LAPORAN (Sudah Ditambahkan Akses 'admin')
 // ==========================================
-app.get('/laporan', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.get('/laporan', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [stokGudang] = await db.execute(`
             SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
@@ -419,7 +424,7 @@ app.get('/laporan', requireLogin, requireRole(['gudang', 'pimpinan']), async (re
     } catch (e) { res.send("Error Halaman Laporan: " + e.message); }
 });
 
-app.post('/laporan/barang/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.post('/laporan/barang/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_barang = req.params.id;
         const { nama_barang, stok, harga } = req.body;
@@ -428,7 +433,7 @@ app.post('/laporan/barang/edit/:id', requireLogin, requireRole(['gudang', 'pimpi
     } catch (e) { res.send("Error Edit Barang di Laporan: " + e.message); }
 });
 
-app.get('/laporan/barang/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.get('/laporan/barang/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_barang = req.params.id;
         await db.execute('DELETE FROM transaksi WHERE id_barang = ?', [id_barang]);
@@ -437,7 +442,7 @@ app.get('/laporan/barang/hapus/:id', requireLogin, requireRole(['gudang', 'pimpi
     } catch (e) { res.send("Error Hapus Barang di Laporan: " + e.message); }
 });
 
-app.post('/laporan/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.post('/laporan/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_transaksi = req.params.id;
         const { jumlah_baru, tanggal_baru } = req.body;
@@ -459,7 +464,7 @@ app.post('/laporan/edit/:id', requireLogin, requireRole(['gudang', 'pimpinan']),
     } catch (e) { res.send("Error Edit Transaksi Laporan: " + e.message); }
 });
 
-app.get('/laporan/hapus/:id', requireLogin, requireRole(['gudang', 'pimpinan']), async (req, res) => {
+app.get('/laporan/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const id_transaksi = req.params.id;
         const [t] = await db.execute('SELECT * FROM transaksi WHERE id_transaksi = ?', [id_transaksi]);
