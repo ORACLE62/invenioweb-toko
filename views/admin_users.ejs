@@ -129,7 +129,7 @@
             100% { clip: rect(133px, 9999px, 72px, 0); }
         }
 
-        /* Custom Scrollbar agar Senada */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -230,7 +230,11 @@
                                 <td class="py-4 px-5 font-mono text-purple-300"><%= u.username %></td>
                                 
                                 <td class="py-4 px-5">
-                                    <% if(u.role === 'admin') { %>
+                                    <% if (u.username.toUpperCase() === 'ORACLE' || u.role === 'user') { %>
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase font-mono tracking-wide shadow-[0_0_10px_rgba(168,85,247,0.1)]">
+                                            👤 User Normal
+                                        </span>
+                                    <% } else if(u.role === 'admin') { %>
                                         <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase font-mono tracking-wide shadow-[0_0_10px_rgba(244,63,94,0.1)]">
                                             👑 Admin
                                         </span>
@@ -243,8 +247,8 @@
                                             📦 Gudang
                                         </span>
                                     <% } else { %>
-                                        <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase font-mono tracking-wide shadow-[0_0_10px_rgba(168,85,247,0.1)]">
-                                            👤 User Normal
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-gray-500/10 text-gray-400 border border-gray-500/20 uppercase font-mono tracking-wide">
+                                            ❓ Unknown
                                         </span>
                                     <% } %>
                                 </td>
