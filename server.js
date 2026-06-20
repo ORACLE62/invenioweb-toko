@@ -9,7 +9,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-app.use(express.static(path.join(__dirname, 'public'))); // Mengaktifkan folder statis untuk Favicon/Logo
 
 // ============================================================
 // 🚨 MIDDLEWARE PENYELAMAT TYPO SPASI (ANTI-ERROR CANNOT GET)
@@ -131,7 +130,7 @@ const requireRole = (roles) => {
 app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => res.render('login', { error: null }));
 
-// LOGIN VALIDATION
+// LOGIN VALIDATION (Versi cookie-session terenkripsi, Langsung Pengalihan Tanpa req.session.save manual)
 app.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -145,11 +144,12 @@ app.post('/login', async (req, res) => {
         if (users.length > 0) { 
             const akun = users[0];
             
+            // Validasi status aktif
             if (akun.status_aktif === 0) {
                 return res.send("<script>alert('Akun Anda dinonaktifkan. Mohon hubungi pihak administrator.'); window.location='/login';</script>");
             }
 
-            // Daftarkan data ke cookie-session secara langsung
+            // Daftarkan data ke cookie-session secara langsung (Otomatis disimpan & dikirim ke browser aman)
             req.session.user = {
                 id_user: akun.id_user,
                 username: akun.username,
@@ -157,6 +157,7 @@ app.post('/login', async (req, res) => {
                 role: akun.role || 'user'
             }; 
             
+            // Langsung lakukan redirect karena cookie-session menulis data secara tersinkronisasi tanpa callback .save()
             if (akun.role === 'user') {
                 return res.redirect('/beli-barang'); 
             } else {
@@ -173,7 +174,7 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-    req.session = null; 
+    req.session = null; // Cara menghapus sesi pada cookie-session cukup dengan mengubah nilainya menjadi null
     res.redirect('/login');
 });
 
@@ -182,16 +183,17 @@ app.get('/register', (req, res) => {
     res.render('register');
 });
 
-// POST REGISTER AKUN
+// POST REGISTER AKUN - AUTO AKTIF & DISET SEBAGAI USER NORMAL (BUKAN PETUGAS)
 app.post('/register', async (req, res) => {
     try {
         const { username, nama, password } = req.body;
-        const defaultRole = 'user';
+        const defaultRole = 'user'; // Mengubah default role pendaftar baru menjadi 'user'
 
         if (!username || !nama || !password) {
             return res.send("<script>alert('Semua formulir pendaftaran wajib diisi!'); window.location='/register';</script>");
         }
 
+        // Trik Reparasi Tambahan: Sinkronisasi tipe ENUM kolom jika belum ter-update
         try {
             await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
             await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
@@ -199,11 +201,13 @@ app.post('/register', async (req, res) => {
             // Lewati jika kolom sudah sesuai
         }
 
+        // Cek duplikasi username
         const [cek] = await db.execute('SELECT * FROM user WHERE username = ?', [username]);
         if (cek.length > 0) {
             return res.send("<script>alert('Username sudah terdaftar! Gunakan nama lain.'); window.location='/register';</script>");
         }
 
+        // Masukkan data ke database dengan status_aktif = 1 (LANGSUNG AKTIF BISA LOGIN sebagai user biasa)
         await db.execute(
             'INSERT INTO user (username, nama, password, role, status_aktif) VALUES (?, ?, ?, ?, 1)',
             [username, nama, password, defaultRole]
@@ -241,6 +245,7 @@ app.get('/admin/users/nonaktifkan/:id', requireLogin, requireRole(['admin']), as
     } catch (e) { res.status(500).send(e.message); }
 });
 
+// --- ROUTE BARU UNTUK HAPUS AKUN PERMANEN ---
 app.get('/admin/users/hapus/:id', requireLogin, requireRole(['admin']), async (req, res) => {
     try {
         await db.execute('DELETE FROM user WHERE id_user = ?', [req.params.id]);
@@ -523,8 +528,10 @@ app.get('/laporan/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pim
 // 7. ROUTE KHUSUS USER BIASA (BELI BARANG)
 // ==========================================
 
+// Halaman utama user untuk melihat stok barang yang tersedia
 app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) => {
     try {
+        // Mengambil barang yang stoknya lebih dari 0 saja
         const [barangTersedia] = await db.execute('SELECT * FROM barang WHERE stok > 0');
         res.render('user_beli', { user: req.session.user, barang: barangTersedia });
     } catch (e) {
@@ -532,14 +539,14 @@ app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) =>
     }
 });
 
-// 🛠️ PROSES PEMBELIAN YANG SUDAH DIPERBAIKI (ANTI-ERROR UNKNOWN COLUMN)
+// Proses ketika user menekan tombol "Beli"
 app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         const { id_barang, jumlah_beli } = req.body;
         const jumlah = parseInt(jumlah_beli);
-        const tanggalHariIni = new Date().toISOString().split('T')[0]; 
+        const tanggalHariIni = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
 
-        // 1. Cek ketersediaan stok
+        // 1. Cek dulu apakah stoknya masih cukup
         const [cekBarang] = await db.execute('SELECT stok, nama_barang FROM barang WHERE id_barang = ?', [id_barang]);
         
         if (cekBarang.length === 0) {
@@ -551,10 +558,10 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
             return res.send(`<script>alert('Stok tidak mencukupi! Sisa stok ${cekBarang[0].nama_barang} adalah ${stokSekarang}'); window.location='/beli-barang';</script>`);
         }
 
-        // 2. Kurangi stok barang
+        // 2. Kurangi stok barang di database
         await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
 
-        // 3. Catat transaksi keluar (Urutan data query disamakan agar id_user terisi dengan benar!)
+        // 3. Catat transaksi keluar secara terstruktur lengkap dengan menyisipkan ID user dari data session aman
         await db.execute(
             'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, "keluar", ?, ?, ?, ?)',
             [id_barang, jumlah, tanggalHariIni, `Dibeli oleh ${req.session.user.nama}`, req.session.user.id_user]
@@ -563,11 +570,10 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
         res.send("<script>alert('Pembelian berhasil! Stok otomatis terpotong.'); window.location='/beli-barang';</script>");
 
     } catch (e) {
-        console.error("🚨 GAGAL PROSES PEMBELIAN:", e);
         res.status(500).send("Error Process Pembelian: " + e.message);
     }
 });
 
-// --- SERVER INSTANCE ---
+// --- SERVER INSTANCE (WAJIB DI PALING BAWAH) ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running smoothly on port ${PORT}`));
