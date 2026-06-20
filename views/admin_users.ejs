@@ -209,7 +209,7 @@
                             <th class="py-4 px-5">Username</th>
                             <th class="py-4 px-5">Hak Akses (Role)</th>
                             <th class="py-4 px-5 text-center">Status Sesi</th>
-                            <th class="py-4 px-5 text-center w-48">Aksi Izin Akses</th>
+                            <th class="py-4 px-5 text-center w-64">Aksi Kontrol Manajemen</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-900/60 text-sm">
@@ -268,18 +268,26 @@
                                 </td>
                                 
                                 <td class="py-4 px-5 text-center">
-                                    <% if(u.status_aktif === 1) { %>
-                                        <a href="/admin/users/nonaktifkan/<%= u.id_user %>" 
-                                           onclick="return confirm('Apakah Anda yakin ingin memblokir akses user <%= u.nama %>?')"
-                                           class="inline-block w-full text-center py-1.5 px-3 text-xs font-semibold rounded-lg bg-red-950/60 text-red-400 border border-red-800/50 hover:bg-red-600 hover:text-white transition duration-200 shadow-md">
-                                            🔒 Cabut Izin / Kunci
+                                    <div class="flex items-center justify-center gap-2">
+                                        <% if(u.status_aktif === 1) { %>
+                                            <a href="/admin/users/nonaktifkan/<%= u.id_user %>" 
+                                               onclick="return confirm('Apakah Anda yakin ingin memblokir akses user <%= u.nama %>?')"
+                                               class="w-1/2 py-1.5 px-2 text-xs font-semibold rounded-lg bg-red-950/40 text-red-400 border border-red-900/40 hover:bg-red-900/80 hover:text-white transition duration-200 shadow-md text-center">
+                                                🔒 Kunci
+                                            </a>
+                                        <% } else { %>
+                                            <a href="/admin/users/aktifkan/<%= u.id_user %>" 
+                                               class="w-1/2 py-1.5 px-2 text-xs font-semibold rounded-lg bg-emerald-950/40 text-emerald-400 border border-emerald-900/40 hover:bg-emerald-900/80 hover:text-white transition duration-200 shadow-md text-center">
+                                                🔓 Aktifkan
+                                            </a>
+                                        <% } %>
+
+                                        <a href="/admin/users/hapus/<%= u.id_user %>" 
+                                           onclick="return confirm('PERINGATAN KERAS!\nApakah Anda benar-benar yakin ingin menghapus akun <%= u.nama %> secara permanen?\nTindakan ini tidak bisa dibatalkan!')"
+                                           class="w-1/2 py-1.5 px-2 text-xs font-semibold rounded-lg bg-rose-600/20 text-rose-400 border border-rose-500/40 hover:bg-rose-600 hover:text-white transition duration-200 shadow-md text-center">
+                                            🗑️ Hapus
                                         </a>
-                                    <% } else { %>
-                                        <a href="/admin/users/aktifkan/<%= u.id_user %>" 
-                                           class="inline-block w-full text-center py-1.5 px-3 text-xs font-semibold rounded-lg bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 hover:bg-emerald-600 hover:text-white transition duration-200 shadow-md">
-                                            🔓 Aktifkan Kembali
-                                        </a>
-                                    <% } %>
+                                    </div>
                                 </td>
                             </tr>
                         <% }) %>
