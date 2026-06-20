@@ -116,7 +116,7 @@ const requireRole = (roles) => {
 app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => res.render('login', { error: null }));
 
-// LOGIN VALIDATION
+// LOGIN VALIDATION (Sudah Diperbarui untuk Pengalihan Hak Akses Otomatis)
 app.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -137,7 +137,14 @@ app.post('/login', async (req, res) => {
                 nama: akun.nama,
                 role: akun.role
             }; 
-            res.redirect('/dashboard'); 
+            
+            // --- MODIFIKASI JALUR REDIRECT MULTI-ROLE ---
+            if (akun.role === 'user') {
+                res.redirect('/beli-barang'); // Jika pembeli baru, lempar ke halaman belanja
+            } else {
+                res.redirect('/dashboard'); // Jika admin/gudang/pimpinan, tetap ke dashboard manajemen
+            }
+
         } else { 
             res.render('login', { error: 'Username atau Password salah!' }); 
         }
@@ -486,6 +493,56 @@ app.get('/laporan/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pim
         }
         res.redirect('/laporan');
     } catch (e) { res.send("Error Hapus Transaksi Laporan: " + e.message); }
+});
+
+// ==========================================
+// 7. ROUTE KHUSUS USER BIASA (BELI BARANG)
+// ==========================================
+
+// Halaman utama user untuk melihat stok barang yang tersedia
+app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) => {
+    try {
+        // Mengambil barang yang stoknya lebih dari 0 saja
+        const [barangTersedia] = await db.execute('SELECT * FROM barang WHERE stok > 0');
+        res.render('user_beli', { user: req.session.user, barang: barangTersedia });
+    } catch (e) {
+        res.send("Error Halaman Beli Barang: " + e.message);
+    }
+});
+
+// Proses ketika user menekan tombol "Beli"
+app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req, res) => {
+    try {
+        const { id_barang, jumlah_beli } = req.body;
+        const jumlah = parseInt(jumlah_beli);
+        const tanggalHariIni = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+
+        // 1. Cek dulu apakah stoknya masih cukup
+        const [cekBarang] = await db.execute('SELECT stok, nama_barang FROM barang WHERE id_barang = ?', [id_barang]);
+        
+        if (cekBarang.length === 0) {
+            return res.send("<script>alert('Barang tidak ditemukan!'); window.location='/beli-barang';</script>");
+        }
+
+        const stokSekarang = cekBarang[0].stok;
+        if (stokSekarang < jumlah) {
+            return res.send(`<script>alert('Stok tidak mencukupi! Sisa stok ${cekBarang[0].nama_barang} adalah ${stokSekarang}'); window.location='/beli-barang';</script>`);
+        }
+
+        // 2. Kurangi stok barang di database
+        await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
+
+        // 3. Catat ke tabel transaksi sebagai jenis_transaksi "keluar"
+        await db.execute(
+            'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar) VALUES (?, "keluar", ?, ?, ?)',
+            [id_barang, jumlah, tanggalHariIni, `Dibeli oleh ${req.session.user.nama}`]
+        );
+
+        res.send("<script>alert('Pembelian berhasil! Stok otomatis terpotong.'); window.location='/beli-barang';</script>");
+
+    } catch (e) {
+        res.send("Error Proses Pembelian: " + e.message);
+    }
 });
 
 // --- SERVER INSTANCE (WAJIB DI PALING BAWAH) ---
