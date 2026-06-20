@@ -238,9 +238,13 @@
                                         <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase font-mono tracking-wide shadow-[0_0_10px_rgba(245,158,11,0.1)]">
                                             ⭐ Pimpinan
                                         </span>
-                                    <% } else { %>
+                                    <% } else if(u.role === 'gudang') { %>
                                         <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 uppercase font-mono tracking-wide shadow-[0_0_10px_rgba(6,182,212,0.1)]">
                                             📦 Gudang
+                                        </span>
+                                    <% } else { %>
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase font-mono tracking-wide shadow-[0_0_10px_rgba(168,85,247,0.1)]">
+                                            👤 User Normal
                                         </span>
                                     <% } %>
                                 </td>
