@@ -1,6 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
-const session = require('express-session');
+const session = require('cookie-session'); // DIUBAH: Menggunakan cookie-session agar aman di Vercel
 const path = require('path');
 const app = express();
 
@@ -22,15 +22,11 @@ app.use((req, res, next) => {
     next();
 });
 
+// DIUBAH: Konfigurasi cookie-session pengganti express-session (Stateless & Anti-Crash Vercel)
 app.use(session({
-    secret: 'invenioweb_secret_key', // Ganti dengan secret key Anda
-    resave: false,
-    saveUninitialized: false, // Ubah ke false agar tidak membuat sesi kosong terus-menerus
-    cookie: { 
-        maxAge: 1000 * 60 * 60 * 24, // Sesi aktif selama 24 jam (1 hari)
-        secure: false, // JANGAN set TRUE jika Anda masih pakai HTTP / localhost biasa
-        httpOnly: true
-    }
+    name: 'session_invenio',
+    keys: ['invenioweb_secret_key_super_secret'], // Kunci enkripsi data session di cookie browser
+    maxAge: 24 * 60 * 60 * 1000 // Sesi aktif selama 24 jam (1 hari)
 }));
 
 // --- DATABASE CONNECTION TO CLOUD AIVEN ---
@@ -61,7 +57,21 @@ async function buatTabelOtomatis() {
         await db.execute(`CREATE TABLE IF NOT EXISTS supplier (id_supplier VARCHAR(50) NOT NULL PRIMARY KEY, nama_supplier VARCHAR(100) NOT NULL, alamat TEXT, no_telp VARCHAR(20))`);
         await db.execute(`CREATE TABLE IF NOT EXISTS petugas (id_petugas VARCHAR(50) NOT NULL PRIMARY KEY, nama_petugas VARCHAR(100) NOT NULL, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, level ENUM('Admin','Petugas Gudang','Pimpinan') NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS barang (id_barang VARCHAR(50) NOT NULL PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, stok INT NOT NULL DEFAULT 0, harga DECIMAL(10,2) NOT NULL, id_supplier VARCHAR(50) DEFAULT NULL)`);
-        await db.execute(`CREATE TABLE IF NOT EXISTS transaksi (id_transaksi INT AUTO_INCREMENT PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, jenis_transaksi ENUM('masuk','keluar') NOT NULL, jumlah INT NOT NULL, tanggal DATE NOT NULL, masuk VARCHAR(50) DEFAULT 'masuk', keluar VARCHAR(50) DEFAULT 'keluar')`);
+        
+        // DIUBAH: Ditambahkan id_user INT DEFAULT NULL agar mencatat relasi pembeli di tabel transaksi
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS transaksi (
+                id_transaksi INT AUTO_INCREMENT PRIMARY KEY, 
+                id_barang VARCHAR(50) NOT NULL, 
+                jenis_transaksi ENUM('masuk','keluar') NOT NULL, 
+                jumlah INT NOT NULL, 
+                tanggal DATE NOT NULL, 
+                masuk VARCHAR(50) DEFAULT 'masuk', 
+                keluar VARCHAR(50) DEFAULT 'keluar',
+                id_user INT DEFAULT NULL
+            )
+        `);
+        
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_keluar (id_keluar VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_keluar DATE NOT NULL, jumlah_keluar INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_masuk (id_masuk VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_masuk DATE NOT NULL, jumlah_masuk INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
 
@@ -85,6 +95,10 @@ setTimeout(async () => {
         // Memastikan tipe ENUM kolom di database cloud ikut mendukung opsi 'user'
         await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
         await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
+        
+        // DIUBAH: Tambahan alter darurat agar kolom id_user otomatis masuk ke transaksi jika tabel sudah terlanjur ada di database cloud
+        await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS id_user INT DEFAULT NULL`);
+
         // Pastikan akun admin utama (Naufal) tetap aktif
         await db.execute(`UPDATE user SET role = 'admin', status_aktif = 1 WHERE id_user = 1 OR username = 'admin'`);
         console.log("🚀 Kolom role & status_aktif aman/berhasil diverifikasi!");
@@ -116,7 +130,7 @@ const requireRole = (roles) => {
 app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => res.render('login', { error: null }));
 
-// LOGIN VALIDATION (Versi Anti-Internal Server Error & Sesi Aman)
+// LOGIN VALIDATION (Versi cookie-session terenkripsi, Langsung Pengalihan Tanpa req.session.save manual)
 app.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -135,7 +149,7 @@ app.post('/login', async (req, res) => {
                 return res.send("<script>alert('Akun Anda dinonaktifkan. Mohon hubungi pihak administrator.'); window.location='/login';</script>");
             }
 
-            // Daftarkan session dengan fallback data kosong jika di DB bernilai NULL
+            // DIUBAH: Daftarkan data ke cookie-session secara langsung (Otomatis disimpan & dikirim ke browser aman)
             req.session.user = {
                 id_user: akun.id_user,
                 username: akun.username,
@@ -143,20 +157,12 @@ app.post('/login', async (req, res) => {
                 role: akun.role || 'user'
             }; 
             
-            // Simpan session secara eksplisit sebelum memanggil res.redirect
-            req.session.save((err) => {
-                if (err) {
-                    console.error("🚨 GAGAL MENYIMPAN SESSION:", err);
-                    return res.status(500).send("Internal Server Error: Gagal menginisialisasi sesi login.");
-                }
-
-                // --- PROSES PENGALIHAN BERDASARKAN ROLE ---
-                if (akun.role === 'user') {
-                    return res.redirect('/beli-barang'); 
-                } else {
-                    return res.redirect('/dashboard'); 
-                }
-            });
+            // DIUBAH: Langsung lakukan redirect karena cookie-session menulis data secara tersinkronisasi tanpa callback .save()
+            if (akun.role === 'user') {
+                return res.redirect('/beli-barang'); 
+            } else {
+                return res.redirect('/dashboard'); 
+            }
 
         } else { 
             return res.render('login', { error: 'Username atau Password salah!' }); 
@@ -168,10 +174,8 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) console.error("Gagal hapus session:", err);
-        res.redirect('/login');
-    });
+    req.session = null; // DIUBAH: Cara menghapus sesi pada cookie-session cukup dengan mengubah nilainya menjadi null
+    res.redirect('/login');
 });
 
 // GET REGISTER PAGE
@@ -557,10 +561,10 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
         // 2. Kurangi stok barang di database
         await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
 
-        // 3. Catat ke tabel transaksi sebagai jenis_transaksi "keluar"
+        // 3. DIUBAH: Catat transaksi keluar secara terstruktur lengkap dengan menyisipkan ID user dari data session aman
         await db.execute(
-            'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar) VALUES (?, "keluar", ?, ?, ?)',
-            [id_barang, jumlah, tanggalHariIni, `Dibeli oleh ${req.session.user.nama}`]
+            'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, "keluar", ?, ?, ?, ?)',
+            [id_barang, jumlah, tanggalHariIni, `Dibeli oleh ${req.session.user.nama}`, req.session.user.id_user]
         );
 
         res.send("<script>alert('Pembelian berhasil! Stok otomatis terpotong.'); window.location='/beli-barang';</script>");
