@@ -95,7 +95,7 @@ setTimeout(async () => {
 
 // --- PROTECT ROUTE MIDDLEWARE ---
 const requireLogin = (req, res, next) => {
-    if (req.session.user) next(); else res.redirect('/login');
+    if (req.session && req.session.user) next(); else res.redirect('/login');
 };
 
 // ==========================================
@@ -105,7 +105,7 @@ const requireLogin = (req, res, next) => {
 // Menyaring hak akses halaman berdasarkan role user
 const requireRole = (roles) => {
     return (req, res, next) => {
-        if (!req.session.user) return res.redirect('/login');
+        if (!req.session || !req.session.user) return res.redirect('/login');
         if (!roles.includes(req.session.user.role)) {
             return res.send("<script>alert('Hak akses ditolak! Akun Anda tidak diizinkan membuka halaman ini.'); window.location='/dashboard';</script>");
         }
@@ -116,10 +116,15 @@ const requireRole = (roles) => {
 app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => res.render('login', { error: null }));
 
-// LOGIN VALIDATION (Sudah Diperbarui untuk Pengalihan Hak Akses Otomatis)
+// LOGIN VALIDATION (Versi Anti-Internal Server Error & Sesi Aman)
 app.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.render('login', { error: 'Username dan Password wajib diisi!' });
+        }
+
         const [users] = await db.execute('SELECT * FROM user WHERE username = ? AND password = ?', [username, password]);
         
         if (users.length > 0) { 
@@ -130,30 +135,43 @@ app.post('/login', async (req, res) => {
                 return res.send("<script>alert('Akun Anda dinonaktifkan. Mohon hubungi pihak administrator.'); window.location='/login';</script>");
             }
 
-            // Daftarkan session
+            // Daftarkan session dengan fallback data kosong jika di DB bernilai NULL
             req.session.user = {
                 id_user: akun.id_user,
                 username: akun.username,
-                nama: akun.nama,
-                role: akun.role
+                nama: akun.nama || 'User Baru',
+                role: akun.role || 'user'
             }; 
             
-            // --- MODIFIKASI JALUR REDIRECT MULTI-ROLE ---
-            if (akun.role === 'user') {
-                res.redirect('/beli-barang'); // Jika pembeli baru, lempar ke halaman belanja
-            } else {
-                res.redirect('/dashboard'); // Jika admin/gudang/pimpinan, tetap ke dashboard manajemen
-            }
+            // Simpan session secara eksplisit sebelum memanggil res.redirect
+            req.session.save((err) => {
+                if (err) {
+                    console.error("🚨 GAGAL MENYIMPAN SESSION:", err);
+                    return res.status(500).send("Internal Server Error: Gagal menginisialisasi sesi login.");
+                }
+
+                // --- PROSES PENGALIHAN BERDASARKAN ROLE ---
+                if (akun.role === 'user') {
+                    return res.redirect('/beli-barang'); 
+                } else {
+                    return res.redirect('/dashboard'); 
+                }
+            });
 
         } else { 
-            res.render('login', { error: 'Username atau Password salah!' }); 
+            return res.render('login', { error: 'Username atau Password salah!' }); 
         }
-    } catch (e) { res.send("Error Login: " + e.message); }
+    } catch (e) { 
+        console.error("🚨 TERJADI ERROR PADA PROSES LOGIN:", e); 
+        return res.status(500).send("Internal Server Error: " + e.message); 
+    }
 });
 
 app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/login');
+    req.session.destroy((err) => {
+        if (err) console.error("Gagal hapus session:", err);
+        res.redirect('/login');
+    });
 });
 
 // GET REGISTER PAGE
@@ -166,6 +184,10 @@ app.post('/register', async (req, res) => {
     try {
         const { username, nama, password } = req.body;
         const defaultRole = 'user'; // Mengubah default role pendaftar baru menjadi 'user'
+
+        if (!username || !nama || !password) {
+            return res.send("<script>alert('Semua formulir pendaftaran wajib diisi!'); window.location='/register';</script>");
+        }
 
         // Trik Reparasi Tambahan: Sinkronisasi tipe ENUM kolom jika belum ter-update
         try {
@@ -189,8 +211,8 @@ app.post('/register', async (req, res) => {
         
         res.send("<script>alert('Akun berhasil dibuat! Status akun AKTIF, kamu bisa langsung login.'); window.location='/login';</script>");
     } catch (e) {
-        console.error(e);
-        res.send("Error Register Akun: " + e.message);
+        console.error("🚨 TERJADI ERROR PADA REGISTER:", e);
+        res.status(500).send("Error Register Akun: " + e.message);
     }
 });
 
@@ -200,7 +222,8 @@ app.get('/admin/users', requireLogin, requireRole(['admin']), async (req, res) =
         const [listUsers] = await db.execute('SELECT * FROM user WHERE id_user != ?', [req.session.user.id_user]);
         res.render('admin_users', { user: req.session.user, users: listUsers });
     } catch (e) {
-        res.send("Error Admin Panel: " + e.message);
+        console.error(e);
+        res.status(500).send("Error Admin Panel: " + e.message);
     }
 });
 
@@ -208,14 +231,14 @@ app.get('/admin/users/aktifkan/:id', requireLogin, requireRole(['admin']), async
     try {
         await db.execute('UPDATE user SET status_aktif = 1 WHERE id_user = ?', [req.params.id]);
         res.redirect('/admin/users');
-    } catch (e) { res.send(e.message); }
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 app.get('/admin/users/nonaktifkan/:id', requireLogin, requireRole(['admin']), async (req, res) => {
     try {
         await db.execute('UPDATE user SET status_aktif = 0 WHERE id_user = ?', [req.params.id]);
         res.redirect('/admin/users');
-    } catch (e) { res.send(e.message); }
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 // --- INI ADALAH ROUTE BARU UNTUK HAPUS AKUN PERMANEN ---
@@ -224,7 +247,7 @@ app.get('/admin/users/hapus/:id', requireLogin, requireRole(['admin']), async (r
         await db.execute('DELETE FROM user WHERE id_user = ?', [req.params.id]);
         res.redirect('/admin/users');
     } catch (e) { 
-        res.send("Error saat menghapus user: " + e.message); 
+        res.status(500).send("Error saat menghapus user: " + e.message); 
     }
 });
 
@@ -244,7 +267,7 @@ app.get('/dashboard', requireLogin, async (req, res) => {
             totalMasuk: m[0].t || 0, 
             totalKeluar: k[0].t || 0 
         });
-    } catch (e) { res.send("Error Dashboard: " + e.message); }
+    } catch (e) { res.status(500).send("Error Dashboard: " + e.message); }
 });
 
 // ==========================================
@@ -255,7 +278,7 @@ app.get('/barang', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), a
         const [barang] = await db.execute('SELECT b.*, s.nama_supplier FROM barang b LEFT JOIN supplier s ON b.id_supplier = s.id_supplier');
         const [supplier] = await db.execute('SELECT * FROM supplier');
         res.render('barang', { user: req.session.user, barang, supplier });
-    } catch (e) { res.send("Error Menu Barang: " + e.message); }
+    } catch (e) { res.status(500).send("Error Menu Barang: " + e.message); }
 });
 
 app.post('/barang/tambah', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
@@ -269,7 +292,7 @@ app.post('/barang/tambah', requireLogin, requireRole(['admin', 'gudang', 'pimpin
             [id_barang, nama_barang, supplierValue, stok, harga]
         );
         res.redirect('/barang');
-    } catch (e) { res.send("Error Simpan Barang: " + e.message); }
+    } catch (e) { res.status(500).send("Error Simpan Barang: " + e.message); }
 });
 
 app.get('/barang/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
@@ -277,7 +300,7 @@ app.get('/barang/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimp
         await db.execute('DELETE FROM transaksi WHERE id_barang = ?', [req.params.id]);
         await db.execute('DELETE FROM barang WHERE id_barang = ?', [req.params.id]);
         res.redirect('/barang');
-    } catch (e) { res.send("Error Hapus Barang: " + e.message); }
+    } catch (e) { res.status(500).send("Error Hapus Barang: " + e.message); }
 });
 
 app.post('/barang/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
@@ -297,7 +320,7 @@ app.post('/barang/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimp
         await db.execute(query, [nama_barang, id_supplier, stok, harga, id_barang]);
         res.redirect('/barang');
     } catch (e) {
-        res.send("Error Update Data Barang Pusat: " + e.message);
+        res.status(500).send("Error Update Data Barang Pusat: " + e.message);
     }
 });
 
@@ -309,7 +332,7 @@ app.get('/supplier', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']),
         const [supplier] = await db.execute('SELECT * FROM supplier');
         res.render('supplier', { user: req.session.user, supplier });
     } catch (e) {
-        res.send("Error Menu Supplier: " + e.message);
+        res.status(500).send("Error Menu Supplier: " + e.message);
     }
 });
 
@@ -328,7 +351,7 @@ app.post('/supplier/tambah', requireLogin, requireRole(['admin', 'gudang', 'pimp
         
         res.redirect('/supplier');
     } catch (e) {
-        res.send("Error Simpan Supplier: " + e.message);
+        res.status(500).send("Error Simpan Supplier: " + e.message);
     }
 });
 
@@ -347,7 +370,7 @@ app.post('/supplier/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
 
         res.redirect('/supplier');
     } catch (e) {
-        res.send("Error Edit Supplier: " + e.message);
+        res.status(500).send("Error Edit Supplier: " + e.message);
     }
 });
 
@@ -357,7 +380,7 @@ app.get('/supplier/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
         await db.execute('DELETE FROM supplier WHERE id_supplier = ?', [req.params.id]);
         res.redirect('/supplier');
     } catch (e) {
-        res.send("Error Hapus Supplier: " + e.message);
+        res.status(500).send("Error Hapus Supplier: " + e.message);
     }
 });
 
@@ -370,7 +393,7 @@ app.get('/transaksi', requireLogin, requireRole(['admin', 'gudang', 'pimpinan'])
         const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang ORDER BY t.tanggal DESC, t.id_transaksi DESC');
         res.render('transaksi', { user: req.session.user, barang, transaksi });
     } catch (e) { 
-        res.send("Error Menu Transaksi: " + e.message); 
+        res.status(500).send("Error Menu Transaksi: " + e.message); 
     }
 });
 
@@ -380,7 +403,7 @@ app.post('/transaksi/masuk', requireLogin, requireRole(['admin', 'gudang', 'pimp
         await db.execute('INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal) VALUES (?, "masuk", ?, ?)', [id_barang, jumlah, tanggal]);
         await db.execute('UPDATE barang SET stok = stok + ? WHERE id_barang = ?', [jumlah, id_barang]);
         res.redirect('/transaksi');
-    } catch (e) { res.send("Error Transaksi Masuk: " + e.message); }
+    } catch (e) { res.status(500).send("Error Transaksi Masuk: " + e.message); }
 });
 
 app.post('/transaksi/keluar', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
@@ -389,7 +412,7 @@ app.post('/transaksi/keluar', requireLogin, requireRole(['admin', 'gudang', 'pim
         await db.execute('INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal) VALUES (?, "keluar", ?, ?)', [id_barang, jumlah, tanggal]);
         await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
         res.redirect('/transaksi');
-    } catch (e) { res.send("Error Transaksi Keluar: " + e.message); }
+    } catch (e) { res.status(500).send("Error Transaksi Keluar: " + e.message); }
 });
 
 app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
@@ -402,7 +425,7 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'p
             await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [req.params.id]);
         }
         res.redirect('/transaksi');
-    } catch (e) { res.send("Error Hapus Transaksi: " + e.message); }
+    } catch (e) { res.status(500).send("Error Hapus Transaksi: " + e.message); }
 });
 
 // ==========================================
@@ -426,19 +449,21 @@ app.get('/laporan', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), 
 
         const laporanPerHari = {};
         allTransaksi.forEach(t => {
-            const tglKey = new Date(t.tanggal).toISOString().split('T')[0];
-            if (!laporanPerHari[tglKey]) {
-                laporanPerHari[tglKey] = { masuk: [], keluar: [] };
-            }
-            if (t.jenis_transaksi === 'masuk') {
-                laporanPerHari[tglKey].masuk.push(t);
-            } else {
-                laporanPerHari[tglKey].keluar.push(t);
+            if (t.tanggal) {
+                const tglKey = new Date(t.tanggal).toISOString().split('T')[0];
+                if (!laporanPerHari[tglKey]) {
+                    laporanPerHari[tglKey] = { masuk: [], keluar: [] };
+                }
+                if (t.jenis_transaksi === 'masuk') {
+                    laporanPerHari[tglKey].masuk.push(t);
+                } else {
+                    laporanPerHari[tglKey].keluar.push(t);
+                }
             }
         });
 
         res.render('laporan', { user: req.session.user, stokGudang, laporanPerHari });
-    } catch (e) { res.send("Error Halaman Laporan: " + e.message); }
+    } catch (e) { res.status(500).send("Error Halaman Laporan: " + e.message); }
 });
 
 app.post('/laporan/barang/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
@@ -447,7 +472,7 @@ app.post('/laporan/barang/edit/:id', requireLogin, requireRole(['admin', 'gudang
         const { nama_barang, stok, harga } = req.body;
         await db.execute('UPDATE barang SET nama_barang = ?, stok = ?, harga = ? WHERE id_barang = ?', [nama_barang, stok, harga, id_barang]);
         res.redirect('/laporan');
-    } catch (e) { res.send("Error Edit Barang di Laporan: " + e.message); }
+    } catch (e) { res.status(500).send("Error Edit Barang di Laporan: " + e.message); }
 });
 
 app.get('/laporan/barang/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
@@ -456,7 +481,7 @@ app.get('/laporan/barang/hapus/:id', requireLogin, requireRole(['admin', 'gudang
         await db.execute('DELETE FROM transaksi WHERE id_barang = ?', [id_barang]);
         await db.execute('DELETE FROM barang WHERE id_barang = ?', [id_barang]);
         res.redirect('/laporan');
-    } catch (e) { res.send("Error Hapus Barang di Laporan: " + e.message); }
+    } catch (e) { res.status(500).send("Error Hapus Barang di Laporan: " + e.message); }
 });
 
 app.post('/laporan/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
@@ -478,7 +503,7 @@ app.post('/laporan/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pim
             await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [selisih, id_barang]);
         }
         res.redirect('/laporan');
-    } catch (e) { res.send("Error Edit Transaksi Laporan: " + e.message); }
+    } catch (e) { res.status(500).send("Error Edit Transaksi Laporan: " + e.message); }
 });
 
 app.get('/laporan/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
@@ -492,7 +517,7 @@ app.get('/laporan/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pim
             await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [id_transaksi]);
         }
         res.redirect('/laporan');
-    } catch (e) { res.send("Error Hapus Transaksi Laporan: " + e.message); }
+    } catch (e) { res.status(500).send("Error Hapus Transaksi Laporan: " + e.message); }
 });
 
 // ==========================================
@@ -506,7 +531,7 @@ app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) =>
         const [barangTersedia] = await db.execute('SELECT * FROM barang WHERE stok > 0');
         res.render('user_beli', { user: req.session.user, barang: barangTersedia });
     } catch (e) {
-        res.send("Error Halaman Beli Barang: " + e.message);
+        res.status(500).send("Error Halaman Beli Barang: " + e.message);
     }
 });
 
@@ -541,7 +566,7 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
         res.send("<script>alert('Pembelian berhasil! Stok otomatis terpotong.'); window.location='/beli-barang';</script>");
 
     } catch (e) {
-        res.send("Error Proses Pembelian: " + e.message);
+        res.status(500).send("Error Proses Pembelian: " + e.message);
     }
 });
 
