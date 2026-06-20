@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Halaman Belanja</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .produk-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #ddd; }
+        .btn-beli { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-beli:hover { background: #218838; }
+        input[type="number"] { width: 90%; padding: 6px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Selamat Datang, <%= user.nama %>! (Pelanggan)</h2>
+        <a href="/logout" style="color: red; text-decoration: none; font-weight: bold;">Logout</a>
+    </div>
+
+    <h3>🛍️ Daftar Barang Tersedia</h3>
+    
+    <% if (barang.length === 0) { %>
+        <p>Maaf, saat ini belum ada stok barang dari petugas gudang.</p>
+    <% } else { %>
+        <div class="produk-container">
+            <% barang.forEach(item => { %>
+                <div class="card">
+                    <h4><%= item.nama_barang %></h4>
+                    <p><b>Harga:</b> Rp <%= item.harga.toLocaleString('id-ID') %></p>
+                    <p><b>Sisa Stok:</b> <%= item.stok %> pcs</p>
+                    
+                    <!-- Form untuk membeli -->
+                    <form action="/beli-barang/proses" method="POST">
+                        <input type="hidden" name="id_barang" value="<%= item.id_barang %>">
+                        <label>Jumlah Beli:</label>
+                        <input type="number" name="jumlah_beli" min="1" max="<%= item.stok %>" value="1" required>
+                        <button type="submit" class="btn-beli">Beli Sekarang</button>
+                    </form>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+
+</body>
+</html>
