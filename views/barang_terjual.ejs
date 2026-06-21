@@ -25,12 +25,14 @@
     <div class="row">
         <div class="col-md-2 sidebar">
             <div class="brand">📦 InvenioWeb</div>
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/barang" class="nav-link">Kelola Barang</a>
-            <a href="/supplier" class="nav-link">Kelola Supplier</a>
-            <a href="/transaksi" class="nav-link">Kelola Transaksi</a>
-            <a href="/barang-terjual" class="nav-link active">Barang Terjual</a>
-            <a href="/laporan" class="nav-link">Cetak Laporan</a>
+            <nav class="space-y-2">
+                <a href="/dashboard" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Dashboard</a>
+                <a href="/barang" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Kelola Barang</a>
+                <a href="/supplier" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Kelola Supplier</a>
+                <a href="/transaksi" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Kelola Transaksi</a>
+                <a href="/laporan" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Cetak Laporan</a>
+                <a href="/barang-terjual" class="block px-4 py-2.5 bg-indigo-600 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Barang Terjual</a>
+            </nav>
             <hr class="text-secondary">
             <div class="small text-muted mb-2">Masuk sebagai:</div>
             <div class="fw-bold text-light"><%= user.nama %> (<%= user.role %>)</div>
