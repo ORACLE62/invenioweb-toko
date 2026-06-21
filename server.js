@@ -96,7 +96,7 @@ setTimeout(async () => {
         await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
         await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
         
-        // Tambahan alter darurat agar kolom id_user otomatis masuk ke transaksi jika tabel sudah terlanjur ada di database cloud
+        // 🔥 TAMBAHKAN BARIS INI UNTUK MEMAKSA DATABASE MEMBUAT KOLOM ID_USER DI TABEL TRANSAKSI
         await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS id_user INT DEFAULT NULL`);
 
         // Pastikan akun admin utama (Naufal) tetap aktif
@@ -105,7 +105,7 @@ setTimeout(async () => {
     } catch (e) {
         console.log("Modifikasi kolom user aman.");
     }
-}, 5000); 
+}, 5000);
 
 // --- PROTECT ROUTE MIDDLEWARE ---
 const requireLogin = (req, res, next) => {
