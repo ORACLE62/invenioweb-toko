@@ -37,12 +37,12 @@ const db = mysql.createPool({
     }
 });
 
-// --- PEMBUATAN & MIGRASI STRUKTUR TABEL OTOMATIS ---
+// --- PEMBUATAN TABEL OTOMATIS KE CLOUD AIVEN ---
 async function buatTabelOtomatis() {
     try {
-        console.log("Sedang menghubungkan dan menyelaraskan tabel di Cloud Aiven...");
+        console.log("Sedang menghubungkan dan membuat tabel di Cloud Aiven...");
 
-        // 1. Membuat/memastikan tabel user dan strukturnya siap
+        // Membuat tabel user dengan default status_aktif = 1 (Langsung Aktif) & enum baru 'user'
         await db.execute(`
             CREATE TABLE IF NOT EXISTS user (
                 id_user INT AUTO_INCREMENT PRIMARY KEY, 
@@ -58,7 +58,7 @@ async function buatTabelOtomatis() {
         await db.execute(`CREATE TABLE IF NOT EXISTS petugas (id_petugas VARCHAR(50) NOT NULL PRIMARY KEY, nama_petugas VARCHAR(100) NOT NULL, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, level ENUM('Admin','Petugas Gudang','Pimpinan') NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS barang (id_barang VARCHAR(50) NOT NULL PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, stok INT NOT NULL DEFAULT 0, harga DECIMAL(10,2) NOT NULL, id_supplier VARCHAR(50) DEFAULT NULL)`);
         
-        // 2. Membuat tabel transaksi dasar
+        // Ditambahkan id_user INT DEFAULT NULL agar mencatat relasi pembeli di tabel transaksi
         await db.execute(`
             CREATE TABLE IF NOT EXISTS transaksi (
                 id_transaksi INT AUTO_INCREMENT PRIMARY KEY, 
@@ -67,36 +67,24 @@ async function buatTabelOtomatis() {
                 jumlah INT NOT NULL, 
                 tanggal DATE NOT NULL, 
                 masuk VARCHAR(50) DEFAULT 'masuk', 
-                keluar VARCHAR(50) DEFAULT 'keluar'
+                keluar VARCHAR(50) DEFAULT 'keluar',
+                id_user INT DEFAULT NULL
             )
         `);
         
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_keluar (id_keluar VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_keluar DATE NOT NULL, jumlah_keluar INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS transaksi_masuk (id_masuk VARCHAR(50) NOT NULL PRIMARY KEY, id_barang VARCHAR(50) NOT NULL, tgl_masuk DATE NOT NULL, jumlah_masuk INT NOT NULL, id_petugas VARCHAR(50) NOT NULL)`);
 
-        // 3. 🔥 PROSES MIGRASI UTAMA (Dipaksa berjalan langsung tanpa timeout agar Vercel mendeteksi kolom baru)
-        try {
-            await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
-            await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
-        } catch (err) { console.log("Migrasi kolom user sudah aman."); }
-
-        try {
-            // Memaksa database menambahkan kolom id_user ke tabel transaksi yang sudah ada di cloud
-            await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS id_user INT DEFAULT NULL`);
-            console.log("✅ Kolom 'id_user' berhasil diverifikasi/ditambahkan ke tabel transaksi!");
-        } catch (err) { console.log("Migrasi kolom id_user pada tabel transaksi sudah aman."); }
-
-        // 4. Input data master default dan sinkronisasi hak akses admin utama
+        // Data default (status_aktif = 1 artinya langsung aktif bisa login)
         await db.execute(`REPLACE INTO user (id_user, username, password, nama, role, status_aktif) VALUES 
             (1, 'admin', 'admin123', 'Naufal', 'admin', 1),
             (2, 'gudang', 'gudang1102', 'Chou (Gudang)', 'gudang', 1),
             (3, 'pimpinan', 'pimpinan82686', 'Siti (Pimpinan)', 'pimpinan', 1)
         `);
-        await db.execute(`UPDATE user SET role = 'admin', status_aktif = 1 WHERE id_user = 1 OR username = 'admin'`);
 
-        console.log("🚀 Selesai! Sinkronisasi database cloud sukses!");
+        console.log("🚀 Selesai! Semua tabel fresh dan bersih!");
     } catch (error) {
-        console.log("Status Error Database: " + error.message);
+        console.log("Status: " + error.message);
     }
 }
 buatTabelOtomatis();
@@ -176,7 +164,7 @@ app.get('/register', (req, res) => {
     res.render('register');
 });
 
-// POST REGISTER AKUN - AUTO AKTIF & DISET SEBAGAI USER NORMAL (BUKAN PETUGAS)
+// POST REGISTER AKUN
 app.post('/register', async (req, res) => {
     try {
         const { username, nama, password } = req.body;
@@ -192,7 +180,7 @@ app.post('/register', async (req, res) => {
             return res.send("<script>alert('Username sudah terdaftar! Gunakan nama lain.'); window.location='/register';</script>");
         }
 
-        // Masukkan data ke database dengan status_aktif = 1
+        // Masukkan data ke database
         await db.execute(
             'INSERT INTO user (username, nama, password, role, status_aktif) VALUES (?, ?, ?, ?, 1)',
             [username, nama, password, defaultRole]
@@ -515,6 +503,7 @@ app.get('/laporan/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pim
 // Halaman utama user untuk melihat stok barang yang tersedia
 app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) => {
     try {
+        // Mengambil barang yang stoknya lebih dari 0 saja
         const [barangTersedia] = await db.execute('SELECT * FROM barang WHERE stok > 0');
         res.render('user_beli', { user: req.session.user, barang: barangTersedia });
     } catch (e) {
@@ -527,9 +516,16 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
     try {
         const { id_barang, jumlah_beli } = req.body;
         const jumlah = parseInt(jumlah_beli);
-        const tanggalHariIni = new Date().toISOString().split('T')[0]; 
+        const tanggalHariIni = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
 
-        // 1. Cek stok barang
+        // 🔥 TAMBALAN DARURAT: Menjamin kolom 'id_user' dibuat langsung sebelum query insert dijalankan
+        try {
+            await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS id_user INT DEFAULT NULL`);
+        } catch (errAlter) {
+            // Abaikan jika kolom sudah terbentuk sebelumnya
+        }
+
+        // 1. Cek dulu apakah stoknya masih cukup
         const [cekBarang] = await db.execute('SELECT stok, nama_barang FROM barang WHERE id_barang = ?', [id_barang]);
         
         if (cekBarang.length === 0) {
@@ -541,10 +537,10 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
             return res.send(`<script>alert('Stok tidak mencukupi! Sisa stok ${cekBarang[0].nama_barang} adalah ${stokSekarang}'); window.location='/beli-barang';</script>`);
         }
 
-        // 2. Potong stok barang
+        // 2. Kurangi stok barang di database
         await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
 
-        // 3. Catat transaksi keluar secara terstruktur lengkap dengan menyisipkan ID user pelakunya
+        // 3. Catat transaksi keluar secara terstruktur lengkap dengan menyisipkan ID user dari data session aman
         await db.execute(
             'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, "keluar", ?, ?, ?, ?)',
             [id_barang, jumlah, tanggalHariIni, `Dibeli oleh ${req.session.user.nama}`, req.session.user.id_user]
