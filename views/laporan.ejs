@@ -28,11 +28,25 @@
         <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
             <div>
                 <p class="text-xs text-zinc-500">Masuk sebagai:</p>
-                <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
+                
+                <!-- LOGIC PENYARINGAN NAMA & ROLE PETUGAS VS USER BARU (DESKTOP) -->
+                <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
+                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)</p>
+                    <div class="mt-1">
+                        <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium"><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %></span>
+                    </div>
+                <% } else { %>
+                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
+                <% } %>
+
+                <% if (user.role === 'admin') { %>
+                    <div class="mt-2">
+                        <a href="/admin/users" class="inline-block text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded border border-red-500/30 font-medium transition">Kelola User</a>
+                    </div>
+                <% } %>
             </div>
-            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 transition">Logout</a>
+            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition shrink-0 ml-2">Logout</a>
         </div>
-    </div>
 
     <!-- MAIN CONTENT -->
     <div class="flex-grow p-4 md:p-10 overflow-y-auto w-full space-y-8">
