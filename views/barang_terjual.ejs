@@ -4,81 +4,121 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barang Terjual - InvenioWeb</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .sidebar { background-color: #1a1a1a; min-height: 100vh; padding: 20px; }
-        .brand { font-size: 24px; font-weight: bold; color: #ffffff; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
-        .nav-link { color: #aaaaaa; padding: 12px 15px; border-radius: 8px; margin-bottom: 5px; display: block; text-decoration: none; }
-        .nav-link:hover, .nav-link.active { background-color: #3b3b98; color: white; }
-        .main-content { padding: 40px; }
-        .card-custom { background-color: #1e1e1e; border: 1px solid #2d2d2d; border-radius: 12px; padding: 24px; }
-        .table-custom { color: #e0e0e0; }
-        .table-custom thead th { background-color: #2a2a2a; color: #ffffff; border-color: #3d3d3d; }
-        .table-custom tbody td { border-color: #2d2d2d; vertical-align: middle; }
-        .badge-user { background-color: #2d3748; color: #a0aec0; padding: 6px 12px; border-radius: 6px; font-size: 13px; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
     </style>
 </head>
-<body>
+<body class="bg-[#121214] text-zinc-100 min-h-screen flex antialiased">
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-2 sidebar">
-            <div class="brand">📦 InvenioWeb</div>
-            <nav class="space-y-2">
-                <a href="/dashboard" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Dashboard</a>
-                <a href="/barang" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Kelola Barang</a>
-                <a href="/supplier" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Kelola Supplier</a>
-                <a href="/transaksi" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Kelola Transaksi</a>
-                <a href="/laporan" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Cetak Laporan</a>
-                <a href="/barang-terjual" class="block px-4 py-2.5 bg-indigo-600 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Barang Terjual</a>
+    <aside class="w-64 bg-[#18181b] border-r border-zinc-800/80 p-6 flex flex-col justify-between shrink-0 min-h-screen sticky top-0">
+        <div>
+            <div class="flex items-center gap-3 mb-8 px-2">
+                <div class="bg-indigo-600 p-2 rounded-xl text-white font-bold text-lg shadow-lg shadow-indigo-600/30 flex items-center justify-center w-10 h-10">
+                    📦
+                </div>
+                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+                    InvenioWeb
+                </span>
+            </div>
+
+            <nav class="space-y-1.5">
+                <a href="/dashboard" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Dashboard</a>
+                <a href="/barang" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Barang</a>
+                <a href="/supplier" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Supplier</a>
+                <a href="/transaksi" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Transaksi</a>
+                <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Cetak Laporan</a>
+                
+                <a href="/barang-terjual" class="block px-4 py-2.5 bg-indigo-600 text-white shadow-md shadow-indigo-600/10 rounded-xl text-sm font-medium transition-all duration-200">Barang Terjual</a>
             </nav>
-            <hr class="text-secondary">
-            <div class="small text-muted mb-2">Masuk sebagai:</div>
-            <div class="fw-bold text-light"><%= user.nama %> (<%= user.role %>)</div>
-            <a href="/logout" class="btn btn-sm btn-outline-danger w-100 mt-3">Logout</a>
         </div>
 
-        <div class="col-md-10 main-content">
-            <h2 class="mb-4">Daftar Barang Terjual (Pesanan Pelanggan)</h2>
-            
-            <div class="card-custom">
-                <% if (terjual.length === 0) { %>
-                    <div class="text-center py-4 text-muted">
-                        Belum ada barang yang dibeli oleh pelanggan saat ini.
-                    </div>
-                <% } else { %>
-                    <div class="table-responsive">
-                        <table class="table table-custom table-dark table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <th>Nama Barang</th>
-                                    <th>Jumlah Beli</th>
-                                    <th>Harga Satuan</th>
-                                    <th>Total Pendapatan</th>
-                                    <th>Nama Pembeli</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% terjual.forEach(item => { %>
-                                    <tr>
-                                        <td><%= new Date(item.tanggal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
-                                        <td class="fw-bold text-info"><%= item.nama_barang %></td>
-                                        <td><%= item.jumlah %> pcs</td>
-                                        <td>Rp <%= parseFloat(item.harga).toLocaleString('id-ID') %></td>
-                                        <td class="text-success fw-bold">Rp <%= (item.jumlah * item.harga).toLocaleString('id-ID') %></td>
-                                        <td><span class="badge-user">👤 <%= item.nama_pembeli %></span></td>
-                                    </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
-                    </div>
-                <% } %>
+        <div class="border-t border-zinc-800/80 pt-4 mt-auto">
+            <p class="text-[11px] text-zinc-500 font-medium uppercase tracking-wider mb-2 px-2">Masuk sebagai:</p>
+            <div class="bg-zinc-900/40 border border-zinc-800/60 p-3 rounded-xl flex flex-col gap-2">
+                <div>
+                    <p class="text-sm font-semibold text-zinc-200 leading-none mb-1"><%= user && user.nama ? user.nama : 'Naufal' %></p>
+                    <span class="inline-block text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-md font-medium border border-indigo-500/20 capitalize">
+                        <%= user && user.role ? user.role : 'Admin' %>
+                    </span>
+                </div>
+                <a href="/logout" class="text-xs text-red-400 hover:text-red-300 transition-colors font-medium border border-red-500/20 hover:border-red-500/40 text-center py-1.5 rounded-lg bg-red-500/5">
+                    Logout
+                </a>
             </div>
         </div>
-    </div>
-</div>
+    </aside>
+
+    <main class="flex-1 p-8 lg:p-10">
+        <div class="max-w-6xl mx-auto">
+            
+            <div class="mb-8">
+                <h1 class="text-2xl lg:text-3xl font-bold text-white tracking-tight">Daftar Barang Terjual</h1>
+                <p class="text-sm text-zinc-400 mt-1.5">Pencatatan sirkulasi pesanan pelanggan yang sukses terjual secara realtime.</p>
+            </div>
+
+            <div class="bg-[#18181b] border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-black/40">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-zinc-800 bg-zinc-900/40 text-zinc-400 text-xs font-semibold tracking-wider uppercase">
+                                <th class="py-4 px-6 w-32">Tanggal</th>
+                                <th class="py-4 px-6">Nama Barang</th>
+                                <th class="py-4 px-6 text-center w-28">Jumlah Beli</th>
+                                <th class="py-4 px-6 w-40">Harga Satuan</th>
+                                <th class="py-4 px-6 w-44">Total Pendapatan</th>
+                                <th class="py-4 px-6 w-40">Nama Pembeli</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800/60 text-sm text-zinc-300">
+                            <% if (typeof terjual !== 'undefined' && terjual && terjual.length > 0) { %>
+                                <% terjual.forEach(t => { %>
+                                    <tr class="hover:bg-zinc-900/20 transition-colors duration-150">
+                                        <td class="py-4 px-6 whitespace-nowrap text-zinc-400 text-xs">
+                                            <%= new Date(t.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                                        </td>
+                                        <td class="py-4 px-6 font-medium text-cyan-400">
+                                            <%= t.nama_barang %>
+                                        </td>
+                                        <td class="py-4 px-6 text-center font-semibold text-zinc-100 whitespace-nowrap">
+                                            <%= t.jumlah %> <span class="text-zinc-500 font-normal text-xs">pcs</span>
+                                        </td>
+                                        <td class="py-4 px-6 whitespace-nowrap text-zinc-400">
+                                            Rp <%= Number(t.harga).toLocaleString('id-ID') %>
+                                        </td>
+                                        <td class="py-4 px-6 font-bold text-emerald-400 whitespace-nowrap">
+                                            Rp <%= (t.jumlah * t.harga).toLocaleString('id-ID') %>
+                                        </td>
+                                        <td class="py-4 px-6 whitespace-nowrap">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700/60 shadow-inner">
+                                                <span class="text-zinc-500">👤</span> <%= t.nama_pembeli %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="6" class="py-12 text-center text-zinc-500 italic">
+                                        <div class="text-2xl mb-2">🛒</div>
+                                        Belum ada data barang yang terjual saat ini.
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
 
 </body>
 </html>
