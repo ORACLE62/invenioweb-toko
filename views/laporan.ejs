@@ -29,7 +29,6 @@
             <div>
                 <p class="text-xs text-zinc-500">Masuk sebagai:</p>
                 
-                <!-- LOGIC PENYARINGAN NAMA & ROLE PETUGAS VS USER BARU (DESKTOP) -->
                 <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
                     <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)</p>
                     <div class="mt-1">
@@ -47,6 +46,7 @@
             </div>
             <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition shrink-0 ml-2">Logout</a>
         </div>
+    </div>
 
     <!-- MAIN CONTENT -->
     <div class="flex-grow p-4 md:p-10 overflow-y-auto w-full space-y-8">
