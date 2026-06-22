@@ -36,8 +36,10 @@
                 <a href="/supplier" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Supplier</a>
                 <a href="/transaksi" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Transaksi</a>
                 <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Cetak Laporan</a>
-                
                 <a href="/barang-terjual" class="block px-4 py-2.5 bg-indigo-600 text-white shadow-md shadow-indigo-600/10 rounded-xl text-sm font-medium transition-all duration-200">Barang Terjual</a>
+                <% if (user.role === 'admin') { %>
+                    <a href="/admin/users" class="block px-4 py-2.5 text-red-400 hover:text-white hover:bg-red-900/30 rounded-lg text-sm font-medium transition border border-red-500/10 mt-4">Kelola User</a>
+                <% } %>
             </nav>
         </div>
 
