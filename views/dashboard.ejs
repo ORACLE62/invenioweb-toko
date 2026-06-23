@@ -6,16 +6,30 @@
     <title>Dashboard - InvenioWeb</title>
     <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-zinc-950 text-white font-sans min-h-screen flex flex-col md:flex-row">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- SIDEBAR: Sembunyikan di HP, Tampilkan di Laptop -->
-    <div class="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen flex flex-col md:flex-row antialiased">
+
+    <div class="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0 min-h-screen sticky top-0">
         <div>
-            <div class="flex items-center gap-3 mb-8">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold">I</div>
-                <span class="font-bold text-lg tracking-wider">InvenioWeb</span>
+            <div class="flex items-center gap-3 mb-8 px-2">
+                <div class="bg-[#5551ff] rounded-full p-1 shadow-lg shadow-[#5551ff]/20 flex items-center justify-center w-11 h-11 overflow-hidden shrink-0">
+                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
+                </div>
+                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent drop-shadow-sm">
+                    InvenioWeb
+                </span>
             </div>
+
             <nav class="space-y-1.5">
                 <a href="/dashboard" class="block px-4 py-2.5 bg-[#5551ff] text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-md shadow-[#5551ff]/10">Dashboard</a>
                 <a href="/barang" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Barang</a>
@@ -24,27 +38,23 @@
                 <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Cetak Laporan</a>
                 <a href="/barang-terjual" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Barang Terjual</a>
                 <% if (user.role === 'admin') { %>
-                    <a href="/admin/users" class="block px-4 py-2.5 text-red-400 hover:text-white hover:bg-red-900/30 rounded-lg text-sm font-medium transition border border-red-500/10 mt-4">Kelola User</a>
+                    <a href="/admin/users" class="block px-4 py-2.5 text-red-400 hover:text-white hover:bg-red-900/30 rounded-xl text-sm font-medium transition border border-red-500/10 mt-4">Kelola User</a>
                 <% } %>
             </nav>      
         </div>
+
         <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
             <div>
                 <p class="text-xs text-zinc-500">Masuk sebagai:</p>
-                
-                <!-- LOGIC PENYARINGAN NAMA & ROLE PETUGAS VS USER BARU -->
                 <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
-                    <!-- Tampilan untuk 3 Petugas Inti -->
-                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)</p>
+                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
                     <div class="mt-1">
-                        <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium"><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %></span>
+                        <span class="text-[10px] bg-[#5551ff]/20 text-indigo-400 px-2 py-0.5 rounded border border-[#5551ff]/30 font-medium capitalize"><%= user.role %></span>
                     </div>
                 <% } else { %>
-                    <!-- Tampilan Bersih Hanya Nama untuk User Baru Hasil Register -->
                     <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
                 <% } %>
 
-                <!-- Menu Tombol Manajemen Admin (Hanya muncul jika rolenya benar-benar admin) -->
                 <% if (user.role === 'admin') { %>
                     <div class="mt-2">
                         <a href="/admin/users" class="inline-block text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded border border-red-500/30 font-medium transition">Kelola User</a>
@@ -55,15 +65,17 @@
         </div>
     </div>
 
-    <!-- NAVBAR KHUSUS HP (Muncul di layar kecil agar rapi) -->
     <div class="md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold">I</div>
-                <span class="font-bold text-lg tracking-wider">InvenioWeb</span>
+                <div class="bg-[#5551ff] rounded-full p-0.5 flex items-center justify-center w-8 h-8 overflow-hidden shrink-0">
+                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
+                </div>
+                <span class="font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent drop-shadow-sm">
+                    InvenioWeb
+                </span>
             </div>
             <div class="flex items-center gap-3">
-                <!-- Tampilan Nama Singkat di HP -->
                 <span class="text-xs text-zinc-400">
                     <%= user.nama %>
                     <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
@@ -73,27 +85,26 @@
                 <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
             </div>
         </div>
-        <!-- Menu Baris Horizontal di HP biar tidak makan tempat -->
+        
         <nav class="flex flex-wrap gap-2">
-            <a href="/dashboard" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium">Dashboard</a>
-            <a href="/barang" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Barang</a>
-            <a href="/supplier" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Supplier</a>
-            <a href="/transaksi" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Transaksi</a>
-            <a href="/laporan" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium">Laporan</a>
+            <a href="/dashboard" class="px-3 py-1.5 bg-[#5551ff] text-white rounded-lg text-xs font-medium shadow-md shadow-[#5551ff]/10">Dashboard</a>
+            <a href="/barang" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Barang</a>
+            <a href="/supplier" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Supplier</a>
+            <a href="/transaksi" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Transaksi</a>
+            <a href="/laporan" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Laporan</a>
+            <a href="/barang-terjual" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Barang Terjual</a>
             <% if (user.role === 'admin') { %>
                 <a href="/admin/users" class="px-3 py-1.5 bg-red-900/50 text-red-400 rounded-lg text-xs font-medium border border-red-500/20">Kelola User</a>
             <% } %>
         </nav>
     </div>
 
-    <!-- KONTEN UTAMA: Otomatis menyesuaikan jarak p-6 di HP, p-10 di Laptop -->
     <div class="flex-grow p-6 md:p-10 overflow-y-auto">
         <header class="mb-8">
             <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Sistem Inventaris Barang Toko</h1>
             <p class="text-zinc-400 text-sm mt-1">Metode Pengembangan: Waterfall SDLC Model</p>
         </header>
 
-        <!-- Grid 4 Kotak Atas: 1 Kolom di HP, 4 Kolom di Laptop -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
             <div class="p-6 bg-zinc-900 border border-zinc-800 rounded-xl relative overflow-hidden">
                 <p class="text-xs text-zinc-500 font-medium uppercase tracking-wider">Total Varian Produk</p>
@@ -117,7 +128,6 @@
             </div>
         </div>
 
-        <!-- Bagian Bawah: 1 Kolom di HP, 3 Kolom di Laptop -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             <div class="lg:col-span-2 p-6 bg-zinc-900 border border-zinc-800 rounded-xl">
                 <h3 class="text-lg font-bold mb-4 flex items-center gap-2">⚠️ Notifikasi Stok Produk Menipis</h3>
