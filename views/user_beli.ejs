@@ -14,21 +14,58 @@
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            /* Latar belakang gradasi radial futuristik persis seperti image_c60247.jpg */
-            background: radial-gradient(circle at top left, #0e2a38 0%, #061321 50%, #020710 100%);
+            background: radial-gradient(circle at center, #0e2a38 0%, #061321 60%, #020710 100%);
+            overflow-x: hidden;
         }
-        /* Pola grid titik geometris transparan (cyber plexus mesh overlay) */
+
+        /* Efek Grid Pola Mesh Bergerak Lambat */
         .cyber-mesh {
-            background-image: radial-gradient(rgba(20, 184, 166, 0.12) 1px, transparent 0);
-            background-size: 24px 24px;
+            background-image: radial-gradient(rgba(20, 184, 166, 0.15) 1px, transparent 0);
+            background-size: 32px 32px;
+            animation: meshMove 40s linear infinite;
+        }
+
+        /* Animasi Pendaran Cahaya Mengambang secara Acak */
+        .glow-orb-1 {
+            animation: floatOrb1 20s ease-in-out infinite alternate;
+        }
+        .glow-orb-2 {
+            animation: floatOrb2 25s ease-in-out infinite alternate;
+        }
+
+        @keyframes meshMove {
+            0% { background-position: 0px 0px; }
+            100% { background-position: 1000px 1000px; }
+        }
+
+        @keyframes floatOrb1 {
+            0% { transform: translate(0px, 0px) scale(1); opacity: 0.5; }
+            50% { transform: translate(100px, 80px) scale(1.2); opacity: 0.8; }
+            100% { transform: translate(-50px, 150px) scale(0.9); opacity: 0.4; }
+        }
+
+        @keyframes floatOrb2 {
+            0% { transform: translate(0px, 0px) scale(1.1); opacity: 0.4; }
+            50% { transform: translate(-120px, -60px) scale(0.83); opacity: 0.7; }
+            100% { transform: translate(80px, -120px) scale(1.2); opacity: 0.5; }
+        }
+
+        /* Sembunyikan spinner bawaan browser agar input bersih */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            appearance: textfield;
         }
     </style>
 </head>
-<body class="text-zinc-100 min-h-screen relative overflow-x-hidden antialiased flex flex-col">
+<body class="text-zinc-100 min-h-screen relative antialiased flex flex-col">
 
-    <div class="absolute inset-0 cyber-mesh pointer-events-none opacity-70 z-0"></div>
-    <div class="absolute top-[-10%] left-[-15%] w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-[130px] pointer-events-none z-0"></div>
-    <div class="absolute bottom-[5%] right-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[150px] pointer-events-none z-0"></div>
+    <div class="absolute inset-0 cyber-mesh pointer-events-none opacity-80 z-0"></div>
+    <div class="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-teal-500/15 rounded-full blur-[140px] pointer-events-none z-0 glow-orb-1"></div>
+    <div class="absolute bottom-[-5%] right-[-5%] w-[700px] h-[700px] bg-cyan-500/10 rounded-full blur-[160px] pointer-events-none z-0 glow-orb-2"></div>
 
     <div class="relative z-10 p-4 md:p-8 max-w-7xl mx-auto w-full space-y-8 flex-grow">
         
@@ -47,7 +84,7 @@
                 </div>
             </div>
             
-            <a href="/logout" class="text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-4 py-2.5 rounded-xl border border-rose-500/20 transition-all duration-200 shadow-md">
+            <a href="/logout" class="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-4 py-2.5 rounded-xl border border-red-500/30 shadow-md transition-all duration-200">
                 Logout
             </a>
         </header>
@@ -56,7 +93,7 @@
             <span class="text-xl">🛍️</span>
             <div>
                 <h2 class="text-sm font-bold uppercase tracking-wider text-teal-400">Daftar Barang Tersedia</h2>
-                <p class="text-xs text-zinc-400 mt-0.5">Silakan pilih produk dan tentukan jumlah pesanan Anda.</p>
+                <p class="text-xs text-zinc-400 mt-0.5">Atur jumlah pesanan menggunakan tombol plus-minus yang disediakan.</p>
             </div>
         </div>
 
@@ -64,19 +101,19 @@
             <div class="bg-slate-900/30 border border-zinc-800/80 backdrop-blur-md rounded-2xl p-12 text-center max-w-md mx-auto shadow-xl">
                 <div class="text-4xl mb-3">📦</div>
                 <h3 class="text-zinc-300 font-semibold mb-1">Stok Belum Tersedia</h3>
-                <p class="text-xs text-zinc-500">Maaf, saat ini belum ada stok barang yang dimasukkan oleh petugas gudang.</p>
+                <p class="text-xs text-zinc-500">Maaf, saat ini belum ada stok barang dari petugas gudang.</p>
             </div>
         <% } else { %>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <% barang.forEach(item => { %>
-                    <div class="bg-slate-900/40 border border-zinc-800/80 hover:border-teal-500/30 backdrop-blur-md rounded-2xl p-5 shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-teal-500/5 flex flex-col justify-between group">
+                <% barang.forEach((item, index) => { %>
+                    <div class="bg-slate-900/50 border border-zinc-800/60 hover:border-teal-500/40 backdrop-blur-md rounded-2xl p-5 shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between group">
                         
                         <div>
                             <div class="flex justify-between items-start gap-2 mb-3">
                                 <h4 class="font-bold text-white group-hover:text-teal-300 transition-colors duration-200 line-clamp-2">
                                     <%= item.nama_barang %>
                                 </h4>
-                                <span class="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded border border-zinc-700/50 font-mono font-medium whitespace-nowrap">
+                                <span class="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded border border-zinc-700/50 font-mono">
                                     ID-<%= item.id_barang %>
                                 </span>
                             </div>
@@ -84,20 +121,18 @@
                             <div class="space-y-2 text-xs border-y border-zinc-800/60 py-3.5 mb-4">
                                 <div class="flex justify-between items-center">
                                     <span class="text-zinc-400">Harga Satuan:</span>
-                                    <span class="font-bold text-zinc-100 font-mono text-sm text-right">
+                                    <span class="font-bold text-zinc-100 font-mono text-sm">
                                         Rp <%= item.harga.toLocaleString('id-ID') %>
                                     </span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-zinc-400">Sisa Stok:</span>
                                     <% if (item.stok <= 5) { %>
-                                        <span class="font-semibold text-rose-400 font-mono bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/10 text-[11px]">
-                                            Terbatas (<%= item.stok %> pcs)
+                                        <span class="font-semibold text-red-400 font-mono bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 text-[11px]">
+                                            Sisa <%= item.stok %> pcs
                                         </span>
                                     <% } else { %>
-                                        <span class="font-semibold text-amber-400 font-mono">
-                                            <%= item.stok %> <span class="text-zinc-500 font-normal text-[10px]">pcs</span>
-                                        </span>
+                                        <span class="font-semibold text-amber-400 font-mono"><%= item.stok %> pcs</span>
                                     <% } %>
                                 </div>
                             </div>
@@ -111,11 +146,29 @@
                                     <label class="block text-[11px] text-zinc-400 font-medium">Jumlah Beli:</label>
                                     <span class="text-[10px] text-zinc-500 font-mono">Max: <%= item.stok %></span>
                                 </div>
-                                <input type="number" name="jumlah_beli" min="1" max="<%= item.stok %>" value="1" required
-                                       class="w-full bg-zinc-950/80 border border-zinc-800 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 rounded-xl p-2.5 text-sm text-center font-mono text-white outline-none transition duration-200">
+
+                                <div class="flex items-center bg-zinc-950/80 border border-zinc-800 focus-within:border-teal-500 rounded-xl overflow-hidden p-0.5 transition duration-200">
+                                    <button type="button" 
+                                            data-input-id="input-<%= index %>"
+                                            onclick="handleDecrement(this)"
+                                            class="w-10 h-9 flex items-center justify-center text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg font-bold text-base transition active:scale-90 select-none">
+                                        &minus;
+                                    </button>
+                                    
+                                    <input type="number" id="input-<%= index %>" name="jumlah_beli" min="1" max="<%= item.stok %>" value="1" required
+                                           class="w-full bg-transparent text-center font-mono text-sm text-white outline-none py-1">
+                                    
+                                    <button type="button" 
+                                            data-input-id="input-<%= index %>" 
+                                            data-max="<%= item.stok %>"
+                                            onclick="handleIncrement(this)"
+                                            class="w-10 h-9 flex items-center justify-center text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg font-bold text-base transition active:scale-90 select-none">
+                                        &plus;
+                                    </button>
+                                </div>
                             </div>
                             
-                            <button type="submit" class="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-zinc-950 font-bold text-xs py-3 rounded-xl transition-all duration-200 shadow-lg shadow-teal-500/10 active:scale-[0.98]">
+                            <button type="submit" class="w-full bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-zinc-950 font-bold text-xs py-3 rounded-xl transition-all duration-200 shadow-lg shadow-red-500/10">
                                 Beli Sekarang
                             </button>
                         </form>
@@ -130,6 +183,29 @@
     <footer class="relative z-10 text-center py-5 border-t border-zinc-800/30 text-[11px] text-zinc-600 font-medium tracking-wide">
         &copy; 2026 InvenioWeb Market System. All rights reserved.
     </footer>
+
+    <script>
+        function handleIncrement(button) {
+            const inputId = button.getAttribute('data-input-id');
+            const maxStock = parseInt(button.getAttribute('data-max')) || 1;
+            
+            const input = document.getElementById(inputId);
+            let currentValue = parseInt(input.value) || 1;
+            if (currentValue < maxStock) {
+                input.value = currentValue + 1;
+            }
+        }
+
+        function handleDecrement(button) {
+            const inputId = button.getAttribute('data-input-id');
+            
+            const input = document.getElementById(inputId);
+            let currentValue = parseInt(input.value) || 1;
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+            }
+        }
+    </script>
 
 </body>
 </html>
