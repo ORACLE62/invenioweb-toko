@@ -1,49 +1,135 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <meta charset="UTF-8">
-    <title>Halaman Belanja</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halaman Belanja - InvenioWeb</title>
+    <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .produk-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #ddd; }
-        .btn-beli { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn-beli:hover { background: #218838; }
-        input[type="number"] { width: 90%; padding: 6px; margin-top: 5px; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            /* Latar belakang gradasi radial futuristik persis seperti image_c60247.jpg */
+            background: radial-gradient(circle at top left, #0e2a38 0%, #061321 50%, #020710 100%);
+        }
+        /* Pola grid titik geometris transparan (cyber plexus mesh overlay) */
+        .cyber-mesh {
+            background-image: radial-gradient(rgba(20, 184, 166, 0.12) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
     </style>
 </head>
-<body>
+<body class="text-zinc-100 min-h-screen relative overflow-x-hidden antialiased flex flex-col">
 
-    <div class="header">
-        <h2>Selamat Datang, <%= user.nama %>! (Pelanggan)</h2>
-        <a href="/logout" style="color: red; text-decoration: none; font-weight: bold;">Logout</a>
+    <div class="absolute inset-0 cyber-mesh pointer-events-none opacity-70 z-0"></div>
+    <div class="absolute top-[-10%] left-[-15%] w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-[130px] pointer-events-none z-0"></div>
+    <div class="absolute bottom-[5%] right-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[150px] pointer-events-none z-0"></div>
+
+    <div class="relative z-10 p-4 md:p-8 max-w-7xl mx-auto w-full space-y-8 flex-grow">
+        
+        <header class="bg-slate-900/40 border border-teal-500/20 backdrop-blur-xl rounded-2xl p-4 md:p-6 flex items-center justify-between shadow-xl shadow-black/30">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-[#5551ff] to-teal-400 rounded-full p-0.5 w-11 h-11 overflow-hidden shrink-0 shadow-lg shadow-teal-500/10">
+                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
+                </div>
+                <div>
+                    <h1 class="text-sm md:text-base font-bold text-white tracking-tight">
+                        Selamat Datang, <span class="text-teal-400 font-mono"><%= user.nama %>!</span>
+                    </h1>
+                    <span class="inline-flex items-center text-[10px] bg-teal-500/10 text-teal-300 px-2 py-0.5 rounded border border-teal-500/20 mt-0.5 font-medium">
+                        👤 Akun Pelanggan
+                    </span>
+                </div>
+            </div>
+            
+            <a href="/logout" class="text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-4 py-2.5 rounded-xl border border-rose-500/20 transition-all duration-200 shadow-md">
+                Logout
+            </a>
+        </header>
+
+        <div class="flex items-center gap-2.5 px-1">
+            <span class="text-xl">🛍️</span>
+            <div>
+                <h2 class="text-sm font-bold uppercase tracking-wider text-teal-400">Daftar Barang Tersedia</h2>
+                <p class="text-xs text-zinc-400 mt-0.5">Silakan pilih produk dan tentukan jumlah pesanan Anda.</p>
+            </div>
+        </div>
+
+        <% if (barang.length === 0) { %>
+            <div class="bg-slate-900/30 border border-zinc-800/80 backdrop-blur-md rounded-2xl p-12 text-center max-w-md mx-auto shadow-xl">
+                <div class="text-4xl mb-3">📦</div>
+                <h3 class="text-zinc-300 font-semibold mb-1">Stok Belum Tersedia</h3>
+                <p class="text-xs text-zinc-500">Maaf, saat ini belum ada stok barang yang dimasukkan oleh petugas gudang.</p>
+            </div>
+        <% } else { %>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <% barang.forEach(item => { %>
+                    <div class="bg-slate-900/40 border border-zinc-800/80 hover:border-teal-500/30 backdrop-blur-md rounded-2xl p-5 shadow-xl shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-teal-500/5 flex flex-col justify-between group">
+                        
+                        <div>
+                            <div class="flex justify-between items-start gap-2 mb-3">
+                                <h4 class="font-bold text-white group-hover:text-teal-300 transition-colors duration-200 line-clamp-2">
+                                    <%= item.nama_barang %>
+                                </h4>
+                                <span class="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded border border-zinc-700/50 font-mono font-medium whitespace-nowrap">
+                                    ID-<%= item.id_barang %>
+                                </span>
+                            </div>
+                            
+                            <div class="space-y-2 text-xs border-y border-zinc-800/60 py-3.5 mb-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-zinc-400">Harga Satuan:</span>
+                                    <span class="font-bold text-zinc-100 font-mono text-sm text-right">
+                                        Rp <%= item.harga.toLocaleString('id-ID') %>
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-zinc-400">Sisa Stok:</span>
+                                    <% if (item.stok <= 5) { %>
+                                        <span class="font-semibold text-rose-400 font-mono bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/10 text-[11px]">
+                                            Terbatas (<%= item.stok %> pcs)
+                                        </span>
+                                    <% } else { %>
+                                        <span class="font-semibold text-amber-400 font-mono">
+                                            <%= item.stok %> <span class="text-zinc-500 font-normal text-[10px]">pcs</span>
+                                        </span>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form action="/beli-barang/proses" method="POST" class="space-y-4">
+                            <input type="hidden" name="id_barang" value="<%= item.id_barang %>">
+                            
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <label class="block text-[11px] text-zinc-400 font-medium">Jumlah Beli:</label>
+                                    <span class="text-[10px] text-zinc-500 font-mono">Max: <%= item.stok %></span>
+                                </div>
+                                <input type="number" name="jumlah_beli" min="1" max="<%= item.stok %>" value="1" required
+                                       class="w-full bg-zinc-950/80 border border-zinc-800 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 rounded-xl p-2.5 text-sm text-center font-mono text-white outline-none transition duration-200">
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-zinc-950 font-bold text-xs py-3 rounded-xl transition-all duration-200 shadow-lg shadow-teal-500/10 active:scale-[0.98]">
+                                Beli Sekarang
+                            </button>
+                        </form>
+
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+
     </div>
 
-    <h3>🛍️ Daftar Barang Tersedia</h3>
-    
-    <% if (barang.length === 0) { %>
-        <p>Maaf, saat ini belum ada stok barang dari petugas gudang.</p>
-    <% } else { %>
-        <div class="produk-container">
-            <% barang.forEach(item => { %>
-                <div class="card">
-                    <h4><%= item.nama_barang %></h4>
-                    <p><b>Harga:</b> Rp <%= item.harga.toLocaleString('id-ID') %></p>
-                    <p><b>Sisa Stok:</b> <%= item.stok %> pcs</p>
-                    
-                    <!-- Form untuk membeli -->
-                    <form action="/beli-barang/proses" method="POST">
-                        <input type="hidden" name="id_barang" value="<%= item.id_barang %>">
-                        <label>Jumlah Beli:</label>
-                        <input type="number" name="jumlah_beli" min="1" max="<%= item.stok %>" value="1" required>
-                        <button type="submit" class="btn-beli">Beli Sekarang</button>
-                    </form>
-                </div>
-            <% }) %>
-        </div>
-    <% } %>
+    <footer class="relative z-10 text-center py-5 border-t border-zinc-800/30 text-[11px] text-zinc-600 font-medium tracking-wide">
+        &copy; 2026 InvenioWeb Market System. All rights reserved.
+    </footer>
 
 </body>
 </html>
