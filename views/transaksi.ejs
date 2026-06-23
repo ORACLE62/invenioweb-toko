@@ -15,20 +15,20 @@
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center font-bold">I</div>
                 <span class="font-bold text-lg tracking-wider">InvenioWeb</span>
             </div>
-            <nav class="space-y-2">
-                <a href="/dashboard" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Dashboard</a>
-                <a href="/barang" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Kelola Barang</a>
-                <a href="/supplier" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Kelola Supplier</a>
-                <a href="/transaksi" class="block px-4 py-2.5 bg-indigo-600 rounded-lg text-sm font-medium transition">Kelola Transaksi</a>
-                <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg text-sm font-medium transition">Cetak Laporan</a>
-                <a href="/barang-terjual" class="block px-4 py-2.5 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg text-sm font-medium transition">Barang Terjual</a>
+            <nav class="space-y-1.5">
+                <a href="/dashboard" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Dashboard</a>
+                <a href="/barang" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Barang</a>
+                <a href="/supplier" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Supplier</a>
+                <a href="/transaksi" class="block px-4 py-2.5 bg-[#5551ff] text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-md shadow-[#5551ff]/10">Kelola Transaksi</a>
+                <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Cetak Laporan</a>
+                <a href="/barang-terjual" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Barang Terjual</a>
                 <% if (user.role === 'admin') { %>
                     <a href="/admin/users" class="block px-4 py-2.5 text-red-400 hover:text-white hover:bg-red-900/30 rounded-lg text-sm font-medium transition border border-red-500/10 mt-4">Kelola User</a>
                 <% } %>
             </nav>
         </div>
         
-<div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
+        <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
             <div>
                 <p class="text-xs text-zinc-500">Masuk sebagai:</p>
                 
