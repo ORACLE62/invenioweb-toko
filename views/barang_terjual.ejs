@@ -22,10 +22,10 @@
     <aside class="w-64 bg-[#18181b] border-r border-zinc-800/80 p-6 flex flex-col justify-between shrink-0 min-h-screen sticky top-0">
         <div>
             <div class="flex items-center gap-3 mb-8 px-2">
-                <div class="bg-indigo-600 p-2 rounded-xl text-white font-bold text-lg shadow-lg shadow-indigo-600/30 flex items-center justify-center w-10 h-10">
-                    📦
+                <div class="bg-[#5551ff] p-1.5 rounded-xl flex items-center justify-center w-11 h-11 shadow-lg shadow-[#5551ff]/20 overflow-hidden transition-transform hover:scale-105 duration-200">
+                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-contain">
                 </div>
-                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent drop-shadow-sm">
                     InvenioWeb
                 </span>
             </div>
@@ -36,10 +36,12 @@
                 <a href="/supplier" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Supplier</a>
                 <a href="/transaksi" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Transaksi</a>
                 <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Cetak Laporan</a>
-                <a href="/barang-terjual" class="block px-4 py-2.5 bg-indigo-600 text-white shadow-md shadow-indigo-600/10 rounded-xl text-sm font-medium transition-all duration-200">Barang Terjual</a>
+                
+                <a href="/barang-terjual" class="block px-4 py-2.5 bg-[#5551ff] text-white shadow-md shadow-[#5551ff]/10 rounded-xl text-sm font-medium transition-all duration-200">Barang Terjual</a>
+                
                 <% if (user.role === 'admin') { %>
-                    <a href="/admin/users" class="block px-4 py-2.5 text-red-400 hover:text-white hover:bg-red-900/30 rounded-lg text-sm font-medium transition border border-red-500/10 mt-4">Kelola User</a>
-                <% } %>
+                    <a href="/admin/users" class="block px-4 py-2.5 text-red-400 hover:text-white hover:bg-red-900/30 rounded-xl text-sm font-medium transition border border-red-500/10 mt-4">Kelola User</a>
+                <% } %> 
             </nav>
         </div>
 
@@ -48,9 +50,9 @@
                 <p class="text-xs text-zinc-500">Masuk sebagai:</p>
                 
                 <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
-                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)</p>
+                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
                     <div class="mt-1">
-                        <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded border border-indigo-500/30 font-medium"><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %></span>
+                        <span class="text-[10px] bg-[#5551ff]/20 text-indigo-400 px-2 py-0.5 rounded border border-[#5551ff]/30 font-medium capitalize"><%= user.role %></span>
                     </div>
                 <% } else { %>
                     <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
