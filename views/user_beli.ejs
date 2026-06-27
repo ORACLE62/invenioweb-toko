@@ -3,127 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Market System - InvenioWeb</title>
+    <title>InvenioWeb Market System</title>
     <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="text-slate-200 min-h-screen p-6 flex flex-col justify-between bg-slate-950 font-['Plus_Jakarta_Sans']">
+<body class="text-slate-200 min-h-screen p-6 flex flex-col justify-between bg-gradient-to-b from-[#0B1528] to-[#040814] font-['Plus_Jakarta_Sans']">
 
-    <div class="max-w-7xl w-full mx-auto space-y-8">
-        <header class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+    <div class="max-w-6xl w-full mx-auto space-y-8">
+        <header class="bg-[#13223C]/50 backdrop-blur-md border border-cyan-900/40 rounded-2xl p-4 flex items-center justify-between shadow-2xl">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg">
-                    IW
+                <div class="w-10 h-10 rounded-xl bg-cyan-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">
+                    IWS
                 </div>
                 <div>
-                    <h1 class="text-sm font-semibold text-white">
-                        Selamat Datang, <span class="text-teal-400"><%= user.nama %></span>!
+                    <h1 class="text-sm font-semibold text-white flex items-center gap-1.5">
+                        Selamat Datang, <span class="text-cyan-400 font-bold"><%= user && user.nama ? user.nama : 'Pelanggan' %></span>!
                     </h1>
-                    <span class="text-[10px] bg-slate-800 text-slate-400 border border-slate-700/50 px-2 py-0.5 rounded-md font-medium">🛒 Akun Pelanggan</span>
+                    <span class="text-[9px] bg-cyan-950/80 text-cyan-400 border border-cyan-800/50 px-2 py-0.5 rounded font-medium tracking-wide">👤 Akun Pelanggan</span>
                 </div>
             </div>
-            <a href="/logout" class="text-xs bg-rose-950/40 border border-rose-800/60 hover:bg-rose-900/60 text-rose-400 font-semibold px-4 py-2 rounded-xl transition">
+            <a href="/logout" class="text-xs bg-rose-950/40 border border-rose-800/40 hover:bg-rose-900/50 text-rose-400 font-semibold px-4 py-2 rounded-xl transition">
                 Logout
             </a>
         </header>
 
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
             <div>
-                <h2 class="text-base font-bold text-teal-400 flex items-center gap-2">🛍️ DAFTAR BARANG TERSEDIA</h2>
-                <p class="text-xs text-slate-400 mt-0.5">Atur jumlah pesanan menggunakan tombol plus-minus lalu tekan Beli Sekaligus.</p>
+                <h2 class="text-sm font-bold text-cyan-400 flex items-center gap-2 uppercase tracking-wider">🗃️ Daftar Barang Tersedia</h2>
+                <p class="text-xs text-slate-400 mt-1">Atur jumlah pesanan menggunakan tombol plus-minus yang disediakan.</p>
             </div>
             
-            <button onclick="bukaModalKonfirmasi()" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-lg transition flex items-center gap-2">
-                <span>🛒</span> Beli Sekaligus (<span id="hitungBarang">0</span>)
+            <button onclick="bukaModalKonfirmasi()" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-lg transition transform active:scale-95 flex items-center gap-2">
+                Beli Sekaligus (<span id="hitungBarang" class="font-mono">0</span>)
             </button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <% barangList.forEach((item, index) => { %>
-                <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between space-y-5 shadow-lg relative group overflow-hidden">
-                    
-                    <div>
-                        <div class="flex justify-between items-start gap-4 mb-3">
-                            <h3 class="font-bold text-white text-base tracking-tight leading-snug group-hover:text-teal-400 transition"><%= item.nama_barang %></h3>
-                            <span class="text-[9px] font-mono bg-slate-800/80 text-slate-400 px-2 py-1 rounded border border-slate-700/50 shrink-0">
-                                ID-BRG-<%= item.id_barang %>
-                            </span>
-                        </div>
-
-                        <div class="space-y-2 text-xs text-slate-400 pt-2 border-t border-slate-800/40">
-                            <div class="flex justify-between">
-                                <span>Harga Satuan:</span>
-                                <span class="font-mono font-bold text-white">Rp <%= item.harga.toLocaleString('id-ID') %></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span>Sisa Stok:</span>
-                                <span class="font-mono px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/10">
-                                    Sisa <%= item.stok %> pcs
+            <% if (barangList && barangList.length > 0) { %>
+                <% barangList.forEach((item, index) => { %>
+                    <div class="bg-[#111C32]/60 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-6 shadow-xl relative overflow-hidden">
+                        
+                        <div>
+                            <div class="flex justify-between items-start gap-4 mb-3">
+                                <h3 class="font-bold text-white text-base tracking-tight"><%= item.nama_barang %></h3>
+                                <span class="text-[9px] font-mono bg-slate-800/80 text-slate-400 px-2 py-0.5 rounded border border-slate-700/50 shrink-0">
+                                    ID-BRG-<%= item.id_barang %>
                                 </span>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center text-[10px] text-slate-500 font-medium">
-                            <span>Jumlah Beli:</span>
-                            <span>Max: <%= item.stok %></span>
+                            <div class="space-y-2.5 text-xs text-slate-400 pt-3 border-t border-slate-800/60">
+                                <div class="flex justify-between">
+                                    <span>Harga Satuan:</span>
+                                    <span class="font-bold text-white">Rp <%= item.harga.toLocaleString('id-ID') %></span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>Sisa Stok:</span>
+                                    <span class="font-semibold text-rose-400 font-mono bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded">
+                                        Sisa <%= item.stok %> pcs
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="flex items-center bg-slate-950 border border-slate-800 rounded-xl overflow-hidden p-1">
-                            <button type="button" onclick="decrement('input-<%= index %>')" class="w-10 h-9 flex items-center justify-center text-zinc-400 hover:text-red-400 rounded-lg transition font-bold text-sm select-none">-</button>
-                            
-                            <input type="number" 
-                                   id="input-<%= index %>" 
-                                   data-id="<%= item.id_barang %>"
-                                   data-nama="<%= item.nama_barang %>"
-                                   data-harga="<%= item.harga %>"
-                                   data-stok="<%= item.stok %>"
-                                   value="0" 
-                                   min="0" 
-                                   max="<%= item.stok %>" 
-                                   onchange="validasiInput(this)"
-                                   class="input-kuantitas w-full bg-transparent text-center font-mono text-sm text-white font-bold outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                            
-                            <button type="button" onclick="increment('input-<%= index %>')" class="w-10 h-9 flex items-center justify-center text-zinc-400 hover:text-red-400 rounded-lg transition font-bold text-sm select-none">&plus;</button>
-                        </div>
-                    </div>
 
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-[10px] text-slate-500 font-medium">
+                                <span>Jumlah Beli:</span>
+                                <span>Max: <%= item.stok %></span>
+                            </div>
+                            
+                            <div class="flex items-center bg-[#070D19] border border-slate-800 rounded-xl p-1 shadow-inner">
+                                <button type="button" onclick="decrement('input-<%= index %>')" class="w-10 h-9 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-slate-800 rounded-lg transition font-bold text-lg select-none">-</button>
+                                
+                                <input type="number" 
+                                       id="input-<%= index %>" 
+                                       data-id="<%= item.id_barang %>"
+                                       data-nama="<%= item.nama_barang %>"
+                                       data-harga="<%= item.harga %>"
+                                       data-stok="<%= item.stok %>"
+                                       value="0" 
+                                       min="0" 
+                                       max="<%= item.stok %>" 
+                                       onchange="validasiInput(this)"
+                                       class="input-kuantitas w-full bg-transparent text-center font-mono text-sm text-white font-bold outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                
+                                <button type="button" onclick="increment('input-<%= index %>')" class="w-10 h-9 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-slate-800 rounded-lg transition font-bold text-lg select-none">+</button>
+                            </div>
+                        </div>
+
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="col-span-full text-center py-12 text-slate-500 text-sm">
+                    ⚠️ Tidak ada komoditas barang yang tersedia saat ini.
                 </div>
-            <% }) %>
+            <% } %>
         </div>
     </div>
 
     <div id="modalKonfirmasi" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+        <div class="bg-[#0F1A2F] border border-cyan-900/30 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
             
             <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
                 <span class="text-xl">📋</span>
                 <h3 class="text-sm font-bold text-white">Konfirmasi Pembelian Anda</h3>
             </div>
 
-            <div class="max-h-48 overflow-y-auto space-y-2" id="listKeranjangModal"></div>
+            <div class="max-h-44 overflow-y-auto space-y-2" id="listKeranjangModal"></div>
 
             <div class="pt-3 border-t border-slate-800 flex justify-between items-center text-sm">
                 <span class="font-medium text-slate-400">Total Pembayaran:</span>
-                <span id="totalBayarModal" class="font-mono font-bold text-emerald-400 text-base">Rp 0</span>
+                <span id="totalBayarModal" class="font-mono font-bold text-cyan-400 text-base">Rp 0</span>
             </div>
 
-            <form action="#" method="POST" id="formCheckout">
+            <form action="" method="POST" id="formCheckout">
                 <input type="hidden" name="keranjangData" id="keranjangDataHidden">
                 
-                <p class="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/10 rounded-xl p-3 leading-relaxed">
+                <p class="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 leading-relaxed">
                     ⚠️ Apakah Anda yakin ingin memproses seluruh item pembelian di atas?
                 </p>
 
-                <div class="flex justify-end gap-3 mt-4 pt-2">
+                <div class="flex justify-end gap-3 mt-5">
                     <button type="button" onclick="tutupModalKonfirmasi()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-xl transition">
-                        Tidak, Batalkan
+                        Batal
                     </button>
-                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-xs text-white font-bold rounded-xl transition shadow-lg">
+                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-xs text-white font-bold rounded-xl transition shadow-lg">
                         Ya, Beli Sekarang
                     </button>
                 </div>
@@ -186,7 +192,7 @@
                     dataBelanja.push({ id_barang: id, nama_barang: nama, jumlah: kuantitas, harga: harga });
 
                     let itemRow = document.createElement('div');
-                    itemRow.className = "flex justify-between items-center text-xs bg-slate-950 border border-slate-800 p-2.5 rounded-xl";
+                    itemRow.className = "flex justify-between items-center text-xs bg-[#070D19] border border-slate-800 p-2.5 rounded-xl";
                     itemRow.innerHTML = `
                         <div>
                             <p class="font-semibold text-white">${nama}</p>
@@ -199,11 +205,11 @@
             });
 
             if (dataBelanja.length === 0) {
-                alert('Silakan tentukan kuantitas barang terlebih dahulu!');
+                alert('Silakan pilih dan tentukan kuantitas barang terlebih dahulu!');
                 return;
             }
 
-            // Set Action URL dinamis menyesuaikan prefix root domain web
+            // Atur dinamis action URL agar selaras dengan prefix Express
             const form = document.getElementById('formCheckout');
             if (window.location.pathname.startsWith('/barang')) {
                 form.action = '/barang/beli-sekaligus';
