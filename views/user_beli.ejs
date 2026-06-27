@@ -10,13 +10,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- EFEK BACKGROUND ANIMASI BINTANG BERGERAK --- */
+        /* --- CORE BACKGROUND --- */
         body {
             position: relative;
             overflow-x: hidden;
-            background-color: #030712;
+            background-color: #020617; /* Gelap pekat agar kontras bintang & salju tajam */
         }
-        body::before, body::after {
+
+        /* --- 1. EFEK BINTANG BERGERAK (GALAXY DRIFT) --- */
+        body::before {
             content: "";
             position: fixed;
             width: 200vw;
@@ -24,27 +26,72 @@
             top: -50vh;
             left: -50vw;
             background-image: 
-                radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
-                radial-gradient(circle at 45% 60%, rgba(6, 182, 212, 0.12) 1.5px, transparent 1.5px),
-                radial-gradient(circle at 85% 35%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                radial-gradient(circle at 35% 85%, rgba(244, 63, 94, 0.08) 2px, transparent 2px),
-                radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
-            background-size: 300px 300px;
-            animation: bintangBergerak 90s linear infinite;
+                radial-gradient(circle at 10% 15%, rgba(255, 255, 255, 0.4) 1.5px, transparent 1.5px),
+                radial-gradient(circle at 40% 35%, rgba(14, 165, 233, 0.3) 2px, transparent 2px),
+                radial-gradient(circle at 70% 25%, rgba(255, 255, 255, 0.45) 1.2px, transparent 1.2px),
+                radial-gradient(circle at 85% 70%, rgba(236, 72, 153, 0.25) 2.5px, transparent 2.5px),
+                radial-gradient(circle at 25% 80%, rgba(255, 255, 255, 0.35) 1.8px, transparent 1.8px);
+            background-size: 260px 260px;
+            animation: bintangRotasi 80s linear infinite;
+            z-index: -2;
+        }
+
+        @keyframes bintangRotasi {
+            from { transform: rotate(0deg) translate(0, 0); }
+            to { transform: rotate(360deg) translate(-40px, -40px); }
+        }
+
+        /* --- 2. EFEK HUJAN SALJU TURUN (SNOWFALL LAYER) --- */
+        .snow-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Agar tombol di web tetap bisa diklik */
             z-index: -1;
         }
-        body::after {
-            background-size: 200px 200px;
-            animation: bintangBergerak 60s linear infinite reverse;
-            opacity: 0.6;
+        
+        .snow-overlay::before, .snow-overlay::after {
+            content: "";
+            position: absolute;
+            top: -100px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.75) 2.5px, transparent 2.5px),
+                radial-gradient(circle at 45% 40%, rgba(255, 255, 255, 0.65) 3.5px, transparent 3.5px),
+                radial-gradient(circle at 75% 20%, rgba(255, 255, 255, 0.7) 2px, transparent 2px),
+                radial-gradient(circle at 90% 65%, rgba(255, 255, 255, 0.8) 4px, transparent 4px),
+                radial-gradient(circle at 30% 75%, rgba(255, 255, 255, 0.6) 3px, transparent 3px);
+            background-size: 350px 350px;
+            animation: saljuTurun Cepat 12s linear infinite;
         }
-        @keyframes bintangBergerak {
-            from { transform: translate(0, 0) rotate(0deg); }
-            to { transform: translate(-80px, -80px) rotate(360deg); }
+
+        .snow-overlay::after {
+            background-size: 240px 240px;
+            animation: saljuTurunLambat 18s linear infinite;
+            animation-delay: -5s;
+            opacity: 0.5;
+        }
+
+        @keyframes saljuTurunCepat {
+            0% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(50vh) translateX(20px); }
+            100% { transform: translateY(100vh) translateX(0); }
+        }
+
+        @keyframes saljuTurunLambat {
+            0% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(50vh) translateX(-15px); }
+            100% { transform: translateY(100vh) translateX(0); }
         }
     </style>
 </head>
 <body class="text-slate-200 min-h-screen p-4 sm:p-6 font-['Plus_Jakarta_Sans']">
+
+    <div class="snow-overlay"></div>
 
     <div class="max-w-4xl w-full mx-auto space-y-6 relative z-10">
         
