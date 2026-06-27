@@ -10,36 +10,37 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- EFEK BACKGROUND BERGERAK ANIMASI PARTIKEL --- */
+        /* --- EFEK BACKGROUND ANIMASI BINTANG BERGERAK --- */
         body {
             position: relative;
             overflow-x: hidden;
-            background: #030712;
+            background-color: #030712;
         }
         body::before, body::after {
             content: "";
             position: fixed;
-            width: 300vw;
-            height: 300vh;
-            top: -100vh;
-            left: -100vw;
+            width: 200vw;
+            height: 200vh;
+            top: -50vh;
+            left: -50vw;
             background-image: 
-                radial-gradient(circle at 20% 30%, rgba(6, 182, 212, 0.05) 1px, transparent 1px),
-                radial-gradient(circle at 75% 40%, rgba(244, 63, 94, 0.03) 2px, transparent 2px),
-                radial-gradient(circle at 40% 80%, rgba(249, 115, 22, 0.04) 1.5px, transparent 1.5px),
-                radial-gradient(circle at 90% 15%, rgba(6, 182, 212, 0.04) 1px, transparent 1px);
-            background-size: 400px 400px;
-            animation: moveBackground 120s linear infinite;
+                radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+                radial-gradient(circle at 45% 60%, rgba(6, 182, 212, 0.12) 1.5px, transparent 1.5px),
+                radial-gradient(circle at 85% 35%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                radial-gradient(circle at 35% 85%, rgba(244, 63, 94, 0.08) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+            background-size: 300px 300px;
+            animation: bintangBergerak 90s linear infinite;
             z-index: -1;
         }
         body::after {
-            background-size: 250px 250px;
-            animation: moveBackground 80s linear infinite reverse;
-            opacity: 0.7;
+            background-size: 200px 200px;
+            animation: bintangBergerak 60s linear infinite reverse;
+            opacity: 0.6;
         }
-        @keyframes moveBackground {
+        @keyframes bintangBergerak {
             from { transform: translate(0, 0) rotate(0deg); }
-            to { transform: translate(-100px, -100px) rotate(360deg); }
+            to { transform: translate(-80px, -80px) rotate(360deg); }
         }
     </style>
 </head>
@@ -47,11 +48,10 @@
 
     <div class="max-w-4xl w-full mx-auto space-y-6 relative z-10">
         
-        <!-- HEADER PROFILE (Persis seperti screenshot pertama) -->
         <header class="bg-[#0D192B]/90 backdrop-blur-md border border-cyan-950/80 rounded-2xl p-5 flex items-center justify-between shadow-xl">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-full bg-[#08101E] border border-cyan-500/30 flex items-center justify-center overflow-hidden shadow-inner">
-                    <span class="text-xs font-bold text-cyan-400">IWS</span>
+                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo IWS" class="w-full h-full object-cover">
                 </div>
                 <div>
                     <h1 class="text-base font-semibold text-white tracking-wide">
@@ -67,8 +67,7 @@
             </a>
         </header>
 
-        <!-- TITLE BAR + TOMBOL MASSAL FLUID (Diletakkan di atas agar tidak merusak kartu produk bawah) -->
-        <div class="bg-[#0A1322]/80 border border-slate-900/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
+        <div class="bg-[#0A1322]/80 border border-slate-900/60 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md">
             <div class="flex items-start gap-3">
                 <span class="text-2xl mt-0.5">🛍️</span>
                 <div>
@@ -76,53 +75,47 @@
                     <p class="text-xs text-slate-400 mt-0.5">Atur jumlah pesanan menggunakan tombol plus-minus yang disediakan.</p>
                 </div>
             </div>
-            <!-- Tombol Beli Sekaligus Massal yang dinamis -->
-            <button onclick="bukaModalKonfirmasi()" class="w-full sm:w-auto bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2">
-                ⚡ Beli Sekaligus (<span id="hitungBarang" class="font-mono">0</span>)
+            <button type="button" onclick="bukaModalKonfirmasi()" class="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2">
+                Beli Sekaligus (<span id="hitungBarang" class="font-mono">0</span>)
             </button>
         </div>
 
-        <!-- LIST DATA BARANG (Persis Mengikuti Tampilan screenshot pertama Anda) -->
-        <div class="space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <% if (barang && barang.length > 0) { %>
                 <% barang.forEach((item, index) => { %>
-                    <div class="bg-[#0D192B]/90 border border-cyan-950/60 rounded-2xl p-5 space-y-5 shadow-xl">
+                    <div class="bg-[#0D192B]/90 border border-cyan-950/60 rounded-2xl p-5 space-y-5 shadow-xl flex flex-col justify-between">
                         
-                        <!-- Nama Barang & Badge ID -->
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-bold text-cyan-400 text-base sm:text-lg tracking-wide"><%= item.nama_barang %></h3>
-                            <span class="text-[10px] font-mono bg-slate-900 text-slate-500 px-2.5 py-1 rounded-md border border-slate-800/60">
-                                ID-BRG-<%= item.id_barang %>
-                            </span>
-                        </div>
-
-                        <!-- Info Harga & Stok -->
-                        <div class="space-y-3 text-xs text-slate-400">
-                            <div class="flex justify-between items-center">
-                                <span>Harga Satuan:</span>
-                                <span class="font-bold text-white text-base">Rp <%= parseFloat(item.harga).toLocaleString('id-ID') %></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span>Sisa Stok:</span>
-                                <span class="font-semibold text-amber-400 font-mono">
-                                    <%= item.stok %> pcs
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-start gap-2">
+                                <h3 class="font-bold text-cyan-400 text-base tracking-wide"><%= item.nama_barang %></h3>
+                                <span class="text-[9px] font-mono bg-slate-900 text-slate-500 px-1.5 py-0.5 rounded border border-slate-800/60 shrink-0">
+                                    ID-BRG-<%= item.id_barang %>
                                 </span>
                             </div>
+
+                            <div class="space-y-2 text-xs text-slate-400">
+                                <div class="flex justify-between items-center">
+                                    <span>Harga Satuan:</span>
+                                    <span class="font-bold text-white text-sm">Rp <%= parseFloat(item.harga).toLocaleString('id-ID') %></span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>Sisa Stok:</span>
+                                    <span class="font-semibold text-amber-400 font-mono"><%= item.stok %> pcs</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Form Eceran Asli Anda (Beli Sekarang Individu) -->
-                        <form action="/beli-barang/proses" method="POST" class="space-y-4 pt-2 border-t border-slate-800/50">
+                        <form action="/beli-barang/proses" method="POST" class="space-y-4 pt-3 border-t border-slate-800/50 mt-4">
                             <input type="hidden" name="id_barang" value="<%= item.id_barang %>">
                             
-                            <div class="space-y-2">
-                                <div class="flex justify-between items-center text-[11px] text-slate-500">
+                            <div class="space-y-1.5">
+                                <div class="flex justify-between items-center text-[10px] text-slate-500">
                                     <span>Jumlah Beli:</span>
                                     <span>Max: <%= item.stok %></span>
                                 </div>
                                 
-                                <!-- Modifikasi Controller agar mendukung Counter Individu & Massal -->
                                 <div class="flex items-center bg-[#060B14] border border-cyan-950 rounded-xl p-1">
-                                    <button type="button" onclick="decrement('input-<%= index %>')" class="w-12 h-10 flex items-center justify-center text-slate-400 hover:text-white font-bold text-lg select-none transition">-</button>
+                                    <button type="button" onclick="decrement('input-<%= index %>')" class="w-10 h-8 flex items-center justify-center text-slate-400 hover:text-white font-bold text-base select-none transition">-</button>
                                     
                                     <input type="number" 
                                            id="input-<%= index %>" 
@@ -135,14 +128,13 @@
                                            min="0" 
                                            max="<%= item.stok %>" 
                                            onchange="validasiInput(this)"
-                                           class="input-kuantitas w-full bg-transparent text-center font-mono text-sm text-white font-bold outline-none">
+                                           class="input-kuantitas w-full bg-transparent text-center font-mono text-xs text-white font-bold outline-none">
                                     
-                                    <button type="button" onclick="increment('input-<%= index %>')" class="w-12 h-10 flex items-center justify-center text-rose-500 hover:text-rose-400 font-bold text-lg select-none transition">+</button>
+                                    <button type="button" onclick="increment('input-<%= index %>')" class="w-10 h-8 flex items-center justify-center text-rose-500 hover:text-rose-400 font-bold text-base select-none transition">+</button>
                                 </div>
                             </div>
 
-                            <!-- Tombol Oranye Eceran Bawaan Anda -->
-                            <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-bold text-xs py-3 rounded-xl shadow-md transition duration-200">
+                            <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-bold text-xs py-2.5 rounded-xl shadow-md transition duration-200">
                                 Beli Sekarang
                             </button>
                         </form>
@@ -150,29 +142,24 @@
                     </div>
                 <% }) %>
             <% } else { %>
-                <div class="text-center py-12 text-slate-500 text-sm bg-[#0D192B]/40 rounded-2xl border border-slate-900">
+                <div class="col-span-1 md:col-span-3 text-center py-12 text-slate-500 text-sm bg-[#0D192B]/40 rounded-2xl border border-slate-900">
                     ⚠️ Tidak ada barang yang tersedia untuk dibeli.
                 </div>
             <% } %>
         </div>
     </div>
 
-    <!-- MODAL POPUP KONFIRMASI CHECKOUT MASSAL -->
     <div id="modalKonfirmasi" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-[#0B1424] border border-cyan-900/40 rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4">
-            
             <div class="flex items-center gap-2 border-b border-slate-800/80 pb-3">
                 <span class="text-lg">📋</span>
                 <h3 class="text-sm font-bold text-white">Konfirmasi Pembelian Massal</h3>
             </div>
-
             <div class="max-h-44 overflow-y-auto space-y-2" id="listKeranjangModal"></div>
-
             <div class="pt-2 flex justify-between items-center text-xs">
                 <span class="text-slate-400">Total Transaksi:</span>
                 <span id="totalBayarModal" class="font-mono font-bold text-cyan-400 text-sm">Rp 0</span>
             </div>
-
             <form action="/beli-sekaligus" method="POST" id="formCheckout">
                 <input type="hidden" name="keranjangData" id="keranjangDataHidden">
                 <div class="flex justify-end gap-3 mt-4">
@@ -183,7 +170,6 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC CONTROLLER -->
     <script>
         function increment(inputId) {
             const input = document.getElementById(inputId);
