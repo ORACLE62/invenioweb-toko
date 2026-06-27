@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Komprehensif - InvenioWeb</title>
-    <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
+    <title>Laporan Gudang - InvenioWeb</title>
+    <link class="no-print" rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,11 +15,39 @@
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
+        input[type="number"] {
+            appearance: textfield;
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: white !important;
+                color: black !important;
+            }
+            .print-card {
+                background-color: transparent !important;
+                border: 1px solid #d4d4d8 !important;
+                box-shadow: none !important;
+                color: black !important;
+            }
+            .text-white, .text-zinc-200, .text-zinc-300 { color: #000000 !important; }
+            .text-zinc-400 { color: #27272a !important; }
+            .bg-zinc-900, .bg-zinc-950, .bg-zinc-900\/50, .bg-zinc-900\/30 { background-color: transparent !important; }
+            .border-zinc-800, .divide-zinc-800\/60, .divide-zinc-900 { border-color: #e4e4e7 !important; }
+        }
     </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen flex flex-col md:flex-row antialiased">
 
-    <div class="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0 min-h-screen sticky top-0">
+    <div class="no-print hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0 min-h-screen sticky top-0">
         <div>
             <div class="flex items-center gap-3 mb-8 px-2">
                 <div class="bg-[#5551ff] rounded-full p-1 shadow-lg shadow-[#5551ff]/20 flex items-center justify-center w-11 h-11 overflow-hidden shrink-0">
@@ -46,26 +74,16 @@
         <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
             <div>
                 <p class="text-xs text-zinc-500">Masuk sebagai:</p>
-                <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
-                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
-                    <div class="mt-1">
-                        <span class="text-[10px] bg-[#5551ff]/20 text-indigo-400 px-2 py-0.5 rounded border border-[#5551ff]/30 font-medium capitalize"><%= user.role %></span>
-                    </div>
-                <% } else { %>
-                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
-                <% } %>
-
-                <% if (user.role === 'admin') { %>
-                    <div class="mt-2">
-                        <a href="/admin/users" class="inline-block text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded border border-red-500/30 font-medium transition">Kelola User</a>
-                    </div>
-                <% } %>
+                <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
+                <div class="mt-1">
+                    <span class="text-[10px] bg-[#5551ff]/20 text-indigo-400 px-2 py-0.5 rounded border border-[#5551ff]/30 font-medium capitalize"><%= user.role %></span>
+                </div>
             </div>
             <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition shrink-0 ml-2">Logout</a>
         </div>
     </div>
 
-    <div class="md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
+    <div class="no-print md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
                 <div class="bg-[#5551ff] rounded-full p-0.5 flex items-center justify-center w-8 h-8 overflow-hidden shrink-0">
@@ -76,36 +94,33 @@
                 </span>
             </div>
             <div class="flex items-center gap-3">
-                <span class="text-xs text-zinc-400">
-                    <%= user.nama %>
-                    <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
-                        (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)
-                    <% } %>
-                </span>
+                <span class="text-xs text-zinc-400"><%= user.nama %></span>
                 <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
             </div>
         </div>
         <nav class="flex flex-wrap gap-2">
-            <a href="/dashboard" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Dashboard</a>
-            <a href="/barang" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Barang</a>
-            <a href="/supplier" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Supplier</a>
-            <a href="/transaksi" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Transaksi</a>
+            <a href="/dashboard" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition">Dashboard</a>
+            <a href="/barang" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition">Barang</a>
+            <a href="/supplier" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition">Supplier</a>
+            <a href="/transaksi" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition">Transaksi</a>
             <a href="/laporan" class="px-3 py-1.5 bg-[#5551ff] text-white rounded-lg text-xs font-medium shadow-md shadow-[#5551ff]/10">Laporan</a>
-            <a href="/barang-terjual" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Barang Terjual</a>
-            <% if (user.role === 'admin') { %>
-                <a href="/admin/users" class="px-3 py-1.5 bg-red-900/50 text-red-400 rounded-lg text-xs font-medium border border-red-500/20">Kelola User</a>
-            <% } %>
+            <a href="/barang-terjual" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition">Barang Terjual</a>
         </nav>
     </div>
 
     <div class="flex-grow p-6 md:p-10 overflow-y-auto w-full space-y-8">
         
-        <header>
-            <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Laporan Mutasi & Akumulasi Stok Gudang</h1>
-            <p class="text-zinc-400 text-sm mt-1">Sistem rekapitulasi data komoditas tahunan dan pencatatan sirkulasi harian.</p>
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-800 pb-5">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Laporan Mutasi & Akumulasi Stok Gudang</h1>
+                <p class="text-zinc-400 text-sm mt-1">Sistem rekapitulasi data komoditas internal logistik gudang.</p>
+            </div>
+            <button onclick="window.print()" class="no-print bg-[#5551ff] hover:bg-[#433eff] text-white font-semibold text-xs px-5 py-3 rounded-xl flex items-center gap-2 shadow-lg transition-all duration-200 shrink-0">
+                🖨️ Cetak Laporan Gudang
+            </button>
         </header>
 
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden">
+        <div class="print-card bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden">
             <div class="flex items-center gap-2 p-6 border-b border-zinc-800 bg-zinc-900/50">
                 <span>📊</span>
                 <h2 class="text-base font-bold text-[#5551ff]">Laporan Akumulasi Komoditas Gudang (Tahunan)</h2>
@@ -118,7 +133,7 @@
                             <th class="p-4">Mitra Penyuplai (Supplier)</th>
                             <th class="p-4 text-center">Stok Terkini</th>
                             <th class="p-4">Harga Satuan</th>
-                            <th class="p-4 text-center">Aksi</th>
+                            <th class="p-4 text-center no-print">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
@@ -133,7 +148,7 @@
                                     <td class="p-4 text-zinc-400"><%= g.nama_supplier %></td>
                                     <td class="p-4 text-center font-bold font-mono <%= g.stok < 0 ? 'text-red-400 bg-red-500/5' : 'text-zinc-200' %>"><%= g.stok %> Pcs</td>
                                     <td class="p-4 font-mono text-zinc-300">Rp <%= g.harga.toLocaleString('id-ID') %></td>
-                                    <td class="p-4 text-center space-x-3 text-xs">
+                                    <td class="p-4 text-center space-x-3 text-xs no-print">
                                         <button onclick="openModalBarang('<%= g.id_barang %>', '<%= g.nama_barang %>', '<%= g.stok %>', '<%= g.harga %>')" class="text-indigo-400 hover:text-indigo-300 font-medium transition hover:underline">✏️ Edit</button>
                                         <a href="/laporan/barang/hapus/<%= g.id_barang %>" onclick="return confirm('⚠️ HAPUS BARANG MASTER?\nSeluruh riwayat transaksi barang ini juga akan ikut dihapus secara permanen!')" class="text-rose-400 hover:text-rose-300 font-medium transition hover:underline">🗑️ Hapus</a>
                                     </td>
@@ -154,7 +169,7 @@
                 </div>
             <% } else { %>
                 <% Object.keys(laporanPerHari).forEach(tanggal => { %>
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-md space-y-1">
+                    <div class="print-card bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-md space-y-1">
                         <div class="flex items-center justify-between p-4 bg-zinc-900/80 border-b border-zinc-800/80">
                             <h3 class="text-sm font-bold text-zinc-200 flex items-center gap-2">
                                 📅 Laporan Hari: <span class="text-indigo-400"><%= new Date(tanggal).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></span>
@@ -164,7 +179,7 @@
 
                         <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-6 bg-zinc-900/20">
                             
-                            <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800/60 overflow-hidden">
+                            <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800/60 overflow-hidden print-card">
                                 <div class="flex items-center gap-1.5 mb-3 border-b border-zinc-900 pb-2">
                                     <span>📥</span>
                                     <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider">Barang Masuk (Inbound)</h4>
@@ -176,7 +191,7 @@
                                                 <th class="pb-2">Nama Produk</th>
                                                 <th class="pb-2">Mitra Penyuplai</th>
                                                 <th class="pb-2 text-center">Jumlah</th>
-                                                <th class="pb-2 text-center">Aksi</th>
+                                                <th class="pb-2 text-center no-print">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-zinc-900 text-zinc-300">
@@ -188,7 +203,7 @@
                                                         <td class="py-2.5 font-medium text-white"><%= bm.nama_barang %></td>
                                                         <td class="py-2.5 text-zinc-400"><%= bm.nama_supplier %></td>
                                                         <td class="py-2.5 text-center text-amber-400 font-bold font-mono">+<%= bm.jumlah %> Pcs</td>
-                                                        <td class="py-2.5 text-center space-x-2 font-medium">
+                                                        <td class="py-2.5 text-center space-x-2 font-medium no-print">
                                                             <button onclick="openModalEdit('<%= bm.id_transaksi %>', '<%= bm.jumlah %>', '<%= tanggal %>')" class="text-indigo-400 hover:text-indigo-300 transition hover:underline">Edit</button>
                                                             <a href="/laporan/hapus/<%= bm.id_transaksi %>" onclick="return confirm('Hapus record ini? Stok gudang akan otomatis disesuaikan kembali.')" class="text-rose-400 hover:text-rose-300 transition hover:underline">Hapus</a>
                                                         </td>
@@ -200,7 +215,7 @@
                                 </div>
                             </div>
 
-                            <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800/60 overflow-hidden">
+                            <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800/60 overflow-hidden print-card">
                                 <div class="flex items-center gap-1.5 mb-3 border-b border-zinc-900 pb-2">
                                     <span>📤</span>
                                     <h4 class="text-xs font-bold text-rose-500 uppercase tracking-wider">Barang Keluar (Outbound)</h4>
@@ -212,7 +227,7 @@
                                                 <th class="pb-2">Nama Produk</th>
                                                 <th class="pb-2">Mitra Penyuplai</th>
                                                 <th class="pb-2 text-center">Jumlah</th>
-                                                <th class="pb-2 text-center">Aksi</th>
+                                                <th class="pb-2 text-center no-print">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-zinc-900 text-zinc-300">
@@ -224,7 +239,7 @@
                                                         <td class="py-2.5 font-medium text-white"><%= bk.nama_barang %></td>
                                                         <td class="py-2.5 text-zinc-400"><%= bk.nama_supplier %></td>
                                                         <td class="py-2.5 text-center text-rose-400 font-bold font-mono">-<%= bk.jumlah %> Pcs</td>
-                                                        <td class="py-2.5 text-center space-x-2 font-medium">
+                                                        <td class="py-2.5 text-center space-x-2 font-medium no-print">
                                                             <button onclick="openModalEdit('<%= bk.id_transaksi %>', '<%= bk.jumlah %>', '<%= tanggal %>')" class="text-indigo-400 hover:text-indigo-300 transition hover:underline">Edit</button>
                                                             <a href="/laporan/hapus/<%= bk.id_transaksi %>" onclick="return confirm('Hapus record ini? Stok gudang akan otomatis disesuaikan kembali.')" class="text-rose-400 hover:text-rose-300 transition hover:underline">Hapus</a>
                                                         </td>
@@ -244,7 +259,7 @@
 
     </div>
 
-    <div id="modalBarang" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-all duration-300">
+    <div id="modalBarang" class="no-print hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-all duration-300">
         <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4">
             <div class="flex items-center gap-2 border-b border-zinc-800 pb-3">
                 <span class="text-xl">✏️</span>
@@ -273,7 +288,7 @@
         </div>
     </div>
 
-    <div id="modalEdit" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-all duration-300">
+    <div id="modalEdit" class="no-print hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-all duration-300">
         <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4">
             <div class="flex items-center gap-2 border-b border-zinc-800 pb-3">
                 <span class="text-xl">✏️</span>
@@ -297,7 +312,6 @@
     </div>
 
     <script>
-        // Modal Handling untuk Master Barang Gudang
         function openModalBarang(id, nama, stok, harga) {
             document.getElementById('formBarang').action = '/laporan/barang/edit/' + id;
             document.getElementById('barangNama').value = nama;
@@ -308,8 +322,6 @@
         function closeModalBarang() {
             document.getElementById('modalBarang').classList.add('hidden');
         }
-
-        // Modal Handling untuk Transaksi Harian
         function openModalEdit(id, jumlah, tanggal) {
             document.getElementById('formEdit').action = '/laporan/edit/' + id;
             document.getElementById('inputJumlah').value = jumlah;
