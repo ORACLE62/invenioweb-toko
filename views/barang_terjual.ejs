@@ -3,154 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barang Terjual - InvenioWeb</title>
-    <link class="rounded-full" rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
+    <title>Laporan Penjualan - InvenioWeb</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0f19;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body, .main-content {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .print-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+            .print-card {
+                border: 1px solid #d4d4d8 !important;
+                background-color: transparent !important;
+                box-shadow: none !important;
+                color: black !important;
+            }
+            .text-white { color: #000000 !important; }
+            .text-zinc-400, .text-zinc-300 { color: #3f3f46 !important; }
+            .bg-zinc-950 { background-color: #f4f4f5 !important; border-bottom: 2px solid #000 !important; }
+            .bg-gradient-to-r { background: transparent !important; }
         }
     </style>
 </head>
-<body class="bg-[#121214] text-zinc-100 min-h-screen flex flex-col md:flex-row antialiased">
+<body class="text-zinc-100 min-h-screen flex">
 
-    <aside class="hidden md:flex w-64 bg-[#18181b] border-r border-zinc-800/80 p-6 flex flex-col justify-between shrink-0 min-h-screen sticky top-0">
-        <div>
-            <div class="flex items-center gap-3 mb-8 px-2">
-                <div class="bg-[#5551ff] rounded-full p-1 shadow-lg shadow-[#5551ff]/20 flex items-center justify-center w-11 h-11 overflow-hidden shrink-0">
-                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
-                </div>
-                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent drop-shadow-sm">
-                    InvenioWeb
-                </span>
+    <aside class="no-print w-64 bg-[#0d121f] border-r border-zinc-800 flex flex-col justify-between p-5 shrink-0 fixed h-full">
+        <div class="space-y-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg shadow-purple-500/20">IWS</div>
+                <span class="text-lg font-bold tracking-tight text-white">InvenioWeb</span>
             </div>
-
-            <nav class="space-y-1.5">
-                <a href="/dashboard" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Dashboard</a>
-                <a href="/barang" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Barang</a>
-                <a href="/supplier" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Supplier</a>
-                <a href="/transaksi" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Transaksi</a>
-                <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Cetak Laporan</a>
-                <a href="/barang-terjual" class="block px-4 py-2.5 bg-[#5551ff] text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-md shadow-[#5551ff]/10">Barang Terjual</a>
-                <% if (user.role === 'admin') { %>
-                    <a href="/admin/users" class="block px-4 py-2.5 text-red-400 hover:text-white hover:bg-red-900/30 rounded-xl text-sm font-medium transition border border-red-500/10 mt-4">Kelola User</a>
-                <% } %> 
+            <nav class="space-y-1">
+                <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 rounded-xl text-sm transition-all">📋 Dashboard</a>
+                <a href="/kelola-barang" class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 rounded-xl text-sm transition-all">📦 Kelola Barang</a>
+                <a href="/kelola-supplier" class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 rounded-xl text-sm transition-all">🤝 Kelola Supplier</a>
+                <a href="/kelola-transaksi" class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 rounded-xl text-sm transition-all">⚙️ Kelola Transaksi</a>
+                <a href="/cetak-laporan" class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 rounded-xl text-sm transition-all">📊 Cetak Laporan</a>
+                <a href="/barang-terjual" class="flex items-center gap-3 px-4 py-3 bg-purple-600 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-purple-600/10">🛒 Barang Terjual</a>
+                <a href="/kelola-user" class="flex items-center gap-3 px-4 py-3 text-red-400/80 hover:text-red-400 hover:bg-red-500/5 rounded-xl text-sm transition-all">👤 Kelola User</a>
             </nav>
         </div>
-
         <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
             <div>
-                <p class="text-xs text-zinc-500">Masuk sebagai:</p>
-                <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
-                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
-                    <div class="mt-1">
-                        <span class="text-[10px] bg-[#5551ff]/20 text-indigo-400 px-2 py-0.5 rounded border border-[#5551ff]/30 font-medium capitalize"><%= user.role %></span>
-                    </div>
-                <% } else { %>
-                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
-                <% } %>
-
-                <% if (user.role === 'admin') { %>
-                    <div class="mt-2">
-                        <a href="/admin/users" class="inline-block text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded border border-red-500/30 font-medium transition">Kelola User</a>
-                    </div>
-                <% } %>
+                <p class="text-xs text-zinc-500">Masuk sebagai</p>
+                <p class="text-sm font-semibold text-zinc-200">Admin</p>
             </div>
-            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition shrink-0 ml-2">Logout</a>
+            <a href="/logout" class="text-xs text-red-400 hover:underline">Logout</a>
         </div>
     </aside>
 
-    <div class="md:hidden bg-[#18181b] border-b border-zinc-800 p-4">
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-                <div class="bg-[#5551ff] rounded-full p-0.5 flex items-center justify-center w-8 h-8 overflow-hidden shrink-0">
-                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
-                </div>
-                <span class="font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent drop-shadow-sm">
-                    InvenioWeb
-                </span>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="text-xs text-zinc-400">
-                    <%= user.nama %>
-                    <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
-                        (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)
-                    <% } %>
-                </span>
-                <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
-            </div>
-        </div>
-        <nav class="flex flex-wrap gap-2">
-            <a href="/dashboard" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Dashboard</a>
-            <a href="/barang" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Barang</a>
-            <a href="/supplier" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Supplier</a>
-            <a href="/transaksi" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Transaksi</a>
-            <a href="/laporan" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Laporan</a>
-            <a href="/barang-terjual" class="px-3 py-1.5 bg-[#5551ff] text-white rounded-lg text-xs font-medium shadow-md shadow-[#5551ff]/10">Barang Terjual</a>
-            <% if (user.role === 'admin') { %>
-                <a href="/admin/users" class="px-3 py-1.5 bg-red-900/50 text-red-400 rounded-lg text-xs font-medium border border-red-500/20">Kelola User</a>
-            <% } %>
-        </nav>
-    </div>
-
-    <main class="flex-1 p-6 md:p-10 overflow-y-auto w-full">
-        <div class="max-w-6xl mx-auto space-y-8">
+    <main class="main-content flex-1 md:pl-64 p-4 md:p-8 w-full">
+        <div class="print-container max-w-5xl mx-auto space-y-6">
             
-            <header>
-                <h1 class="text-2xl lg:text-3xl font-bold text-white tracking-tight">Daftar Barang Terjual</h1>
-                <p class="text-sm text-zinc-400 mt-1">Pencatatan sirkulasi pesanan pelanggan yang sukses terjual secara realtime.</p>
-            </header>
+            <div class="flex justify-between items-center border-b border-zinc-800 pb-5">
+                <div>
+                    <h1 class="text-2xl font-bold text-white print:text-black">Laporan Realisasi Penjualan & Pendapatan</h1>
+                    <p class="text-xs text-zinc-400 mt-1 print:text-zinc-700">Rekapitulasi berkas transaksi komersial dari aktivitas checkout belanja konsumen.</p>
+                </div>
+                <button onclick="window.print()" class="no-print bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg transition-all">
+                    🖨️ Cetak Laporan Penjualan
+                </button>
+            </div>
 
-            <div class="bg-[#18181b] border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-black/40">
-                <div class="overflow-x-auto w-full">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="border-b border-zinc-800 bg-zinc-900/30 text-zinc-400 text-xs font-semibold tracking-wider uppercase">
-                                <th class="p-4 w-32">Tanggal</th>
-                                <th class="p-4">Nama Barang</th>
-                                <th class="p-4 text-center w-28">Jumlah Beli</th>
-                                <th class="p-4 w-40">Harga Satuan</th>
-                                <th class="p-4 w-44">Total Pendapatan</th>
-                                <th class="p-4 w-40">Nama Pembeli</th>
+            <div class="print-card bg-gradient-to-r from-purple-950/30 to-slate-900/40 border border-purple-500/20 rounded-2xl p-6 shadow-xl flex justify-between items-center">
+                <div>
+                    <span class="text-xs uppercase tracking-wider text-purple-400 font-semibold">Total Pendapatan Bersih Terbuku</span>
+                    <h3 class="text-2xl font-mono font-bold text-white mt-1 print:text-black">
+                        Rp <%= typeof totalPendapatan !== 'undefined' ? totalPendapatan.toLocaleString('id-ID') : '0' %>
+                    </h3>
+                </div>
+                <div class="text-3xl no-print">💰</div>
+            </div>
+
+            <div class="print-card bg-slate-900/40 border border-zinc-800 rounded-2xl p-6 shadow-xl">
+                <h2 class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-4 print:text-purple-700">🛒 Daftar Faktur Transaksi Penjualan Sukses</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-zinc-300">
+                        <thead class="bg-zinc-950 text-zinc-400 uppercase font-mono border-b border-zinc-800">
+                            <tr>
+                                <th class="p-3">Tanggal</th>
+                                <th class="p-3">Nama Pembeli</th>
+                                <th class="p-3">Komoditas Barang</th>
+                                <th class="p-3 text-center">Volume Beli</th>
+                                <th class="p-3 text-right">Total Transaksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
-                            <% if (typeof terjual !== 'undefined' && terjual && terjual.length > 0) { %>
-                                <% terjual.forEach(t => { %>
-                                    <tr class="hover:bg-zinc-800/20 transition-colors duration-150">
-                                        <td class="p-4 whitespace-nowrap text-zinc-400 text-xs font-mono">
-                                            <%= new Date(t.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %>
-                                        </td>
-                                        <td class="p-4 font-medium text-cyan-400">
-                                            <%= t.nama_barang %>
-                                        </td>
-                                        <td class="p-4 text-center font-bold text-zinc-100 whitespace-nowrap font-mono">
-                                            <%= t.jumlah %> <span class="text-zinc-500 font-normal text-xs">pcs</span>
-                                        </td>
-                                        <td class="p-4 whitespace-nowrap text-zinc-300 font-mono">
-                                            Rp <%= Number(t.harga).toLocaleString('id-ID') %>
-                                        </td>
-                                        <td class="p-4 font-bold text-emerald-400 whitespace-nowrap font-mono">
-                                            Rp <%= (t.jumlah * t.harga).toLocaleString('id-ID') %>
-                                        </td>
-                                        <td class="p-4 whitespace-nowrap">
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-900 text-zinc-300 border border-zinc-800 shadow-inner">
-                                                <span class="text-zinc-500 text-[11px]">👤</span> <%= t.nama_pembeli %>
-                                            </span>
-                                        </td>
+                        <tbody class="divide-y divide-zinc-800/50 print:divide-zinc-300">
+                            <% if (typeof penjualan !== 'undefined' && penjualan.length > 0) { %>
+                                <% penjualan.forEach(trx => { %>
+                                    <tr class="hover:bg-zinc-900/30">
+                                        <td class="p-3 font-mono text-zinc-400"><%= trx.tanggal_format %></td>
+                                        <td class="p-3 font-medium text-white"><%= trx.nama_user %></td>
+                                        <td class="p-3 text-zinc-300"><%= trx.nama_barang %></td>
+                                        <td class="p-3 text-center font-mono text-purple-300 font-semibold"><%= trx.jumlah_beli %> Pcs</td>
+                                        <td class="p-3 text-right font-mono text-emerald-400 font-bold">Rp <%= (trx.jumlah_beli * trx.harga_satuan).toLocaleString('id-ID') %></td>
                                     </tr>
                                 <% }) %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="6" class="p-12 text-center text-zinc-500 italic">
-                                        <div class="text-2xl mb-2">🛒</div>
-                                        Belum ada data barang yang terjual saat ini.
-                                    </td>
+                                    <td colspan="5" class="p-4 text-center text-zinc-500">Belum ada transaksi masuk dari pembeli.</td>
                                 </tr>
                             <% } %>
                         </tbody>
