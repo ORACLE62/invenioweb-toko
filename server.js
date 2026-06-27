@@ -52,7 +52,8 @@ async function buatTabelOtomatis() {
             )
         `);
         
-        await db.execute(`CREATE TABLE IF NOT EXISTS supplier (id_supplier VARCHAR(50) NOT NULL PRIMARY KEY, nama_supplier VARCHAR(100) NOT NULL, alamat TEXT, no_telp VARCHAR(20))`);
+        // FIXED: Membuat tabel supplier langsung dengan kolom 'kontak'
+        await db.execute(`CREATE TABLE IF NOT EXISTS supplier (id_supplier VARCHAR(50) NOT NULL PRIMARY KEY, nama_supplier VARCHAR(100) NOT NULL, alamat TEXT, kontak VARCHAR(20))`);
         await db.execute(`CREATE TABLE IF NOT EXISTS petugas (id_petugas VARCHAR(50) NOT NULL PRIMARY KEY, nama_petugas VARCHAR(100) NOT NULL, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, level ENUM('Admin','Petugas Gudang','Pimpinan') NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS barang (id_barang VARCHAR(50) NOT NULL PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, stok INT NOT NULL DEFAULT 0, harga DECIMAL(10,2) NOT NULL, id_supplier VARCHAR(50) DEFAULT NULL)`);
         
@@ -91,6 +92,10 @@ setTimeout(async () => {
         await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
         await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
         await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS id_user INT DEFAULT NULL`);
+        
+        // FIXED: Memastikan struktur kolom 'kontak' ada di database cloud Anda jika sebelumnya memakai 'no_telp'
+        await db.execute(`ALTER TABLE supplier ADD COLUMN IF NOT EXISTS kontak VARCHAR(20)`);
+        
         await db.execute(`UPDATE user SET role = 'admin', status_aktif = 1 WHERE id_user = 1 OR username = 'admin'`);
         console.log("🚀 Kolom role & status_aktif aman/berhasil diverifikasi!");
     } catch (e) {
@@ -307,7 +312,8 @@ app.post('/supplier/tambah', requireLogin, requireRole(['admin', 'gudang', 'pimp
         const paramKontak = (inputTelepon && inputTelepon.trim() !== '') ? inputTelepon : null;
         const paramAlamat = (alamat && alamat.trim() !== '') ? alamat : null;
 
-        await db.execute('INSERT INTO supplier (id_supplier, nama_supplier, no_telp, alamat) VALUES (?, ?, ?, ?)', [id_supplier, paramNama, paramKontak, paramAlamat]);
+        // FIXED: Menggunakan nama kolom 'kontak' yang sesuai dengan struktur ejs dan database
+        await db.execute('INSERT INTO supplier (id_supplier, nama_supplier, kontak, alamat) VALUES (?, ?, ?, ?)', [id_supplier, paramNama, paramKontak, paramAlamat]);
         res.redirect('/supplier');
     } catch (e) { res.status(500).send("Error Simpan Supplier: " + e.message); }
 });
@@ -318,7 +324,8 @@ app.post('/supplier/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
         const { nama_supplier, telepon, alamat } = req.body;
         const inputTelepon = telepon || req.body.kontak || req.body.no_telp;
 
-        await db.execute('UPDATE supplier SET nama_supplier = ?, no_telp = ?, alamat = ? WHERE id_supplier = ?', [nama_supplier, inputTelepon, alamat, id_supplier]);
+        // FIXED: Mengubah set query menjadi 'kontak = ?' agar sinkron secara berkala
+        await db.execute('UPDATE supplier SET nama_supplier = ?, kontak = ?, alamat = ? WHERE id_supplier = ?', [nama_supplier, inputTelepon, alamat, id_supplier]);
         res.redirect('/supplier');
     } catch (e) { res.status(500).send("Error Edit Supplier: " + e.message); }
 });
@@ -380,7 +387,7 @@ app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpin
     try {
         const [terjual] = await db.execute(`
             SELECT t.*, b.nama_barang, b.harga, u.nama as nama_pembeli 
-            FROM transaksi t 
+            from transaksi t 
             JOIN barang b ON t.id_barang = b.id_barang 
             JOIN user u ON t.id_user = u.id_user 
             WHERE t.jenis_transaksi = 'keluar' AND t.id_user IS NOT NULL
