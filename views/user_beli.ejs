@@ -3,69 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Barang Tersedia - InvenioWeb</title>
+    <title>Market System - InvenioWeb</title>
+    <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100 text-gray-800 min-h-screen p-6 flex flex-col justify-between font-['Plus_Jakarta_Sans']">
+<body class="text-slate-200 min-h-screen p-6 flex flex-col justify-between bg-slate-950 font-['Plus_Jakarta_Sans']">
 
-    <div class="max-w-7xl w-full mx-auto space-y-6">
-        <header class="bg-white border border-gray-200 rounded-xl p-6 flex items-center justify-between shadow-sm">
-            <div>
-                <h1 class="text-lg font-bold text-gray-900">
-                    Selamat Datang, <span class="text-indigo-600"><%= user.nama %></span>! (Pelanggan)
-                </h1>
+    <div class="max-w-7xl w-full mx-auto space-y-8">
+        <header class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg">
+                    IW
+                </div>
+                <div>
+                    <h1 class="text-sm font-semibold text-white">
+                        Selamat Datang, <span class="text-teal-400"><%= user.nama %></span>!
+                    </h1>
+                    <span class="text-[10px] bg-slate-800 text-slate-400 border border-slate-700/50 px-2 py-0.5 rounded-md font-medium">🛒 Akun Pelanggan</span>
+                </div>
             </div>
-            <a href="/logout" class="text-sm text-red-600 hover:underline font-semibold">
+            <a href="/logout" class="text-xs bg-rose-950/40 border border-rose-800/60 hover:bg-rose-900/60 text-rose-400 font-semibold px-4 py-2 rounded-xl transition">
                 Logout
             </a>
         </header>
 
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-            <div class="flex items-center gap-2">
-                <span>🗳️</span>
-                <h2 class="text-base font-bold text-gray-900">Daftar Barang Tersedia</h2>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+                <h2 class="text-base font-bold text-teal-400 flex items-center gap-2">🛍️ DAFTAR BARANG TERSEDIA</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Atur jumlah pesanan menggunakan tombol plus-minus lalu tekan Beli Sekaligus.</p>
             </div>
             
-            <button onclick="bukaModalKonfirmasi()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-md transition flex items-center gap-2">
-                🛒 Beli Sekaligus (<span id="hitungBarang">0</span>)
+            <button onclick="bukaModalKonfirmasi()" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-lg transition flex items-center gap-2">
+                <span>🛒</span> Beli Sekaligus (<span id="hitungBarang">0</span>)
             </button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <% barangList.forEach((item, index) => { %>
-                <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col justify-between space-y-5 shadow-sm">
+                <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between space-y-5 shadow-lg relative group overflow-hidden">
                     
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-start gap-2">
-                            <h3 class="font-bold text-gray-900 text-base leading-snug"><%= item.nama_barang %></h3>
-                            <span class="text-[10px] font-mono bg-gray-100 text-gray-500 px-2 py-0.5 rounded border border-gray-200 shrink-0">
+                    <div>
+                        <div class="flex justify-between items-start gap-4 mb-3">
+                            <h3 class="font-bold text-white text-base tracking-tight leading-snug group-hover:text-teal-400 transition"><%= item.nama_barang %></h3>
+                            <span class="text-[9px] font-mono bg-slate-800/80 text-slate-400 px-2 py-1 rounded border border-slate-700/50 shrink-0">
                                 ID-BRG-<%= item.id_barang %>
                             </span>
                         </div>
 
-                        <div class="space-y-1.5 text-sm text-gray-600">
+                        <div class="space-y-2 text-xs text-slate-400 pt-2 border-t border-slate-800/40">
                             <div class="flex justify-between">
-                                <span class="font-medium text-gray-500">Harga:</span>
-                                <span class="font-semibold text-gray-900">Rp <%= item.harga.toLocaleString('id-ID') %></span>
+                                <span>Harga Satuan:</span>
+                                <span class="font-mono font-bold text-white">Rp <%= item.harga.toLocaleString('id-ID') %></span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="font-medium text-gray-500">Sisa Stok:</span>
-                                <span class="font-semibold text-gray-900"><%= item.stok %> pcs</span>
+                            <div class="flex justify-between items-center">
+                                <span>Sisa Stok:</span>
+                                <span class="font-mono px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/10">
+                                    Sisa <%= item.stok %> pcs
+                                </span>
                             </div>
                         </div>
                     </div>
 
                     <div class="space-y-2">
-                        <div class="flex justify-between items-center text-xs text-gray-500">
-                            <label for="input-<%= index %>">Jumlah Beli:</label>
+                        <div class="flex justify-between items-center text-[10px] text-slate-500 font-medium">
+                            <span>Jumlah Beli:</span>
                             <span>Max: <%= item.stok %></span>
                         </div>
                         
-                        <div class="flex items-center bg-gray-50 border border-gray-300 rounded-lg p-1">
-                            <button type="button" onclick="ubahJumlah('<%= index %>', -1)" class="w-10 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-200 rounded font-bold text-lg select-none">-</button>
+                        <div class="flex items-center bg-slate-950 border border-slate-800 rounded-xl overflow-hidden p-1">
+                            <button type="button" onclick="decrement('input-<%= index %>')" class="w-10 h-9 flex items-center justify-center text-zinc-400 hover:text-red-400 rounded-lg transition font-bold text-sm select-none">-</button>
                             
                             <input type="number" 
                                    id="input-<%= index %>" 
@@ -77,9 +86,9 @@
                                    min="0" 
                                    max="<%= item.stok %>" 
                                    onchange="validasiInput(this)"
-                                   class="input-kuantitas w-full bg-transparent text-center font-semibold text-sm text-gray-900 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                   class="input-kuantitas w-full bg-transparent text-center font-mono text-sm text-white font-bold outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                             
-                            <button type="button" onclick="ubahJumlah('<%= index %>', 1)" class="w-10 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-200 rounded font-bold text-lg select-none">+</button>
+                            <button type="button" onclick="increment('input-<%= index %>')" class="w-10 h-9 flex items-center justify-center text-zinc-400 hover:text-red-400 rounded-lg transition font-bold text-sm select-none">&plus;</button>
                         </div>
                     </div>
 
@@ -88,33 +97,33 @@
         </div>
     </div>
 
-    <div id="modalKonfirmasi" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-xl space-y-4 border border-gray-200">
+    <div id="modalKonfirmasi" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
             
-            <div class="flex items-center gap-2 border-b border-gray-200 pb-3">
+            <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
                 <span class="text-xl">📋</span>
-                <h3 class="text-base font-bold text-gray-900">Konfirmasi Pembelian Anda</h3>
+                <h3 class="text-sm font-bold text-white">Konfirmasi Pembelian Anda</h3>
             </div>
 
             <div class="max-h-48 overflow-y-auto space-y-2" id="listKeranjangModal"></div>
 
-            <div class="pt-3 border-t border-gray-200 flex justify-between items-center text-sm">
-                <span class="font-medium text-gray-500">Total Pembayaran:</span>
-                <span id="totalBayarModal" class="font-bold text-emerald-600 text-base">Rp 0</span>
+            <div class="pt-3 border-t border-slate-800 flex justify-between items-center text-sm">
+                <span class="font-medium text-slate-400">Total Pembayaran:</span>
+                <span id="totalBayarModal" class="font-mono font-bold text-emerald-400 text-base">Rp 0</span>
             </div>
 
             <form action="/barang/beli-sekaligus" method="POST" id="formCheckout">
                 <input type="hidden" name="keranjangData" id="keranjangDataHidden">
                 
-                <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 leading-relaxed">
+                <p class="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/10 rounded-xl p-3 leading-relaxed">
                     ⚠️ Apakah Anda yakin ingin memproses seluruh item pembelian di atas?
                 </p>
 
-                <div class="flex justify-end gap-3 mt-4">
-                    <button type="button" onclick="tutupModalKonfirmasi()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-xs font-bold text-gray-700 rounded-lg transition">
+                <div class="flex justify-end gap-3 mt-4 pt-2">
+                    <button type="button" onclick="tutupModalKonfirmasi()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-xl transition">
                         Tidak, Batalkan
                     </button>
-                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-xs text-white font-bold rounded-lg transition shadow-sm">
+                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-xs text-white font-bold rounded-xl transition shadow-lg">
                         Ya, Beli Sekarang
                     </button>
                 </div>
@@ -123,26 +132,31 @@
     </div>
 
     <script>
-        function ubahJumlah(index, nilai) {
-            const input = document.getElementById('input-' + index);
+        function increment(inputId) {
+            const input = document.getElementById(inputId);
             let current = parseInt(input.value) || 0;
-            let maxStok = parseInt(input.getAttribute('data-stok')) || 0;
+            let maxStok = parseInt(input.getAttribute('data-stok')) || 0; 
             
-            let hasil = current + nilai;
-            if (hasil < 0) hasil = 0;
-            if (hasil > maxStok) hasil = maxStok;
-            
-            input.value = hasil;
+            if (current < maxStok) {
+                input.value = current + 1;
+            }
+            perbaruiHitunganKeranjang();
+        }
+
+        function decrement(inputId) {
+            const input = document.getElementById(inputId);
+            let current = parseInt(input.value) || 0;
+            if (current > 0) {
+                input.value = current - 1;
+            }
             perbaruiHitunganKeranjang();
         }
 
         function validasiInput(input) {
             let value = parseInt(input.value) || 0;
             let maxStok = parseInt(input.getAttribute('data-stok')) || 0;
-            
             if (value < 0) value = 0;
             if (value > maxStok) value = maxStok;
-            
             input.value = value;
             perbaruiHitunganKeranjang();
         }
@@ -158,7 +172,6 @@
         function bukaModalKonfirmasi() {
             const listContainer = document.getElementById('listKeranjangModal');
             listContainer.innerHTML = '';
-            
             let dataBelanja = [];
             let totalBayar = 0;
 
@@ -174,20 +187,20 @@
                     dataBelanja.push({ id_barang: id, nama_barang: nama, jumlah: kuantitas, harga: harga });
 
                     let itemRow = document.createElement('div');
-                    itemRow.className = "flex justify-between items-center text-xs bg-gray-50 border border-gray-200 p-2.5 rounded-lg";
+                    itemRow.className = "flex justify-between items-center text-xs bg-slate-950 border border-slate-800 p-2.5 rounded-xl";
                     itemRow.innerHTML = `
                         <div>
-                            <p class="font-semibold text-gray-900">${nama}</p>
-                            <p class="text-[10px] text-gray-500">${kuantitas} pcs x Rp ${harga.toLocaleString('id-ID')}</p>
+                            <p class="font-semibold text-white">${nama}</p>
+                            <p class="text-[10px] text-slate-500">${kuantitas} pcs x Rp ${harga.toLocaleString('id-ID')}</p>
                         </div>
-                        <span class="font-bold text-gray-700">Rp ${subtotal.toLocaleString('id-ID')}</span>
+                        <span class="font-mono font-bold text-slate-300">Rp ${subtotal.toLocaleString('id-ID')}</span>
                     `;
                     listContainer.appendChild(itemRow);
                 }
             });
 
             if (dataBelanja.length === 0) {
-                alert('Silakan tentukan kuantitas jumlah beli barang terlebih dahulu!');
+                alert('Silakan tentukan kuantitas barang terlebih dahulu sebelum membeli sekaligus!');
                 return;
             }
 
