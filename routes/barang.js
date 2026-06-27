@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db'); // Sesuaikan dengan path file database Anda
+const db = require('../config/db'); // Pastikan path config/db.js Anda benar
 
-// Middleware simulasi login (pastikan ini sesuai dengan project Anda)
+// Middleware cek login
 function requireLogin(req, res, next) {
     if (req.session && req.session.user) {
         next();
@@ -12,82 +12,67 @@ function requireLogin(req, res, next) {
 }
 
 // ===================================================================
-// OPTION A: JIKA BACKEND MEMBACA URL: /barang/edit/BRG-XXXXXX
+// OPTION A & B: FITUR EDIT DATA BARANG (DIBUAT AMAN)
 // ===================================================================
 router.post('/barang/edit/:id', requireLogin, async (req, res) => {
     try {
         const id_barang = req.params.id;
         const { nama_barang, id_supplier, stok, harga } = req.body;
-
-        const query = `
-            UPDATE barang 
-            SET nama_barang = ?, id_supplier = ?, stok = ?, harga = ? 
-            WHERE id_barang = ?
-        `;
+        const query = `UPDATE barang SET nama_barang = ?, id_supplier = ?, stok = ?, harga = ? WHERE id_barang = ?`;
         await db.query(query, [nama_barang, id_supplier, stok, harga, id_barang]);
         res.redirect('/barang');
     } catch (e) {
-        console.error("Error Edit Barang A:", e);
-        res.send("Error Update Data Barang: " + e.message);
+        console.error(e);
+        res.status(500).send("Error Update Data Barang: " + e.message);
     }
 });
 
-// ===================================================================
-// OPTION B: JIKA BACKEND MEMBACA URL LANGSUNG: /edit/BRG-XXXXXX
-// ===================================================================
 router.post('/edit/:id', requireLogin, async (req, res) => {
     try {
         const id_barang = req.params.id;
         const { nama_barang, id_supplier, stok, harga } = req.body;
-
-        const query = `
-            UPDATE barang 
-            SET nama_barang = ?, id_supplier = ?, stok = ?, harga = ? 
-            WHERE id_barang = ?
-        `;
+        const query = `UPDATE barang SET nama_barang = ?, id_supplier = ?, stok = ?, harga = ? WHERE id_barang = ?`;
         await db.query(query, [nama_barang, id_supplier, stok, harga, id_barang]);
         res.redirect('/barang');
     } catch (e) {
-        console.error("Error Edit Barang B:", e);
-        res.send("Error Update Data Barang: " + e.message);
+        console.error(e);
+        res.status(500).send("Error Update Data Barang: " + e.message);
     }
 }); 
 
 // ===================================================================
-// FIXED ROUTE: MENAMPILKAN HALAMAN BELI BARANG
-// (Mendukung URL /beli-barang dan /barang/beli-barang)
+// FIX DEFINITIF: ROUTE GET /beli-barang 
 // ===================================================================
-const tampilkanHalamanBeli = async (req, res) => {
+router.get('/beli-barang', requireLogin, async (req, res) => {
     try {
+        // Menggunakan query dasar agar kompatibel dengan library mysql2/promise
         const [barangList] = await db.query("SELECT * FROM barang WHERE stok > 0");
+        
         res.render('user_beli', { 
             barangList: barangList, 
-            user: req.session.user 
+            user: req.session.user || { nama: 'Pelanggan' }
         });
     } catch (e) {
-        console.error("Error memuat halaman beli-barang:", e);
-        res.status(500).send("Internal Server Error: " + e.message);
+        console.error("Crash di GET /beli-barang:", e);
+        res.status(500).send("Internal Server Error di Backend: " + e.message);
     }
-};
-
-router.get('/beli-barang', requireLogin, tampilkanHalamanBeli);
-router.get('/barang/beli-barang', requireLogin, tampilkanHalamanBeli);
+});
 
 // ===================================================================
-// FIXED ROUTE: PROSES BELI MASSAL SEKALIGUS
-// (Mendukung POST /beli-sekaligus dan /barang/beli-sekaligus)
+// FIX DEFINITIF: ROUTE POST /beli-sekaligus
 // ===================================================================
-const prosesBeliSekaligus = async (req, res) => {
+router.post('/beli-sekaligus', requireLogin, async (req, res) => {
     try {
+        if (!req.body.keranjangData) {
+            return res.status(400).send("Data keranjang tidak terkirim");
+        }
+
         const keranjang = JSON.parse(req.body.keranjangData);
-        const userId = req.session.user.id; 
+        const userId = req.session.user ? req.session.user.id : null; 
         const tanggalSekarang = new Date().toISOString().split('T')[0];
 
-        // Deteksi dinamis arah kembali URL asal pembuka halaman
-        const urlAsal = req.originalUrl.includes('/barang/') ? '/barang/beli-barang' : '/beli-barang';
-
         if (!keranjang || keranjang.length === 0) {
-            return res.send(`<script>alert('Keranjang belanja kosong!'); window.location='${urlAsal}';</script>`);
+            return res.send("<script>alert('Keranjang kosong!'); window.location.reload();</script>");
         }
 
         for (let item of keranjang) {
@@ -95,28 +80,66 @@ const prosesBeliSekaligus = async (req, res) => {
             const barang = rows[0];
             
             if (!barang || barang.stok < item.jumlah) {
-                return res.send(`<script>alert('Gagal! Stok untuk ${item.nama_barang} tidak mencukupi.'); window.location='${urlAsal}';</script>`);
+                return res.send(`<script>alert('Gagal! Stok ${item.nama_barang} habis atau tidak cukup.'); window.location.reload();</script>`);
             }
 
-            // Potong stok master barang gudang
+            // Potong Stok
             await db.query("UPDATE barang SET stok = stok - ? WHERE id_barang = ?", [item.jumlah, item.id_barang]);
 
-            // Catat ke log riwayat transaksi sirkulasi keluar
+            // Catat Transaksi Keluar
             await db.query(
                 "INSERT INTO transaksi (id_barang, id_user, jumlah, jenis_transaksi, tanggal) VALUES (?, ?, ?, 'keluar', ?)",
                 [item.id_barang, userId, item.jumlah, tanggalSekarang]
             );
         }
 
-        res.send(`<script>alert('🎉 Pembelian sukses dikonfirmasi sekaligus!'); window.location='${urlAsal}';</script>`);
+        res.send("<script>alert('🎉 Pembelian sukses dikonfirmasi sekaligus!'); window.location.reload();</script>");
 
     } catch (error) {
-        console.error("Error Beli Sekaligus:", error);
-        res.status(500).send("Terjadi masalah internal sistem saat checkout: " + error.message);
+        console.error("Crash di POST /beli-sekaligus:", error);
+        res.status(500).send("Gagal memproses pembelian: " + error.message);
     }
-};
+});
 
-router.post('/beli-sekaligus', requireLogin, prosesBeliSekaligus);
-router.post('/barang/beli-sekaligus', requireLogin, prosesBeliSekaligus);
+// ===================================================================
+// PENAMBAHAN BARU: ROUTE GET /barang-terjual (UNTUK HALAMAN ADMIN)
+// ===================================================================
+router.get('/barang-terjual', requireLogin, async (req, res) => {
+    try {
+        // Ambil data transaksi keluar dengan join ke tabel user dan barang
+        // Alias kolom (AS) disesuaikan dengan variabel di file barang_terjual.ejs Anda
+        const [rows] = await db.query(`
+            SELECT 
+                DATE_FORMAT(t.tanggal, '%d/%m/%Y') AS tanggal_format,
+                t.tanggal AS tanggal,
+                u.username AS nama_user,
+                b.nama_barang AS nama_barang,
+                t.jumlah AS jumlah_beli,
+                b.harga AS harga_satuan
+            FROM transaksi t
+            JOIN user u ON t.id_user = u.id_user
+            JOIN barang b ON t.id_barang = b.id_barang
+            WHERE t.jenis_transaksi = 'keluar'
+            ORDER BY t.tanggal DESC, t.id_transaksi DESC
+        `);
+
+        // Hitung total nominal pendapatan secara dinamis dari seluruh baris transaksi
+        let totalPendapatan = 0;
+        rows.forEach(trx => {
+            totalPendapatan += (trx.jumlah_beli * trx.harga_satuan);
+        });
+
+        // Merender view barang_terjual.ejs dengan data asli dari database
+        res.render('barang_terjual', {
+            riwayatPenjualan: rows,
+            totalPendapatan: totalPendapatan,
+            user: req.session.user
+        });
+
+    } catch (e) {
+        console.error("Gagal memuat halaman barang terjual:", e);
+        res.status(500).send("Error Laporan Penjualan: " + e.message);
+    }
+});
 
 module.exports = router;
