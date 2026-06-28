@@ -60,7 +60,7 @@ async function buatTabelOtomatis() {
             CREATE TABLE IF NOT EXISTS transaksi (
                 id_transaksi INT AUTO_INCREMENT PRIMARY KEY, 
                 id_barang VARCHAR(50) NOT NULL, 
-                jenis_transaksi ENUM('masuk','keluar','komersial') NOT NULL, 
+                jenis_transaksi ENUM('masuk','keluar') NOT NULL, 
                 jumlah INT NOT NULL, 
                 tanggal DATE NOT NULL, 
                 masuk VARCHAR(50) DEFAULT 'masuk', 
@@ -90,7 +90,6 @@ setTimeout(async () => {
     try {
         await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
         await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
-        await db.execute(`ALTER TABLE transaksi MODIFY COLUMN jenis_transaksi ENUM('masuk','keluar','komersial') NOT NULL`);
         await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS id_user INT DEFAULT NULL`);
         await db.execute(`ALTER TABLE supplier ADD COLUMN IF NOT EXISTS kontak VARCHAR(20)`);
         console.log("🚀 Kolom role & status_aktif aman/berhasil diverifikasi!");
@@ -333,7 +332,8 @@ app.get('/supplier/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
 app.get('/transaksi', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT * FROM barang');
-        const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang WHERE t.jenis_transaksi != "komersial" ORDER BY t.tanggal DESC, t.id_transaksi DESC');
+        // Filter agar transaksi milik pelanggan komersial tidak mengotori tabel logistik reguler
+        const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang WHERE t.keluar NOT LIKE "KOMERSIAL:%" ORDER BY t.tanggal DESC, t.id_transaksi DESC');
         res.render('transaksi', { user: req.session.user, barang, transaksi });
     } catch (e) { res.status(500).send("Error Menu Transaksi: " + e.message); }
 });
@@ -370,17 +370,17 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'p
 });
 
 // ==========================================
-// ✨ FIXED FEATURE: ROUTE BARANG TERJUAL (DATA REAL-TIME KOMERSIAL)
+// ✨ FIXED FEATURE: ROUTE BARANG TERJUAL (MENAMPILKAN DATA AKTIVITAS USER)
 // ==========================================
 app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
-        // FIXED: Membaca jenis_transaksi = 'komersial' agar sinkron penuh dengan aktivitas beli user
+        // Menggunakan filter awalan string 'KOMERSIAL:' pada kolom keluar agar relasi data valid total 100%
         const [terjual] = await db.execute(`
             SELECT t.*, b.nama_barang, b.harga, u.nama as nama_pembeli 
             FROM transaksi t 
             JOIN barang b ON t.id_barang = b.id_barang 
             JOIN user u ON t.id_user = u.id_user 
-            WHERE t.jenis_transaksi = 'komersial'
+            WHERE t.jenis_transaksi = 'keluar' AND t.keluar LIKE 'KOMERSIAL:%'
             ORDER BY t.tanggal DESC, t.id_transaksi DESC
         `);
         res.render('barang_terjual', { user: req.session.user, terjual });
@@ -388,19 +388,19 @@ app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpin
 });
 
 // ==========================================
-// 6. ROUTE LAPORAN (HANYA MEMBACA LOGISTIK GUDANG MASUK KELUAR)
+// 6. ROUTE LAPORAN (BERSIH DARI DATA BELANJA USER)
 // ==========================================
 app.get('/laporan', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [stokGudang] = await db.execute(`SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier FROM barang b LEFT JOIN supplier s ON b.id_supplier = s.id_supplier`);
         
-        // FIXED: Ditambahkan filter WHERE t.jenis_transaksi != 'komersial' agar barang belanjaan tidak masuk ke cetak laporan penyuplai
+        // Memfilter keluar data bertanda 'KOMERSIAL:' supaya lembar Cetak Laporan logistik murni bersih kembali
         const [allTransaksi] = await db.execute(`
             SELECT t.*, b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
             FROM transaksi t 
             JOIN barang b ON t.id_barang = b.id_barang 
             LEFT JOIN supplier s ON b.id_supplier = s.id_supplier 
-            WHERE t.jenis_transaksi != 'komersial'
+            WHERE t.keluar NOT LIKE 'KOMERSIAL:%'
             ORDER BY t.tanggal DESC, t.id_transaksi DESC
         `);
 
@@ -478,7 +478,7 @@ app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) =>
     }
 });
 
-// FIXED: Proses Pembelian Eceran diarahkan memakai 'komersial' dan melempar ke halaman barang-terjual
+// FIXED: Eceran menggunakan penanda KOMERSIAL: agar terisolasi sempurna
 app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         const { id_barang, jumlah_beli } = req.body;
@@ -496,10 +496,10 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
 
         await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
         
-        // FIXED: jenis_transaksi diubah menjadi 'komersial' agar dibaca oleh halaman Barang Terjual
+        // Memakai jenis_transaksi 'keluar' beraliansi dengan string penanda di kolom 'keluar'
         await db.execute(
-            'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, "komersial", ?, ?, ?, ?)',
-            [id_barang, jumlah, tanggalHariIni, `Dibeli oleh ${req.session.user.nama}`, userId]
+            'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, "keluar", ?, ?, ?, ?)',
+            [id_barang, jumlah, tanggalHariIni, `KOMERSIAL: Dibeli oleh ${req.session.user.nama}`, userId]
         );
 
         res.send("<script>alert('Pembelian berhasil! Stok otomatis terpotong.'); window.location='/barang-terjual';</script>");
@@ -508,7 +508,7 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
     }
 });
 
-// 🔥 FIXED PERMANEN: POST PROSES BELI MASSAL SEKALIGUS (Masuk Barang Terjual & Ditendang Keluar dari Cetak Laporan)
+// 🔥 FIXED PERMANEN: AMAN DARI ERROR ENUM DATABASE DATA TRUNCATED
 app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         if (!req.body.keranjangData) return res.status(400).send("Data keranjang kosong.");
@@ -533,14 +533,13 @@ app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res
             // Potong stok produk gudang
             await db.execute("UPDATE barang SET stok = stok - ? WHERE id_barang = ?", [item.jumlah, item.id_barang]);
 
-            // FIXED: jenis_transaksi diisi 'komersial'. Ini membuat data langsung tampil di /barang-terjual dan terfilter dari /laporan
+            // Menggunakan jenis_transaksi 'keluar' (Lolos Error Data Truncated) + Penanda khusus 'KOMERSIAL:'
             await db.execute(
-                "INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, 'komersial', ?, ?, ?, ?)",
-                [item.id_barang, item.jumlah, tanggalSekarang, `Dibeli Sekaligus oleh ${req.session.user.nama}`, userId]
+                "INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, 'keluar', ?, ?, ?, ?)",
+                [item.id_barang, item.jumlah, tanggalSekarang, `KOMERSIAL: Massal oleh ${req.session.user.nama}`, userId]
             );
         }
 
-        // FIXED: Diarahkan langsung melihat hasilnya ke halaman Barang Terjual
         res.send("<script>alert('🎉 Pembelian sukses dikonfirmasi sekaligus!'); window.location='/barang-terjual';</script>");
     } catch (error) {
         console.error("Error Beli Sekaligus Massal:", error);
