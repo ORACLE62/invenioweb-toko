@@ -107,7 +107,7 @@ const requireRole = (roles) => {
     return (req, res, next) => {
         if (!req.session || !req.session.user) return res.redirect('/login');
         if (!roles.includes(req.session.user.role)) {
-            // Jika user biasa mencoba akses halaman admin, lempar balik ke halaman belanja mereka
+            // Jika user biasa mencoba akses halaman admin/dashboard, langsung usir balik ke halaman belanja mereka
             if (req.session.user.role === 'user') {
                 return res.redirect('/beli-barang');
             }
@@ -145,7 +145,7 @@ app.post('/login', async (req, res) => {
                 role: akun.role || 'user'
             }; 
             
-            // 🔥 FIX PENGALIHAN SEWAKTU LOGIN
+            // JALUR PENGALIHAN UTAMA SETELAH LOGIN
             if (akun.role === 'user') {
                 return res.redirect('/beli-barang'); 
             } else {
@@ -225,7 +225,7 @@ app.get('/admin/users/hapus/:id', requireLogin, requireRole(['admin']), async (r
 });
 
 // ==========================================
-// 2. ROUTE DASHBOARD (🔥 KUNCI KHUSUS INTERNAL STAFF)
+// 2. ROUTE DASHBOARD (KUNCI KHUSUS INTERNAL STAFF)
 // ==========================================
 app.get('/dashboard', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
@@ -478,7 +478,6 @@ app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) =>
     }
 });
 
-// 🔥 FIX REDIRECT: Pembelian Eceran dialihkan kembali ke /beli-barang
 app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         const { id_barang, jumlah_beli } = req.body;
@@ -507,7 +506,7 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
     }
 });
 
-// 🔥 FIX REDIRECT: Checkout Massal dialihkan kembali ke /beli-barang (Aman & Anti Nyasar!)
+// 🔥 FIXED PERMANEN: PERBAIKAN TYPO 'interanjang' MENJADI 'keranjang'
 app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         if (!req.body.keranjangData) return res.status(400).send("Data keranjang kosong.");
@@ -516,7 +515,8 @@ app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res
         const userId = req.session.user.id_user; 
         const tanggalSekarang = new Date().toISOString().split('T')[0];
 
-        if (!interanjang || keranjang.length === 0) {
+        // DISINI SUDAH FIXED: Menggunakan variabel 'keranjang' yang benar
+        if (!keranjang || keranjang.length === 0) {
             return res.send("<script>alert('Keranjang belanja kosong!'); window.location='/beli-barang';</script>");
         }
 
