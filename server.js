@@ -373,16 +373,17 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'p
 });
 
 // ==========================================
-// 6. ROUTE BARANG TERJUAL (MENAMPILKAN DATA AKTIVITAS USER)
+// 6. ROUTE BARANG TERJUAL (MENAMPILKAN DATA AKTIVITAS USER & OUTBOUND)
 // ==========================================
 app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
+        // FIXED: Filter diperlonggar agar semua jenis_transaksi = 'keluar' otomatis masuk dan terhitung
         const [terjual] = await db.execute(`
-            SELECT t.*, b.nama_barang, b.harga, COALESCE(u.nama, 'Pelanggan Toko') as nama_pembeli 
+            SELECT t.*, b.nama_barang, b.harga, COALESCE(u.nama, 'Pelanggan/Gudang') as nama_pembeli 
             FROM transaksi t 
             JOIN barang b ON t.id_barang = b.id_barang 
             LEFT JOIN user u ON t.id_user = u.id_user 
-            WHERE t.jenis_transaksi = 'keluar' AND (t.id_user IS NOT NULL OR t.keluar LIKE 'KOMERSIAL:%')
+            WHERE t.jenis_transaksi = 'keluar'
             ORDER BY t.tanggal DESC, t.id_transaksi DESC
         `);
         res.render('barang_terjual', { user: req.session.user, terjual });
