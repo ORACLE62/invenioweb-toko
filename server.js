@@ -52,7 +52,6 @@ async function buatTabelOtomatis() {
             )
         `);
         
-        // FIXED: Membuat tabel supplier langsung dengan kolom 'kontak'
         await db.execute(`CREATE TABLE IF NOT EXISTS supplier (id_supplier VARCHAR(50) NOT NULL PRIMARY KEY, nama_supplier VARCHAR(100) NOT NULL, alamat TEXT, kontak VARCHAR(20))`);
         await db.execute(`CREATE TABLE IF NOT EXISTS petugas (id_petugas VARCHAR(50) NOT NULL PRIMARY KEY, nama_petugas VARCHAR(100) NOT NULL, username VARCHAR(50) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, level ENUM('Admin','Petugas Gudang','Pimpinan') NOT NULL)`);
         await db.execute(`CREATE TABLE IF NOT EXISTS barang (id_barang VARCHAR(50) NOT NULL PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, stok INT NOT NULL DEFAULT 0, harga DECIMAL(10,2) NOT NULL, id_supplier VARCHAR(50) DEFAULT NULL)`);
@@ -61,7 +60,7 @@ async function buatTabelOtomatis() {
             CREATE TABLE IF NOT EXISTS transaksi (
                 id_transaksi INT AUTO_INCREMENT PRIMARY KEY, 
                 id_barang VARCHAR(50) NOT NULL, 
-                jenis_transaksi ENUM('masuk','keluar') NOT NULL, 
+                jenis_transaksi ENUM('masuk','keluar','komersial') NOT NULL, 
                 jumlah INT NOT NULL, 
                 tanggal DATE NOT NULL, 
                 masuk VARCHAR(50) DEFAULT 'masuk', 
@@ -91,15 +90,12 @@ setTimeout(async () => {
     try {
         await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
         await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
+        await db.execute(`ALTER TABLE transaksi MODIFY COLUMN jenis_transaksi ENUM('masuk','keluar','komersial') NOT NULL`);
         await db.execute(`ALTER TABLE transaksi ADD COLUMN IF NOT EXISTS id_user INT DEFAULT NULL`);
-        
-        // FIXED: Memastikan struktur kolom 'kontak' ada di database cloud Anda jika sebelumnya memakai 'no_telp'
         await db.execute(`ALTER TABLE supplier ADD COLUMN IF NOT EXISTS kontak VARCHAR(20)`);
-        
-        await db.execute(`UPDATE user SET role = 'admin', status_aktif = 1 WHERE id_user = 1 OR username = 'admin'`);
         console.log("🚀 Kolom role & status_aktif aman/berhasil diverifikasi!");
     } catch (e) {
-        console.log("Modifikasi kolom user aman.");
+        console.log("Modifikasi kolom database aman.");
     }
 }, 5000);
 
@@ -177,11 +173,6 @@ app.post('/register', async (req, res) => {
         if (!username || !nama || !password) {
             return res.send("<script>alert('Semua formulir pendaftaran wajib diisi!'); window.location='/register';</script>");
         }
-
-        try {
-            await db.execute(`ALTER TABLE user MODIFY COLUMN role ENUM('admin', 'gudang', 'pimpinan', 'user') DEFAULT 'user'`);
-            await db.execute(`ALTER TABLE user ADD COLUMN IF NOT EXISTS status_aktif TINYINT DEFAULT 1`);
-        } catch (errCol) {}
 
         const [cek] = await db.execute('SELECT * FROM user WHERE username = ?', [username]);
         if (cek.length > 0) {
@@ -312,7 +303,6 @@ app.post('/supplier/tambah', requireLogin, requireRole(['admin', 'gudang', 'pimp
         const paramKontak = (inputTelepon && inputTelepon.trim() !== '') ? inputTelepon : null;
         const paramAlamat = (alamat && alamat.trim() !== '') ? alamat : null;
 
-        // FIXED: Menggunakan nama kolom 'kontak' yang sesuai dengan struktur ejs dan database
         await db.execute('INSERT INTO supplier (id_supplier, nama_supplier, kontak, alamat) VALUES (?, ?, ?, ?)', [id_supplier, paramNama, paramKontak, paramAlamat]);
         res.redirect('/supplier');
     } catch (e) { res.status(500).send("Error Simpan Supplier: " + e.message); }
@@ -324,7 +314,6 @@ app.post('/supplier/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
         const { nama_supplier, telepon, alamat } = req.body;
         const inputTelepon = telepon || req.body.kontak || req.body.no_telp;
 
-        // FIXED: Mengubah set query menjadi 'kontak = ?' agar sinkron secara berkala
         await db.execute('UPDATE supplier SET nama_supplier = ?, kontak = ?, alamat = ? WHERE id_supplier = ?', [nama_supplier, inputTelepon, alamat, id_supplier]);
         res.redirect('/supplier');
     } catch (e) { res.status(500).send("Error Edit Supplier: " + e.message); }
@@ -339,12 +328,12 @@ app.get('/supplier/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
 });
 
 // ==========================================
-// 5. ROUTE TRANSAKSI
+// 5. ROUTE TRANSAKSI (LOGISTIK GUDANG)
 // ==========================================
 app.get('/transaksi', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT * FROM barang');
-        const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang ORDER BY t.tanggal DESC, t.id_transaksi DESC');
+        const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang WHERE t.jenis_transaksi != "komersial" ORDER BY t.tanggal DESC, t.id_transaksi DESC');
         res.render('transaksi', { user: req.session.user, barang, transaksi });
     } catch (e) { res.status(500).send("Error Menu Transaksi: " + e.message); }
 });
@@ -381,16 +370,17 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'p
 });
 
 // ==========================================
-// ✨ NEW FEATURE: ROUTE BARANG TERJUAL 
+// ✨ FIXED FEATURE: ROUTE BARANG TERJUAL (DATA REAL-TIME KOMERSIAL)
 // ==========================================
 app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
+        // FIXED: Membaca jenis_transaksi = 'komersial' agar sinkron penuh dengan aktivitas beli user
         const [terjual] = await db.execute(`
             SELECT t.*, b.nama_barang, b.harga, u.nama as nama_pembeli 
-            from transaksi t 
+            FROM transaksi t 
             JOIN barang b ON t.id_barang = b.id_barang 
             JOIN user u ON t.id_user = u.id_user 
-            WHERE t.jenis_transaksi = 'keluar' AND t.id_user IS NOT NULL
+            WHERE t.jenis_transaksi = 'komersial'
             ORDER BY t.tanggal DESC, t.id_transaksi DESC
         `);
         res.render('barang_terjual', { user: req.session.user, terjual });
@@ -398,12 +388,21 @@ app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpin
 });
 
 // ==========================================
-// 6. ROUTE LAPORAN
+// 6. ROUTE LAPORAN (HANYA MEMBACA LOGISTIK GUDANG MASUK KELUAR)
 // ==========================================
 app.get('/laporan', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [stokGudang] = await db.execute(`SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier FROM barang b LEFT JOIN supplier s ON b.id_supplier = s.id_supplier`);
-        const [allTransaksi] = await db.execute(`SELECT t.*, b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang LEFT JOIN supplier s ON b.id_supplier = s.id_supplier ORDER BY t.tanggal DESC, t.id_transaksi DESC`);
+        
+        // FIXED: Ditambahkan filter WHERE t.jenis_transaksi != 'komersial' agar barang belanjaan tidak masuk ke cetak laporan penyuplai
+        const [allTransaksi] = await db.execute(`
+            SELECT t.*, b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
+            FROM transaksi t 
+            JOIN barang b ON t.id_barang = b.id_barang 
+            LEFT JOIN supplier s ON b.id_supplier = s.id_supplier 
+            WHERE t.jenis_transaksi != 'komersial'
+            ORDER BY t.tanggal DESC, t.id_transaksi DESC
+        `);
 
         const laporanPerHari = {};
         allTransaksi.forEach(t => {
@@ -466,7 +465,6 @@ app.get('/laporan/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pim
 // 7. ROUTE KHUSUS USER BIASA (BELI BARANG ECERAN & SEKALIGUS)
 // ===================================================================
 
-// GET Halaman Utama Beli Barang (Dicocokkan dengan variabel 'barang')
 app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         const [barangTersedia] = await db.execute('SELECT * FROM barang WHERE stok > 0');
@@ -480,12 +478,13 @@ app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) =>
     }
 });
 
-// POST Beli Barang Eceran Bawaan Anda
+// FIXED: Proses Pembelian Eceran diarahkan memakai 'komersial' dan melempar ke halaman barang-terjual
 app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         const { id_barang, jumlah_beli } = req.body;
         const jumlah = parseInt(jumlah_beli);
         const tanggalHariIni = new Date().toISOString().split('T')[0];
+        const userId = req.session.user.id_user;
 
         const [cekBarang] = await db.execute('SELECT stok, nama_barang FROM barang WHERE id_barang = ?', [id_barang]);
         if (cekBarang.length === 0) return res.send("<script>alert('Barang tidak ditemukan!'); window.location='/beli-barang';</script>");
@@ -496,24 +495,26 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
         }
 
         await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
+        
+        // FIXED: jenis_transaksi diubah menjadi 'komersial' agar dibaca oleh halaman Barang Terjual
         await db.execute(
-            'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, "keluar", ?, ?, ?, ?)',
-            [id_barang, jumlah, tanggalHariIni, `Dibeli oleh ${req.session.user.nama}`, req.session.user.id_user]
+            'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, "komersial", ?, ?, ?, ?)',
+            [id_barang, jumlah, tanggalHariIni, `Dibeli oleh ${req.session.user.nama}`, userId]
         );
 
-        res.send("<script>alert('Pembelian berhasil! Stok otomatis terpotong.'); window.location='/beli-barang';</script>");
+        res.send("<script>alert('Pembelian berhasil! Stok otomatis terpotong.'); window.location='/barang-terjual';</script>");
     } catch (e) {
         res.status(500).send("Error Process Pembelian: " + e.message);
     }
 });
 
-// 🔥 NEW: POST PROSES BELI MASSAL SEKALIGUS (Daftar Sempurna Tanpa Crash)
+// 🔥 FIXED PERMANEN: POST PROSES BELI MASSAL SEKALIGUS (Masuk Barang Terjual & Ditendang Keluar dari Cetak Laporan)
 app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         if (!req.body.keranjangData) return res.status(400).send("Data keranjang kosong.");
 
         const keranjang = JSON.parse(req.body.keranjangData);
-        const userId = req.session.user.id_user; // Menggunakan properti id_user bawaan server.js Anda
+        const userId = req.session.user.id_user; 
         const tanggalSekarang = new Date().toISOString().split('T')[0];
 
         if (!keranjang || keranjang.length === 0) {
@@ -532,14 +533,15 @@ app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res
             // Potong stok produk gudang
             await db.execute("UPDATE barang SET stok = stok - ? WHERE id_barang = ?", [item.jumlah, item.id_barang]);
 
-            // Simpan log riwayat pembeli
+            // FIXED: jenis_transaksi diisi 'komersial'. Ini membuat data langsung tampil di /barang-terjual dan terfilter dari /laporan
             await db.execute(
-                "INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, 'keluar', ?, ?, ?, ?)",
+                "INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, 'komersial', ?, ?, ?, ?)",
                 [item.id_barang, item.jumlah, tanggalSekarang, `Dibeli Sekaligus oleh ${req.session.user.nama}`, userId]
             );
         }
 
-        res.send("<script>alert('🎉 Pembelian sukses dikonfirmasi sekaligus!'); window.location='/beli-barang';</script>");
+        // FIXED: Diarahkan langsung melihat hasilnya ke halaman Barang Terjual
+        res.send("<script>alert('🎉 Pembelian sukses dikonfirmasi sekaligus!'); window.location='/barang-terjual';</script>");
     } catch (error) {
         console.error("Error Beli Sekaligus Massal:", error);
         res.status(500).send("Terjadi masalah internal sistem saat checkout massal: " + error.message);
