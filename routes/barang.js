@@ -1,144 +1,97 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db'); // Pastikan path config/db.js Anda benar
+const db = require('../config/db'); // Menyesuaikan dengan file koneksi db.js Anda
 
-// Middleware cek login
-function requireLogin(req, res, next) {
-    if (req.session && req.session.user) {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-}
-
-// ===================================================================
-// OPTION A & B: FITUR EDIT DATA BARANG (DIBUAT AMAN)
-// ===================================================================
-router.post('/barang/edit/:id', requireLogin, async (req, res) => {
+// =========================================================================
+// [GET] ROUTE: MENAMPILKAN HALAMAN UTAMA BELI BARANG (USER VIEW)
+// =========================================================================
+router.get('/beli-barang', async (req, res) => {
     try {
-        const id_barang = req.params.id;
-        const { nama_barang, id_supplier, stok, harga } = req.body;
-        const query = `UPDATE barang SET nama_barang = ?, id_supplier = ?, stok = ?, harga = ? WHERE id_barang = ?`;
-        await db.query(query, [nama_barang, id_supplier, stok, harga, id_barang]);
-        res.redirect('/barang');
-    } catch (e) {
-        console.error(e);
-        res.status(500).send("Error Update Data Barang: " + e.message);
-    }
-});
-
-router.post('/edit/:id', requireLogin, async (req, res) => {
-    try {
-        const id_barang = req.params.id;
-        const { nama_barang, id_supplier, stok, harga } = req.body;
-        const query = `UPDATE barang SET nama_barang = ?, id_supplier = ?, stok = ?, harga = ? WHERE id_barang = ?`;
-        await db.query(query, [nama_barang, id_supplier, stok, harga, id_barang]);
-        res.redirect('/barang');
-    } catch (e) {
-        console.error(e);
-        res.status(500).send("Error Update Data Barang: " + e.message);
-    }
-}); 
-
-// ===================================================================
-// FIX DEFINITIF: ROUTE GET /beli-barang 
-// ===================================================================
-router.get('/beli-barang', requireLogin, async (req, res) => {
-    try {
-        // Menggunakan query dasar agar kompatibel dengan library mysql2/promise
-        const [barangList] = await db.query("SELECT * FROM barang WHERE stok > 0");
+        // Mengambil semua daftar komoditas barang yang stoknya masih ada
+        const [rows] = await db.query('SELECT * FROM barang WHERE stok > 0 ORDER BY id_barang DESC');
         
-        res.render('user_beli', { 
-            barangList: barangList, 
-            user: req.session.user || { nama: 'Pelanggan' }
+        // Render halaman user_beli.ejs di dalam folder views
+        res.render('user_beli', {
+            barang: rows,
+            user: req.session.user || null // Menyesuaikan session user login Anda
         });
-    } catch (e) {
-        console.error("Crash di GET /beli-barang:", e);
-        res.status(500).send("Internal Server Error di Backend: " + e.message);
+    } catch (error) {
+        console.error('Error saat memuat halaman beli barang:', error);
+        res.status(500).send('Gagal memuat daftar barang.');
     }
 });
 
-// ===================================================================
-// FIX DEFINITIF: ROUTE POST /beli-sekaligus
-// ===================================================================
-router.post('/beli-sekaligus', requireLogin, async (req, res) => {
+// =========================================================================
+// [POST] ROUTE: PROSES PEMBELIAN MASSAL / CHECKOUT (BELI SEKALIGUS)
+// =========================================================================
+router.post('/beli-sekaligus', async (req, res) => {
+    const { keranjangData } = req.body;
+    
+    if (!keranjangData) {
+        return res.status(400).send('Keranjang belanja kosong atau tidak valid.');
+    }
+
     try {
-        if (!req.body.keranjangData) {
-            return res.status(400).send("Data keranjang tidak terkirim");
-        }
+        const items = JSON.parse(keranjangData);
+        // Mengambil nama pembeli dari session aktif akun, default 'Pelanggan' jika session kosong
+        const namaPembeli = req.session.user ? req.session.user.username : 'Pelanggan';
 
-        const keranjang = JSON.parse(req.body.keranjangData);
-        const userId = req.session.user ? req.session.user.id : null; 
-        const tanggalSekarang = new Date().toISOString().split('T')[0];
+        // Lakukan looping transaksi menggunakan Promise.all atau for-loop agar sinkron ke database
+        for (let item of items) {
+            const jumlahBeli = parseInt(item.jumlah);
+            const hargaSatuan = parseFloat(item.harga);
+            const totalNominal = jumlahBeli * hargaSatuan;
 
-        if (!keranjang || keranjang.length === 0) {
-            return res.send("<script>alert('Keranjang kosong!'); window.location.reload();</script>");
-        }
-
-        for (let item of keranjang) {
-            const [rows] = await db.query("SELECT stok FROM barang WHERE id_barang = ?", [item.id_barang]);
-            const barang = rows[0];
-            
-            if (!barang || barang.stok < item.jumlah) {
-                return res.send(`<script>alert('Gagal! Stok ${item.nama_barang} habis atau tidak cukup.'); window.location.reload();</script>`);
-            }
-
-            // Potong Stok
-            await db.query("UPDATE barang SET stok = stok - ? WHERE id_barang = ?", [item.jumlah, item.id_barang]);
-
-            // Catat Transaksi Keluar
+            // 1. UPDATE: Mengurangi jumlah stok real-time di tabel barang utama
             await db.query(
-                "INSERT INTO transaksi (id_barang, id_user, jumlah, jenis_transaksi, tanggal) VALUES (?, ?, ?, 'keluar', ?)",
-                [item.id_barang, userId, item.jumlah, tanggalSekarang]
+                'UPDATE barang SET stok = stok - ? WHERE id_barang = ?',
+                [jumlahBeli, item.id_barang]
+            );
+
+            // 2. INSERT: Memasukkan data ke tabel transaksi pembeli agar terbaca di halaman 'Barang Terjual'
+            // Menggunakan struktur kolom: tanggal_transaksi, nama_pembeli, komoditas_barang, volume_beli, total_nominal
+            await db.query(
+                `INSERT INTO transaksi 
+                (tanggal_transaksi, nama_pembeli, komoditas_barang, volume_beli, total_nominal) 
+                VALUES (NOW(), ?, ?, ?, ?)`,
+                [namaPembeli, item.nama_barang, jumlahBeli, totalNominal]
             );
         }
 
-        res.send("<script>alert('🎉 Pembelian sukses dikonfirmasi sekaligus!'); window.location.reload();</script>");
+        // SELESAI: Setelah sukses, lempar navigasi langsung ke halaman barang-terjual
+        res.redirect('/barang-terjual');
 
     } catch (error) {
-        console.error("Crash di POST /beli-sekaligus:", error);
-        res.status(500).send("Gagal memproses pembelian: " + error.message);
+        console.error('Error saat mengeksekusi pembelian sekaligus:', error);
+        res.status(500).send('Sistem gagal memproses transaksi belanja massal Anda.');
     }
 });
 
-// ===================================================================
-// PENAMBAHAN BARU: ROUTE GET /barang-terjual (UNTUK HALAMAN ADMIN)
-// ===================================================================
-router.get('/barang-terjual', requireLogin, async (req, res) => {
+// =========================================================================
+// [GET] ROUTE: MENAMPILKAN HALAMAN REALISASI BARANG TERJUAL & PENDAPATAN
+// =========================================================================
+router.get('/barang-terjual', async (req, res) => {
     try {
-        // Ambil data transaksi keluar dengan join ke tabel user dan barang
-        // Alias kolom (AS) disesuaikan dengan variabel di file barang_terjual.ejs Anda
-        const [rows] = await db.query(`
-            SELECT 
-                DATE_FORMAT(t.tanggal, '%d/%m/%Y') AS tanggal_format,
-                t.tanggal AS tanggal,
-                u.username AS nama_user,
-                b.nama_barang AS nama_barang,
-                t.jumlah AS jumlah_beli,
-                b.harga AS harga_satuan
-            FROM transaksi t
-            JOIN user u ON t.id_user = u.id_user
-            JOIN barang b ON t.id_barang = b.id_barang
-            WHERE t.jenis_transaksi = 'keluar'
-            ORDER BY t.tanggal DESC, t.id_transaksi DESC
-        `);
+        // Ambil data transaksi yang baru saja dimasukkan secara real-time terurut dari yang terbaru
+        const [rows] = await db.query(
+            'SELECT tanggal_transaksi, nama_pembeli, komoditas_barang, volume_beli, total_nominal FROM transaksi ORDER BY tanggal_transaksi DESC'
+        );
 
-        // Hitung total nominal pendapatan secara dinamis dari seluruh baris transaksi
-        let totalPendapatan = 0;
-        rows.forEach(trx => {
-            totalPendapatan += (trx.jumlah_beli * trx.harga_satuan);
-        });
+        // Menghitung akumulasi total pendapatan terbuku dari kolom total_nominal seluruh transaksi
+        const totalPendapatan = rows.reduce((accumulator, currentItem) => {
+            return accumulator + parseFloat(currentItem.total_nominal || 0);
+        }, 0);
 
-        // Merender view barang_terjual.ejs dengan data asli dari database
+        // Render file views/barang_terjual.ejs dengan membawa data array transaksi dan total pendapatan
         res.render('barang_terjual', {
-            riwayatPenjualan: rows,
+            transaksi: rows,
             totalPendapatan: totalPendapatan,
-            user: req.session.user
+            user: req.session.user || null
         });
 
-    } catch (e) {
-        console.error("Gagal memuat halaman barang terjual:", e);
-        res.status(500).send("Error Laporan Penjualan: " + e.message);
+    } catch (error) {
+        console.error('Error saat menarik data halaman barang terjual:', error);
+        res.status(500).send('Gagal memuat rekap data realisasi barang terjual.');
     }
 });
 
