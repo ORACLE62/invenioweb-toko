@@ -137,12 +137,12 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
-                        <% if (typeof stokGudang === 'undefined' || stokGudang.length === 0) { %>
+                        <% if (typeof rawBarang === 'undefined' || rawBarang.length === 0) { %>
                             <tr>
                                 <td colspan="5" class="p-8 text-center text-zinc-500 italic">Belum ada data akumulasi barang master.</td>
                             </tr>
                         <% } else { %>
-                            <% stokGudang.forEach(g => { %>
+                            <% rawBarang.forEach(g => { %>
                                 <tr class="hover:bg-zinc-800/20 transition">
                                     <td class="p-4 font-medium text-white"><%= g.nama_barang %></td>
                                     <td class="p-4 text-zinc-400"><%= g.nama_supplier %></td>
@@ -325,7 +325,18 @@
         function openModalEdit(id, jumlah, tanggal) {
             document.getElementById('formEdit').action = '/laporan/edit/' + id;
             document.getElementById('inputJumlah').value = jumlah;
-            document.getElementById('inputTanggal').value = tanggal;
+            
+            // Format tanggal agar kompatibel dengan input type="date" (YYYY-MM-DD)
+            if (tanggal) {
+                const dateObj = new Date(tanggal);
+                if (!isNaN(dateObj.getTime())) {
+                    const formattedDate = dateObj.toISOString().split('T')[0];
+                    document.getElementById('inputTanggal').value = formattedDate;
+                } else {
+                    document.getElementById('inputTanggal').value = tanggal;
+                }
+            }
+            
             document.getElementById('modalEdit').classList.remove('hidden');
         }
         function closeModalEdit() {
