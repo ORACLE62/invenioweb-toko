@@ -4,84 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Supplier - InvenioWeb</title>
-    <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
+    <link class="rounded-full" rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Memasang Google Fonts agar font seragam di seluruh halaman -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0c10;
+            color: #c5c6c7;
         }
     </style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen flex flex-col md:flex-row antialiased">
+<body class="min-h-screen flex flex-col md:flex-row antialiased select-none">
 
-    <!-- SIDEBAR: Sembunyikan di HP, Tampilkan di Laptop -->
-    <div class="hidden md:flex w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex-col justify-between shrink-0 min-h-screen sticky top-0">
+    <div class="hidden md:flex w-64 bg-[#1f2833] border-r border-gray-800 p-4 flex-col justify-between shrink-0 min-h-screen sticky top-0">
         <div>
-            <!-- Logo Brand Premium Bulat & Teks Kilau Logam -->
-            <div class="flex items-center gap-3 mb-8 px-2">
-                <div class="bg-[#5551ff] rounded-full p-1 shadow-lg shadow-[#5551ff]/20 flex items-center justify-center w-11 h-11 overflow-hidden shrink-0">
+            <div class="flex items-center gap-3 px-2 py-4 border-b border-gray-700 mb-6">
+                <div class="w-10 h-10 bg-[#45f3ff] rounded-full flex items-center justify-center p-1 shadow-lg shadow-[#45f3ff]/20 overflow-hidden shrink-0">
                     <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
                 </div>
-                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent drop-shadow-sm">
-                    InvenioWeb
-                </span>
+                <div>
+                    <h1 class="text-white font-bold tracking-wide text-sm">InvenioWeb</h1>
+                    <span class="text-[10px] text-[#45f3ff] font-medium tracking-wider uppercase">Market System</span>
+                </div>
             </div>
             
-            <!-- Navigasi Menu Utama Seragam (Tombol Kelola Supplier Aktif) -->
-            <nav class="space-y-1.5">
-                <a href="/dashboard" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Dashboard</a>
-                <a href="/barang" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Barang</a>
-                <a href="/supplier" class="block px-4 py-2.5 bg-[#5551ff] text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-md shadow-[#5551ff]/10">Kelola Supplier</a>
-                <a href="/transaksi" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Kelola Transaksi</a>
-                <a href="/laporan" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Cetak Laporan</a>
-                <a href="/barang-terjual" class="block px-4 py-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl text-sm font-medium transition-all duration-200">Barang Terjual</a>
+            <nav class="space-y-1">
+                <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all duration-200">
+                    <span class="text-sm font-medium">Dashboard</span>
+                </a>
+                <a href="/barang" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all duration-200">
+                    <span class="text-sm font-medium">Kelola Barang</span>
+                </a>
+                <a href="/supplier" class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#45f3ff]/20 to-transparent border-l-4 border-[#45f3ff] text-white rounded-r-lg transition-all">
+                    <span class="text-sm font-medium">Kelola Supplier</span>
+                </a>
+                <a href="/transaksi" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all duration-200">
+                    <span class="text-sm font-medium">Kelola Transaksi</span>
+                </a>
+                <a href="/laporan" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all duration-200">
+                    <span class="text-sm font-medium">Cetak Laporan</span>
+                </a>
+                <a href="/barang-terjual" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all duration-200">
+                    <span class="text-sm font-medium">Barang Terjual</span>
+                </a>
                 <% if (user.role === 'admin') { %>
-                    <a href="/admin/users" class="block px-4 py-2.5 text-red-400 hover:text-white hover:bg-red-900/30 rounded-xl text-sm font-medium transition border border-red-500/10 mt-4">Kelola User</a>
+                    <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-950/20 hover:text-red-300 rounded-lg transition-all mt-2">
+                        <span class="text-sm font-medium">Kelola User</span>
+                    </a>
                 <% } %>
             </nav>
         </div>
         
-        <div class="border-t border-zinc-800 pt-4 flex items-center justify-between">
-            <div>
-                <p class="text-xs text-zinc-500">Masuk sebagai:</p>
-                <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
-                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
-                    <div class="mt-1">
-                        <span class="text-[10px] bg-[#5551ff]/20 text-indigo-400 px-2 py-0.5 rounded border border-[#5551ff]/30 font-medium capitalize"><%= user.role %></span>
-                    </div>
-                <% } else { %>
-                    <p class="text-sm font-semibold text-zinc-200"><%= user.nama %></p>
-                <% } %>
-
-                <% if (user.role === 'admin') { %>
-                    <div class="mt-2">
-                        <a href="/admin/users" class="inline-block text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded border border-red-500/30 font-medium transition">Kelola User</a>
-                    </div>
-                <% } %>
+        <div class="bg-[#151a21] p-3 rounded-xl border border-gray-800 flex items-center justify-between shadow-inner">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold uppercase border border-purple-500/30">
+                    <%= user.nama.substring(0,2) %>
+                </div>
+                <div>
+                    <p class="text-white text-xs font-semibold truncate max-w-[110px]"><%= user.nama %></p>
+                    <span class="text-[10px] bg-purple-950 text-purple-300 px-1.5 py-0.5 rounded border border-purple-800/50 block w-max capitalize mt-0.5"><%= user.role %></span>
+                </div>
             </div>
-            <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition shrink-0 ml-2">Logout</a>
+            <a href="/logout" class="text-gray-500 hover:text-red-400 p-1.5 hover:bg-gray-800/30 rounded-lg transition-colors" title="Log Out">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+            </a>
         </div>
     </div>
 
-    <!-- NAVBAR KHUSUS HP (Muncul di layar kecil agar rapi) -->
-    <div class="md:hidden bg-zinc-900 border-b border-zinc-800 p-4">
+    <div class="md:hidden bg-[#1f2833] border-b border-gray-800 p-4">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
-                <div class="bg-[#5551ff] rounded-full p-0.5 flex items-center justify-center w-8 h-8 overflow-hidden shrink-0">
+                <div class="bg-[#45f3ff] rounded-full p-0.5 flex items-center justify-center w-8 h-8 overflow-hidden shrink-0">
                     <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
                 </div>
-                <span class="font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent drop-shadow-sm">
+                <span class="font-bold tracking-tight text-white">
                     InvenioWeb
                 </span>
             </div>
             <div class="flex items-center gap-3">
-                <span class="text-xs text-zinc-400">
+                <span class="text-xs text-gray-400">
                     <%= user.nama %>
                     <% if (user.username === 'admin' || user.username === 'gudang' || user.username === 'pimpinan') { %>
                         (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)
@@ -91,44 +99,42 @@
             </div>
         </div>
         <nav class="flex flex-wrap gap-2">
-            <a href="/dashboard" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Dashboard</a>
-            <a href="/barang" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Barang</a>
-            <a href="/supplier" class="px-3 py-1.5 bg-[#5551ff] text-white rounded-lg text-xs font-medium shadow-md shadow-[#5551ff]/10">Supplier</a>
-            <a href="/transaksi" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Transaksi</a>
-            <a href="/laporan" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Laporan</a>
-            <a href="/barang-terjual" class="px-3 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-medium transition hover:text-white">Barang Terjual</a>
+            <a href="/dashboard" class="px-3 py-1.5 bg-[#151a21] text-gray-400 rounded-lg text-xs font-medium transition hover:text-white">Dashboard</a>
+            <a href="/barang" class="px-3 py-1.5 bg-[#151a21] text-gray-400 rounded-lg text-xs font-medium transition hover:text-white">Barang</a>
+            <a href="/supplier" class="px-3 py-1.5 bg-[#45f3ff] text-[#0b0c10] rounded-lg text-xs font-bold shadow-md">Supplier</a>
+            <a href="/transaksi" class="px-3 py-1.5 bg-[#151a21] text-gray-400 rounded-lg text-xs font-medium transition hover:text-white">Transaksi</a>
+            <a href="/laporan" class="px-3 py-1.5 bg-[#151a21] text-gray-400 rounded-lg text-xs font-medium transition hover:text-white">Laporan</a>
+            <a href="/barang-terjual" class="px-3 py-1.5 bg-[#151a21] text-gray-400 rounded-lg text-xs font-medium transition hover:text-white">Barang Terjual</a>
             <% if (user.role === 'admin') { %>
-                <a href="/admin/users" class="px-3 py-1.5 bg-red-900/50 text-red-400 rounded-lg text-xs font-medium border border-red-500/20">Kelola User</a>
+                <a href="/admin/users" class="px-3 py-1.5 bg-red-950/50 text-red-400 rounded-lg text-xs font-medium border border-red-500/20">Kelola User</a>
             <% } %>
         </nav>
     </div>
 
-    <!-- KONTEN UTAMA -->
-    <div class="flex-grow p-6 md:p-10 overflow-y-auto w-full space-y-8">
+    <div class="flex-grow p-6 md:p-10 overflow-y-auto w-full space-y-8 bg-[#0b0c10]">
         <header>
-            <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Kelola Mitra Supplier</h1>
-            <p class="text-zinc-400 text-sm mt-1">Manajemen data produsen, distributor, dan pihak penyuplai pasokan barang toko.</p>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Kelola Mitra Supplier</h1>
+            <p class="text-gray-500 text-sm mt-1">Manajemen data produsen, distributor, dan pihak penyuplai pasokan barang toko.</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            <!-- Form Tambah Supplier -->
-            <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl shadow-xl lg:col-span-1">
+            <div class="bg-[#1f2833] border border-gray-800 p-6 rounded-xl shadow-xl lg:col-span-1">
                 <div class="flex items-center gap-2 mb-4">
                     <span>🤝</span>
-                    <h2 class="text-base font-bold text-indigo-400">Tambah Supplier Baru</h2>
+                    <h2 class="text-base font-bold text-[#45f3ff]">Tambah Supplier Baru</h2>
                 </div>
                 <form action="/supplier/tambah" method="POST" class="space-y-4">
                     <div>
-                        <label class="block text-xs text-zinc-500 mb-1">Nama Supplier / PT</label>
-                        <input type="text" name="nama_supplier" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white" placeholder="Contoh: PT. IndoFood" required>
+                        <label class="block text-xs text-gray-400 mb-1">Nama Supplier / PT</label>
+                        <input type="text" name="nama_supplier" class="w-full bg-[#0b0c10] border border-gray-800 rounded-lg p-2.5 text-sm focus:border-[#45f3ff] outline-none text-white" placeholder="Contoh: PT. IndoFood" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-zinc-500 mb-1">Nomor Telepon Kontak</label>
-                        <input type="text" name="telepon" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white" placeholder="Contoh: 08123456789" required>
+                        <label class="block text-xs text-gray-400 mb-1">Nomor Telepon Kontak</label>
+                        <input type="text" name="telepon" class="w-full bg-[#0b0c10] border border-gray-800 rounded-lg p-2.5 text-sm focus:border-[#45f3ff] outline-none text-white" placeholder="Contoh: 08123456789" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-zinc-500 mb-1">Alamat Kantor</label>
-                        <textarea name="alamat" rows="3" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-indigo-500 outline-none text-white resize-none" placeholder="Alamat lengkap instansi..." required></textarea>
+                        <label class="block text-xs text-gray-400 mb-1">Alamat Kantor</label>
+                        <textarea name="alamat" rows="3" class="w-full bg-[#0b0c10] border border-gray-800 rounded-lg p-2.5 text-sm focus:border-[#45f3ff] outline-none text-white resize-none" placeholder="Alamat lengkap instansi..." required></textarea>
                     </div>
                     <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg text-sm transition shadow-lg shadow-indigo-900/20">
                         Simpan Mitra
@@ -136,42 +142,40 @@
                 </form>
             </div>
 
-            <!-- Form Edit Supplier (Tersembunyi secara default) -->
-            <div id="cardEditSupplier" class="bg-zinc-900/50 border border-amber-500/30 p-6 rounded-xl shadow-xl lg:col-span-1 hidden">
+            <div id="cardEditSupplier" class="bg-[#1f2833] border border-amber-500/30 p-6 rounded-xl shadow-xl lg:col-span-1 hidden">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2">
                         <span>✏️</span>
                         <h2 class="text-base font-bold text-amber-500">Form Ubah Data Supplier</h2>
                     </div>
-                    <button type="button" onclick="tutupFormEdit()" class="text-zinc-500 hover:text-white transition text-sm">&times;</button>
+                    <button type="button" onclick="tutupFormEdit()" class="text-gray-400 hover:text-white transition text-sm">&times;</button>
                 </div>
                 <form id="formEditSupplier" method="POST" class="space-y-4">
                     <input type="hidden" name="id_supplier" id="edit_id_supplier">
                     <div>
-                        <label class="block text-xs text-zinc-500 mb-1">Nama Supplier / PT</label>
-                        <input type="text" name="nama_supplier" id="edit_nama_supplier" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-amber-500 outline-none text-white" required>
+                        <label class="block text-xs text-gray-400 mb-1">Nama Supplier / PT</label>
+                        <input type="text" name="nama_supplier" id="edit_nama_supplier" class="w-full bg-[#0b0c10] border border-gray-800 rounded-lg p-2.5 text-sm focus:border-amber-500 outline-none text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-zinc-500 mb-1">Nomor Telepon Kontak</label>
-                        <input type="text" name="telepon" id="edit_telepon" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-amber-500 outline-none text-white" required>
+                        <label class="block text-xs text-gray-400 mb-1">Nomor Telepon Kontak</label>
+                        <input type="text" name="telepon" id="edit_telepon" class="w-full bg-[#0b0c10] border border-gray-800 rounded-lg p-2.5 text-sm focus:border-amber-500 outline-none text-white" required>
                     </div>
                     <div>
-                        <label class="block text-xs text-zinc-500 mb-1">Alamat Kantor</label>
-                        <textarea name="alamat" id="edit_alamat" rows="3" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-sm focus:border-amber-500 outline-none text-white resize-none" required></textarea>
+                        <label class="block text-xs text-gray-400 mb-1">Alamat Kantor</label>
+                        <textarea name="alamat" id="edit_alamat" rows="3" class="w-full bg-[#0b0c10] border border-gray-800 rounded-lg p-2.5 text-sm focus:border-amber-500 outline-none text-white resize-none" required></textarea>
                     </div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="tutupFormEdit()" class="w-1/3 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 rounded-lg text-sm font-medium transition">Batal</button>
+                        <button type="button" onclick="tutupFormEdit()" class="w-1/3 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-lg text-sm font-medium transition">Batal</button>
                         <button type="submit" class="w-2/3 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-lg text-sm transition shadow-lg shadow-amber-900/20">Update Mitra</button>
                     </div>
                 </form>
             </div>
 
-            <!-- Tabel Data Supplier -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden lg:col-span-2 w-full">
+            <div class="bg-[#1f2833] border border-gray-800 rounded-xl shadow-2xl overflow-hidden lg:col-span-2 w-full">
                 <div class="overflow-x-auto w-full">
                     <table class="w-full text-left border-collapse min-w-[550px]">
                         <thead>
-                            <tr class="border-b border-zinc-800 bg-zinc-900/50 text-zinc-400 text-xs font-semibold uppercase tracking-wider">
+                            <tr class="border-b border-gray-800 bg-[#151a21]/50 text-gray-400 text-xs font-semibold uppercase tracking-wider">
                                 <th class="p-4">ID</th>
                                 <th class="p-4">Nama Instansi</th>
                                 <th class="p-4">Telepon</th>
@@ -179,18 +183,18 @@
                                 <th class="p-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-800/60 text-sm text-zinc-300">
+                        <tbody class="divide-y divide-gray-800/60 text-sm text-gray-300">
                             <% if (supplier.length === 0) { %>
                                 <tr>
-                                    <td colspan="5" class="p-8 text-center text-zinc-500 italic">Belum ada data supplier di database.</td>
+                                    <td colspan="5" class="p-8 text-center text-gray-500 italic">Belum ada data supplier di database.</td>
                                 </tr>
                             <% } else { %>
                                 <% supplier.forEach(s => { %>
-                                    <tr class="hover:bg-zinc-800/20 transition">
-                                        <td class="p-4 font-mono text-indigo-400 text-xs font-semibold"><%= s.id_supplier %></td>
+                                    <tr class="hover:bg-[#151a21]/40 transition">
+                                        <td class="p-4 font-mono text-[#45f3ff] text-xs font-semibold"><%= s.id_supplier %></td>
                                         <td class="p-4 font-medium text-white"><%= s.nama_supplier %></td>
-                                        <td class="p-4 font-mono text-xs text-zinc-400"><%= s.kontak || '-' %></td>
-                                        <td class="p-4 text-zinc-300 max-w-[180px] truncate"><%= s.alamat || '-' %></td>
+                                        <td class="p-4 font-mono text-xs text-gray-400"><%= s.kontak || '-' %></td>
+                                        <td class="p-4 text-gray-300 max-w-[180px] truncate"><%= s.alamat || '-' %></td>
                                         <td class="p-4 text-center">
                                             <div class="flex items-center justify-center gap-2">
                                                 <button onclick="tampilkanFormEdit('<%= s.id_supplier %>', '<%= s.nama_supplier %>', '<%= s.kontak %>', '<%= s.alamat %>')" 
@@ -214,7 +218,6 @@
         </div>
     </div>
 
-    <!-- JavaScript Handling -->
     <script>
         function tampilkanFormEdit(id, nama, telp, alamat) {
             document.getElementById('edit_id_supplier').value = id;
