@@ -107,7 +107,6 @@ const requireRole = (roles) => {
     return (req, res, next) => {
         if (!req.session || !req.session.user) return res.redirect('/login');
         if (!roles.includes(req.session.user.role)) {
-            // Jika user biasa mencoba akses halaman admin/dashboard, langsung usir balik ke halaman belanja mereka
             if (req.session.user.role === 'user') {
                 return res.redirect('/beli-barang');
             }
@@ -145,7 +144,6 @@ app.post('/login', async (req, res) => {
                 role: akun.role || 'user'
             }; 
             
-            // JALUR PENGALIHAN UTAMA SETELAH LOGIN
             if (akun.role === 'user') {
                 return res.redirect('/beli-barang'); 
             } else {
@@ -332,12 +330,13 @@ app.get('/supplier/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
 });
 
 // ==========================================
-// 5. ROUTE TRANSAKSI (LOGISTIK GUDANG)
+// 5. ROUTE TRANSAKSI (LOGISTIK INTERNAL GUDANG)
 // ==========================================
 app.get('/transaksi', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT * FROM barang');
-        const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang WHERE t.keluar NOT LIKE "KOMERSIAL:%" ORDER BY t.tanggal DESC, t.id_transaksi DESC');
+        // Hanya menampilkan riwayat logistik murni gudang (bukan belanja komersial konsumen)
+        const [transaksi] = await db.execute("SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang WHERE t.id_user IS NULL ORDER t.tanggal DESC, t.id_transaksi DESC");
         res.render('transaksi', { user: req.session.user, barang, transaksi });
     } catch (e) { res.status(500).send("Error Menu Transaksi: " + e.message); }
 });
@@ -373,17 +372,18 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'p
     } catch (e) { res.status(500).send("Error Hapus Transaksi: " + e.message); }
 });
 
-// ==========================================
-// 6. ROUTE BARANG TERJUAL (MENAMPILKAN DATA AKTIVITAS USER)
-// ==========================================
+// ===================================================================
+// 6. 🔥 ROUTE BARANG TERJUAL (SAMPEL FIXED AMAN & SENSITIVITAS DILONGGARKAN)
+// ===================================================================
 app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
+        // PERBAIKAN: Menggunakan LEFT JOIN user dan filter id_user IS NOT NULL agar semua pembelian konsumen langsung terdeteksi masuk ke sistem pendapatan
         const [terjual] = await db.execute(`
-            SELECT t.*, b.nama_barang, b.harga, u.nama as nama_pembeli 
+            SELECT t.*, b.nama_barang, b.harga, COALESCE(u.nama, 'Pelanggan Toko') as nama_pembeli 
             FROM transaksi t 
             JOIN barang b ON t.id_barang = b.id_barang 
-            JOIN user u ON t.id_user = u.id_user 
-            WHERE t.jenis_transaksi = 'keluar' AND t.keluar LIKE 'KOMERSIAL:%'
+            LEFT JOIN user u ON t.id_user = u.id_user 
+            WHERE t.jenis_transaksi = 'keluar' AND (t.id_user IS NOT NULL OR t.keluar LIKE 'KOMERSIAL:%')
             ORDER BY t.tanggal DESC, t.id_transaksi DESC
         `);
         res.render('barang_terjual', { user: req.session.user, terjual });
@@ -391,17 +391,19 @@ app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpin
 });
 
 // ==========================================
-// 7. ROUTE LAPORAN (BERSIH DARI DATA BELANJA USER)
+// 7. ROUTE LAPORAN (DATA LOGISTIK UTAMA)
 // ==========================================
 app.get('/laporan', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [stokGudang] = await db.execute(`SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier FROM barang b LEFT JOIN supplier s ON b.id_supplier = s.id_supplier`);
+        
+        // Memuat seluruh aktivitas keluar masuk logistik murni
         const [allTransaksi] = await db.execute(`
             SELECT t.*, b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
             FROM transaksi t 
             JOIN barang b ON t.id_barang = b.id_barang 
             LEFT JOIN supplier s ON b.id_supplier = s.id_supplier 
-            WHERE t.keluar NOT LIKE 'KOMERSIAL:%'
+            WHERE t.id_user IS NULL
             ORDER BY t.tanggal DESC, t.id_transaksi DESC
         `);
 
@@ -506,7 +508,6 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
     }
 });
 
-// 🔥 FIXED PERMANEN: PERBAIKAN TYPO 'interanjang' MENJADI 'keranjang'
 app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         if (!req.body.keranjangData) return res.status(400).send("Data keranjang kosong.");
@@ -515,7 +516,6 @@ app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res
         const userId = req.session.user.id_user; 
         const tanggalSekarang = new Date().toISOString().split('T')[0];
 
-        // DISINI SUDAH FIXED: Menggunakan variabel 'keranjang' yang benar
         if (!keranjang || keranjang.length === 0) {
             return res.send("<script>alert('Keranjang belanja kosong!'); window.location='/beli-barang';</script>");
         }
