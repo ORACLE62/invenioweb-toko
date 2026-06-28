@@ -330,13 +330,13 @@ app.get('/supplier/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
 });
 
 // ==========================================
-// 5. ROUTE TRANSAKSI (LOGISTIK INTERNAL GUDANG)
+// 5. ROUTE TRANSAKSI (🔥 FIXED: Ditambahkan kata 'BY' pada ORDER BY)
 // ==========================================
 app.get('/transaksi', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT * FROM barang');
-        // Hanya menampilkan riwayat logistik murni gudang (bukan belanja komersial konsumen)
-        const [transaksi] = await db.execute("SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang WHERE t.id_user IS NULL ORDER t.tanggal DESC, t.id_transaksi DESC");
+        // DISINI SUDAH FIXED: Menggunakan ORDER BY yang lengkap dan benar
+        const [transaksi] = await db.execute("SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang WHERE t.id_user IS NULL ORDER BY t.tanggal DESC, t.id_transaksi DESC");
         res.render('transaksi', { user: req.session.user, barang, transaksi });
     } catch (e) { res.status(500).send("Error Menu Transaksi: " + e.message); }
 });
@@ -372,12 +372,11 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'p
     } catch (e) { res.status(500).send("Error Hapus Transaksi: " + e.message); }
 });
 
-// ===================================================================
-// 6. 🔥 ROUTE BARANG TERJUAL (SAMPEL FIXED AMAN & SENSITIVITAS DILONGGARKAN)
-// ===================================================================
+// ==========================================
+// 6. ROUTE BARANG TERJUAL (MENAMPILKAN DATA AKTIVITAS USER)
+// ==========================================
 app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
-        // PERBAIKAN: Menggunakan LEFT JOIN user dan filter id_user IS NOT NULL agar semua pembelian konsumen langsung terdeteksi masuk ke sistem pendapatan
         const [terjual] = await db.execute(`
             SELECT t.*, b.nama_barang, b.harga, COALESCE(u.nama, 'Pelanggan Toko') as nama_pembeli 
             FROM transaksi t 
@@ -397,7 +396,6 @@ app.get('/laporan', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), 
     try {
         const [stokGudang] = await db.execute(`SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier FROM barang b LEFT JOIN supplier s ON b.id_supplier = s.id_supplier`);
         
-        // Memuat seluruh aktivitas keluar masuk logistik murni
         const [allTransaksi] = await db.execute(`
             SELECT t.*, b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
             FROM transaksi t 
