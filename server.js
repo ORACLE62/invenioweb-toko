@@ -107,7 +107,11 @@ const requireRole = (roles) => {
     return (req, res, next) => {
         if (!req.session || !req.session.user) return res.redirect('/login');
         if (!roles.includes(req.session.user.role)) {
-            return res.send("<script>alert('Hak akses ditolak! Akun Anda tidak diizinkan membuka halaman ini.'); window.location='/dashboard';</script>");
+            // Jika user biasa mencoba akses halaman admin, lempar balik ke halaman belanja mereka
+            if (req.session.user.role === 'user') {
+                return res.redirect('/beli-barang');
+            }
+            return res.send("<script>alert('Hak akses ditolak!'); window.location='/dashboard';</script>");
         }
         next();
     };
@@ -141,6 +145,7 @@ app.post('/login', async (req, res) => {
                 role: akun.role || 'user'
             }; 
             
+            // 🔥 FIX PENGALIHAN SEWAKTU LOGIN
             if (akun.role === 'user') {
                 return res.redirect('/beli-barang'); 
             } else {
@@ -220,9 +225,9 @@ app.get('/admin/users/hapus/:id', requireLogin, requireRole(['admin']), async (r
 });
 
 // ==========================================
-// 2. ROUTE DASHBOARD
+// 2. ROUTE DASHBOARD (🔥 KUNCI KHUSUS INTERNAL STAFF)
 // ==========================================
-app.get('/dashboard', requireLogin, async (req, res) => {
+app.get('/dashboard', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [b] = await db.execute('SELECT COUNT(*) as t FROM barang');
         const [s] = await db.execute('SELECT COUNT(*) as t FROM supplier');
@@ -332,7 +337,6 @@ app.get('/supplier/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
 app.get('/transaksi', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT * FROM barang');
-        // Filter agar transaksi milik pelanggan komersial tidak mengotori tabel logistik reguler
         const [transaksi] = await db.execute('SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang WHERE t.keluar NOT LIKE "KOMERSIAL:%" ORDER BY t.tanggal DESC, t.id_transaksi DESC');
         res.render('transaksi', { user: req.session.user, barang, transaksi });
     } catch (e) { res.status(500).send("Error Menu Transaksi: " + e.message); }
@@ -370,11 +374,10 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'p
 });
 
 // ==========================================
-// ✨ FIXED FEATURE: ROUTE BARANG TERJUAL (MENAMPILKAN DATA AKTIVITAS USER)
+// 6. ROUTE BARANG TERJUAL (MENAMPILKAN DATA AKTIVITAS USER)
 // ==========================================
 app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
-        // Menggunakan filter awalan string 'KOMERSIAL:' pada kolom keluar agar relasi data valid total 100%
         const [terjual] = await db.execute(`
             SELECT t.*, b.nama_barang, b.harga, u.nama as nama_pembeli 
             FROM transaksi t 
@@ -388,13 +391,11 @@ app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpin
 });
 
 // ==========================================
-// 6. ROUTE LAPORAN (BERSIH DARI DATA BELANJA USER)
+// 7. ROUTE LAPORAN (BERSIH DARI DATA BELANJA USER)
 // ==========================================
 app.get('/laporan', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [stokGudang] = await db.execute(`SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier FROM barang b LEFT JOIN supplier s ON b.id_supplier = s.id_supplier`);
-        
-        // Memfilter keluar data bertanda 'KOMERSIAL:' supaya lembar Cetak Laporan logistik murni bersih kembali
         const [allTransaksi] = await db.execute(`
             SELECT t.*, b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
             FROM transaksi t 
@@ -462,9 +463,8 @@ app.get('/laporan/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pim
 });
 
 // ===================================================================
-// 7. ROUTE KHUSUS USER BIASA (BELI BARANG ECERAN & SEKALIGUS)
+// 8. ROUTE KHUSUS USER BIASA (BELI BARANG ECERAN & SEKALIGUS)
 // ===================================================================
-
 app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         const [barangTersedia] = await db.execute('SELECT * FROM barang WHERE stok > 0');
@@ -478,7 +478,7 @@ app.get('/beli-barang', requireLogin, requireRole(['user']), async (req, res) =>
     }
 });
 
-// FIXED: Eceran menggunakan penanda KOMERSIAL: agar terisolasi sempurna
+// 🔥 FIX REDIRECT: Pembelian Eceran dialihkan kembali ke /beli-barang
 app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         const { id_barang, jumlah_beli } = req.body;
@@ -496,19 +496,18 @@ app.post('/beli-barang/proses', requireLogin, requireRole(['user']), async (req,
 
         await db.execute('UPDATE barang SET stok = stok - ? WHERE id_barang = ?', [jumlah, id_barang]);
         
-        // Memakai jenis_transaksi 'keluar' beraliansi dengan string penanda di kolom 'keluar'
         await db.execute(
             'INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, "keluar", ?, ?, ?, ?)',
             [id_barang, jumlah, tanggalHariIni, `KOMERSIAL: Dibeli oleh ${req.session.user.nama}`, userId]
         );
 
-        res.send("<script>alert('Pembelian berhasil! Stok otomatis terpotong.'); window.location='/barang-terjual';</script>");
+        res.send("<script>alert('Pembelian berhasil! Stok otomatis terpotong.'); window.location='/beli-barang';</script>");
     } catch (e) {
         res.status(500).send("Error Process Pembelian: " + e.message);
     }
 });
 
-// 🔥 FIXED PERMANEN: AMAN DARI ERROR ENUM DATABASE DATA TRUNCATED
+// 🔥 FIX REDIRECT: Checkout Massal dialihkan kembali ke /beli-barang (Aman & Anti Nyasar!)
 app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res) => {
     try {
         if (!req.body.keranjangData) return res.status(400).send("Data keranjang kosong.");
@@ -517,11 +516,10 @@ app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res
         const userId = req.session.user.id_user; 
         const tanggalSekarang = new Date().toISOString().split('T')[0];
 
-        if (!keranjang || keranjang.length === 0) {
+        if (!interanjang || keranjang.length === 0) {
             return res.send("<script>alert('Keranjang belanja kosong!'); window.location='/beli-barang';</script>");
         }
 
-        // Loop verifikasi stok & pemotongan massal
         for (let item of keranjang) {
             const [rows] = await db.execute("SELECT stok FROM barang WHERE id_barang = ?", [item.id_barang]);
             const itemBarang = rows[0];
@@ -530,23 +528,21 @@ app.post('/beli-sekaligus', requireLogin, requireRole(['user']), async (req, res
                 return res.send(`<script>alert('Gagal! Stok untuk ${item.nama_barang} tidak mencukupi.'); window.location='/beli-barang';</script>`);
             }
 
-            // Potong stok produk gudang
             await db.execute("UPDATE barang SET stok = stok - ? WHERE id_barang = ?", [item.jumlah, item.id_barang]);
 
-            // Menggunakan jenis_transaksi 'keluar' (Lolos Error Data Truncated) + Penanda khusus 'KOMERSIAL:'
             await db.execute(
                 "INSERT INTO transaksi (id_barang, jenis_transaksi, jumlah, tanggal, keluar, id_user) VALUES (?, 'keluar', ?, ?, ?, ?)",
                 [item.id_barang, item.jumlah, tanggalSekarang, `KOMERSIAL: Massal oleh ${req.session.user.nama}`, userId]
             );
         }
 
-        res.send("<script>alert('🎉 Pembelian sukses dikonfirmasi sekaligus!'); window.location='/barang-terjual';</script>");
+        res.send("<script>alert('🎉 Pembelian sukses dikonfirmasi sekaligus!'); window.location='/beli-barang';</script>");
     } catch (error) {
         console.error("Error Beli Sekaligus Massal:", error);
         res.status(500).send("Terjadi masalah internal sistem saat checkout massal: " + error.message);
     }
 });
 
-// --- SERVER INSTANCE (WAJIB DI PALING BAWAH) ---
+// --- SERVER INSTANCE ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running smoothly on port ${PORT}`));
