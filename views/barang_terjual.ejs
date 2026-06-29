@@ -3,149 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Realisasi Penjualan & Pendapatan</title>
-    <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
+    <title>Laporan Realisasi Penjualan & Pendapatan - InvenioWeb</title>
+    <link class="no-print" rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background-color: #0b0c10;
-            color: #c5c6c7;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0f19; /* Background utama gelap navy */
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: white !important;
+                color: black !important;
+            }
+            .print-card {
+                background-color: transparent !important;
+                border: 1px solid #d4d4d8 !important;
+                box-shadow: none !important;
+                color: black !important;
+            }
+            .text-white, .text-slate-200, .text-slate-300 { color: #000000 !important; }
+            .text-slate-400, .text-slate-500 { color: #27272a !important; }
+            
+            [class*="bg-"] { 
+                background-color: transparent !important; 
+            }
+            [class*="border-"] { 
+                border-color: #e4e4e7 !important; 
+            }
         }
     </style>
 </head>
-<body class="flex min-h-screen">
+<body class="text-slate-300 min-h-screen flex flex-col md:flex-row antialiased select-none">
 
-    <div class="w-64 bg-[#1f2833] flex flex-col justify-between p-4 border-r border-gray-800">
+    <div class="no-print hidden md:flex w-64 bg-[#111625] border-r border-slate-800/50 p-5 flex-col justify-between shrink-0 min-h-screen sticky top-0">
         <div>
-            <div class="flex items-center gap-3 px-2 py-4 border-b border-gray-700 mb-6">
-                <div class="w-10 h-10 bg-[#66fcf1] rounded-lg flex items-center justify-center text-[#0b0c10] font-bold text-xl shadow-lg shadow-[#66fcf1]/20">
-                    IW
+            <div class="flex items-center gap-3 mb-8 px-2">
+                <div class="bg-cyan-500 rounded-full p-0.5 w-9 h-9 overflow-hidden shrink-0 flex items-center justify-center">
+                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
                 </div>
                 <div>
-                    <h1 class="text-white font-bold tracking-wide">InvenioWeb</h1>
-                    <span class="text-xs text-[#66fcf1] font-medium">Market System</span>
+                    <span class="text-sm font-bold tracking-wide text-white block">InvenioWeb</span>
+                    <span class="text-[10px] text-cyan-400 tracking-wider font-semibold uppercase block -mt-0.5">Market System</span>
                 </div>
             </div>
             
             <nav class="space-y-1">
-                <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all group">
-                    <i class="fa-solid : fa-chart-pie text-lg group-hover:text-[#66fcf1]"></i> <span class="text-sm font-medium">Dashboard</span>
-                </a>
-                <a href="/barang" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all group">
-                    <i class="fa-solid fa-box text-lg group-hover:text-[#66fcf1]"></i> <span class="text-sm font-medium">Kelola Barang</span>
-                </a>
-                <a href="/supplier" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all group">
-                    <i class="fa-solid fa-truck-field text-lg group-hover:text-[#66fcf1]"></i> <span class="text-sm font-medium">Kelola Supplier</span>
-                </a>
-                <a href="/transaksi" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all group">
-                    <i class="fa-solid fa-exchange-alt text-lg group-hover:text-[#66fcf1]"></i> <span class="text-sm font-medium">Kelola Transaksi</span>
-                </a>
-                <a href="/laporan" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all group">
-                    <i class="fa-solid fa-file-invoice-dollar text-lg group-hover:text-[#66fcf1]"></i> <span class="text-sm font-medium">Cetak Laporan</span>
-                </a>
-                <a href="/barang-terjual" class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#45f3ff]/20 to-transparent border-l-4 border-[#45f3ff] text-white rounded-r-lg transition-all">
-                    <i class="fa-solid fa-receipt text-lg text-[#45f3ff]"></i> <span class="text-sm font-medium">Barang Terjual</span>
-                </a>
+                <a href="/dashboard" class="block px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/30 rounded-lg text-sm font-medium transition duration-150">Dashboard</a>
+                <a href="/barang" class="block px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/30 rounded-lg text-sm font-medium transition duration-150">Kelola Barang</a>
+                <a href="/supplier" class="block px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/30 rounded-lg text-sm font-medium transition duration-150">Kelola Supplier</a>
+                <a href="/transaksi" class="block px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/30 rounded-lg text-sm font-medium transition duration-150">Kelola Transaksi</a>
+                <a href="/laporan" class="block px-4 py-2 text-slate-400 hover:text-white hover:bg-slate-800/30 rounded-lg text-sm font-medium transition duration-150">Cetak Laporan</a>
+                <a href="/barang-terjual" class="block px-4 py-2 bg-sky-500/10 border border-sky-500/20 text-sky-400 font-medium text-sm transition duration-150 rounded-lg">Barang Terjual</a>
                 <% if (user.role === 'admin') { %>
-                <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-950/20 hover:text-red-300 rounded-lg transition-all group">
-                    <i class="fa-solid fa-users-cog text-lg"></i> <span class="text-sm font-medium">Kelola User</span>
-                </a>
+                    <a href="/admin/users" class="block px-4 py-2 text-red-400/80 hover:text-white hover:bg-red-950/20 rounded-lg text-sm font-medium transition duration-150 mt-4">Kelola User</a>
                 <% } %>
             </nav>
         </div>
-
-        <div class="bg-[#151a21] p-3 rounded-xl border border-gray-800 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold uppercase">
-                    <%= user.nama.substring(0,2) %>
+        
+        <div class="bg-[#161d2a] p-3 rounded-xl flex items-center justify-between border border-slate-800/40">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-xs font-bold text-white uppercase">
+                    <%= user.nama.charAt(0) %>
                 </div>
-                <div>
-                    <p class="text-white text-xs font-semibold truncate max-w-[100px]"><%= user.nama %></p>
-                    <span class="text-[10px] bg-purple-900/50 text-purple-300 px-1.5 py-0.5 rounded border border-purple-700/50 block w-max capitalize"><%= user.role %></span>
+                <div class="leading-tight">
+                    <p class="text-xs font-bold text-white"><%= user.nama %></p>
+                    <span class="text-[10px] text-purple-400 font-medium capitalize"><%= user.role %></span>
                 </div>
             </div>
-            <a href="/logout" class="text-gray-500 hover:text-red-400 transition-colors" title="Log Out">
-                <i class="fa-solid fa-sign-out-alt text-sm"></i>
-            </a>
+            <a href="/logout" class="text-[11px] text-red-400 hover:text-red-300 font-medium transition">Logout</a>
         </div>
     </div>
 
-    <main class="flex-1 p-8 overflow-y-auto">
-        
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h2 class="text-2xl font-bold text-white tracking-wide">Laporan Realisasi Penjualan & Pendapatan</h2>
-                <p class="text-xs text-gray-500 mt-1">Rekapitulasi berkas seluruh transaksi komersial dari checkout belanja konsumen maupun pengeluaran logistik.</p>
+    <div class="no-print md:hidden bg-[#111625] border-b border-slate-800 p-4">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <div class="bg-cyan-500 rounded-full p-0.5 w-7 h-7 flex items-center justify-center overflow-hidden shrink-0">
+                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
+                </div>
+                <span class="font-bold text-sm tracking-tight text-white">InvenioWeb</span>
             </div>
-            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-lg shadow-blue-600/20 transition-all">
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-slate-400 font-medium"><%= user.nama %></span>
+                <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
+            </div>
+        </div>
+        <nav class="flex flex-wrap gap-1.5">
+            <a href="/dashboard" class="px-3 py-1.5 bg-[#161d2a] text-slate-400 rounded-md text-xs font-medium transition">Dashboard</a>
+            <a href="/barang" class="px-3 py-1.5 bg-[#161d2a] text-slate-400 rounded-md text-xs font-medium transition">Barang</a>
+            <a href="/supplier" class="px-3 py-1.5 bg-[#161d2a] text-slate-400 rounded-md text-xs font-medium transition">Supplier</a>
+            <a href="/transaksi" class="px-3 py-1.5 bg-[#161d2a] text-slate-400 rounded-md text-xs font-medium transition">Transaksi</a>
+            <a href="/laporan" class="px-3 py-1.5 bg-[#161d2a] text-slate-400 rounded-md text-xs font-medium transition">Laporan</a>
+            <a href="/barang-terjual" class="px-3 py-1.5 bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-md text-xs font-medium">Barang Terjual</a>
+        </nav>
+    </div>
+
+    <main class="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold text-white tracking-wide">Laporan Realisasi Penjualan & Pendapatan</h2>
+                <p class="text-xs text-slate-400 mt-1">Rekapitulasi berkas seluruh transaksi komersial dari checkout belanja konsumen.</p>
+            </div>
+            <button onclick="window.print()" class="no-print bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-semibold text-xs px-4 py-2.5 rounded-lg flex items-center gap-2 transition duration-150 shrink-0 shadow-md">
                 <i class="fa-solid fa-print"></i> Cetak Laporan Penjualan
             </button>
         </div>
 
         <% 
             let totalPendapatan = 0; 
-            terjual.forEach(t => { 
-                totalPendapatan += (t.jumlah * t.harga); 
-            }); 
+            if (typeof terjual !== 'undefined' && terjual.length > 0) {
+                terjual.forEach(t => { 
+                    totalPendapatan += (t.jumlah * t.harga); 
+                }); 
+            }
         %>
 
-        <div class="bg-[#1f2833] p-6 rounded-xl border border-gray-800 shadow-xl relative overflow-hidden mb-8 group">
-            <div class="absolute right-0 top-0 w-24 h-24 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full pointer-events-none"></div>
-            <p class="text-[11px] uppercase tracking-wider text-gray-400 font-semibold mb-1">Total Pendapatan Terbuku</p>
+        <div class="print-card bg-[#161d2a] p-5 rounded-xl border border-slate-800/80 shadow-lg relative overflow-hidden group">
+            <div class="absolute right-0 top-0 w-24 h-24 bg-gradient-to-bl from-amber-500/5 to-transparent rounded-bl-full pointer-events-none"></div>
+            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-1">Total Pendapatan Terbuku</p>
             <div class="flex items-baseline gap-2">
-                <span class="text-xl font-bold text-gray-400">Rp</span>
-                <span class="text-3xl font-extrabold text-white tracking-tight group-hover:text-amber-400 transition-colors">
+                <span class="text-lg font-bold text-slate-400">Rp</span>
+                <span class="text-2xl font-extrabold text-white tracking-tight transition-colors">
                     <%= totalPendapatan.toLocaleString('id-ID') %>
                 </span>
             </div>
-            <div class="absolute right-6 bottom-6 text-2xl text-amber-500/30 group-hover:scale-110 transition-transform">
+            <div class="absolute right-6 bottom-5 text-xl text-amber-500/20 group-hover:scale-105 transition-transform">
                 <i class="fa-solid fa-sack-dollar"></i>
             </div>
         </div>
 
-        <div class="bg-[#1f2833] rounded-xl border border-gray-800 shadow-2xl overflow-hidden">
-            <div class="p-4 bg-[#151a21] border-b border-gray-800 flex items-center gap-2">
-                <i class="fa-solid : fa-list-check text-blue-400 text-sm"></i>
-                <h3 class="text-xs font-bold text-blue-400 uppercase tracking-wider">Daftar Transaksi Pelanggan Sukses</h3>
+        <div class="print-card bg-[#161d2a] border border-slate-800/80 rounded-xl overflow-hidden shadow-lg">
+            <div class="p-4 bg-[#1e2530]/30 border-b border-slate-800/80 flex items-center gap-2">
+                <h3 class="text-xs font-bold text-[#0ea5e9] uppercase tracking-wider">🛒 Daftar Transaksi Pelanggan Sukses</h3>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto w-full">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="bg-[#151a21]/50 text-gray-400 uppercase tracking-wider border-b border-gray-800 font-semibold">
-                            <th class="p-4">Tanggal Transaksi</th>
-                            <th class="p-4">Nama Pembeli (User)</th>
-                            <th class="p-4">Komoditas Barang</th>
-                            <th class="p-4 text-center">Volume Beli</th>
-                            <th class="p-4 text-right">Total Nominal</th>
+                        <tr class="bg-[#111625]/50 text-slate-400 uppercase tracking-wider border-b border-slate-800 font-semibold">
+                            <th class="p-3.5">Tanggal Transaksi</th>
+                            <th class="p-3.5">Nama Pembeli (User)</th>
+                            <th class="p-3.5">Komoditas Barang</th>
+                            <th class="p-3.5 text-center">Volume Beli</th>
+                            <th class="p-3.5 text-right">Total Nominal</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-800">
-                        <% if (terjual.length === 0) { %>
+                    <tbody class="divide-y divide-slate-800/50 text-slate-300">
+                        <% if (typeof terjual === 'undefined' || terjual.length === 0) { %>
                             <tr>
-                                <td colspan="5" class="p-8 text-center text-gray-500 italic">
-                                    Belum ada data transaksi dari pembeli atau pengeluaran logistik.
+                                <td colspan="5" class="p-6 text-center text-slate-500 italic">
+                                    Belum ada data transaksi dari pembeli.
                                 </td>
                             </tr>
                         <% } else { %>
                             <% terjual.forEach(t => { %>
-                                <tr class="hover:bg-[#151a21]/30 transition-colors group">
-                                    <td class="p-4 text-gray-400">
+                                <tr class="hover:bg-[#1e2530]/20 transition duration-150">
+                                    <td class="p-3.5 text-slate-400 font-mono">
                                         <%= t.tanggal ? new Date(t.tanggal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : '-' %>
                                     </td>
-                                    <td class="p-4 font-medium text-white">
-                                        <i class="fa-solid fa-user-circle text-gray-600 mr-1.5 text-sm"></i>
+                                    <td class="p-3.5 font-medium text-white flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-circle text-slate-600 text-sm"></i>
                                         <%= t.nama_pembeli %>
                                     </td>
-                                    <td class="p-4 text-gray-300 font-semibold group-hover:text-[#45f3ff] transition-colors">
+                                    <td class="p-3.5 text-slate-300 font-medium">
                                         <%= t.nama_barang %>
                                     </td>
-                                    <td class="p-4 text-center text-amber-400 font-mono font-bold">
+                                    <td class="p-3.5 text-center text-amber-500 font-mono font-bold">
                                         <%= t.jumlah %> Pcs
                                     </td>
-                                    <td class="p-4 text-right text-emerald-400 font-mono font-bold">
+                                    <td class="p-3.5 text-right text-emerald-400 font-mono font-bold">
                                         Rp <%= (t.jumlah * t.harga).toLocaleString('id-ID') %>
                                     </td>
                                 </tr>
