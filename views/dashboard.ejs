@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - InvenioWeb</title>
-    <link rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
+    <link class="no-print" rel="icon" href="https://i.postimg.cc/Fsgf4zWP/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,167 +15,160 @@
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #0b0c10;
-            color: #c5c6c7;
+            background-color: #0c1017;
+            color: #c9d1d9;
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col md:flex-row antialiased select-none">
 
-    <div class="hidden md:flex w-64 bg-[#1f2833] border-r border-gray-800 p-4 flex-col justify-between shrink-0 min-h-screen sticky top-0">
+    <div class="no-print hidden md:flex w-64 bg-[#12161f] border-r border-[#1f242e] p-4 flex-col justify-between shrink-0 min-h-screen sticky top-0">
         <div>
-            <div class="flex items-center gap-3 px-2 py-4 border-b border-gray-700 mb-6">
-                <div class="w-10 h-10 bg-[#45f3ff] rounded-full flex items-center justify-center p-1 shadow-lg shadow-[#45f3ff]/20 overflow-hidden shrink-0">
-                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
+            <div class="flex items-center gap-3 px-2 py-4 border-b border-[#1f242e] mb-6">
+                <div class="w-10 h-10 bg-cyan-500 rounded-lg flex items-center justify-center text-slate-900 font-bold text-xl shadow-md">
+                    IW
                 </div>
                 <div>
                     <h1 class="text-white font-bold tracking-wide text-sm">InvenioWeb</h1>
-                    <span class="text-[10px] text-[#45f3ff] font-medium tracking-wider uppercase">Market System</span>
+                    <span class="text-[11px] text-cyan-400 font-semibold tracking-wider uppercase block">Market System</span>
                 </div>
             </div>
 
             <nav class="space-y-1">
-                <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#45f3ff]/20 to-transparent border-l-4 border-[#45f3ff] text-white rounded-r-lg transition-all">
-                    <span class="text-sm font-medium">Dashboard</span>
+                <a href="/dashboard" class="flex items-center gap-3 px-4 py-2.5 bg-[#1c212c] text-white border-l-4 border-cyan-500 rounded-r-lg text-sm font-medium transition duration-150">
+                    <i class="fa-solid fa-chart-pie w-5 text-center text-cyan-400"></i> <span>Dashboard</span>
                 </a>
-                <a href="/barang" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all duration-200">
-                    <span class="text-sm font-medium">Kelola Barang</span>
+                <a href="/barang" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-[#1c212c] hover:text-white rounded-lg text-sm font-medium transition duration-150">
+                    <i class="fa-solid fa-box w-5 text-center"></i> <span>Kelola Barang</span>
                 </a>
-                <a href="/supplier" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all duration-200">
-                    <span class="text-sm font-medium">Kelola Supplier</span>
+                <a href="/supplier" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-[#1c212c] hover:text-white rounded-lg text-sm font-medium transition duration-150">
+                    <i class="fa-solid fa-truck w-5 text-center"></i> <span>Kelola Supplier</span>
                 </a>
-                <a href="/transaksi" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all duration-200">
-                    <span class="text-sm font-medium">Kelola Transaksi</span>
+                <a href="/transaksi" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-[#1c212c] hover:text-white rounded-lg text-sm font-medium transition duration-150">
+                    <i class="fa-solid fa-exchange-alt w-5 text-center"></i> <span>Kelola Transaksi</span>
                 </a>
-                <a href="/laporan" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all duration-200">
-                    <span class="text-sm font-medium">Cetak Laporan</span>
+                <a href="/laporan" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-[#1c212c] hover:text-white rounded-lg text-sm font-medium transition duration-150">
+                    <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> <span>Cetak Laporan</span>
                 </a>
-                <a href="/barang-terjual" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-[#151a21] hover:text-white rounded-lg transition-all duration-200">
-                    <span class="text-sm font-medium">Barang Terjual</span>
+                <a href="/barang-terjual" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-[#1c212c] hover:text-white rounded-lg text-sm font-medium transition duration-150">
+                    <i class="fa-solid fa-receipt w-5 text-center"></i> <span>Barang Terjual</span>
                 </a>
                 
                 <% if (user.role === 'admin') { %>
-                    <a href="/admin/users" class="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-950/20 hover:text-red-300 rounded-lg transition-all mt-2">
-                        <span class="text-sm font-medium">Kelola User</span>
+                    <a href="/admin/users" class="flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-950/20 hover:text-red-300 rounded-lg text-sm font-medium transition duration-150 mt-4">
+                        <i class="fa-solid fa-users-cog w-5 text-center"></i> <span>Kelola User</span>
                     </a>
                 <% } %>
             </nav>      
         </div>
 
-        <div class="bg-[#151a21] p-3 rounded-xl border border-gray-800 flex items-center justify-between shadow-inner">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold uppercase border border-purple-500/30">
+        <div class="bg-[#171b26] p-3 rounded-xl border border-[#222834] flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold uppercase">
                     <%= user.nama.substring(0,2) %>
                 </div>
-                <div>
+                <div class="leading-tight">
                     <p class="text-white text-xs font-semibold truncate max-w-[110px]"><%= user.nama %></p>
-                    <span class="text-[10px] bg-purple-950 text-purple-300 px-1.5 py-0.5 rounded border border-purple-800/50 block w-max capitalize mt-0.5"><%= user.role %></span>
+                    <span class="text-[10px] text-purple-400 font-medium capitalize block w-max mt-0.5"><%= user.role %></span>
                 </div>
             </div>
-            <a href="/logout" class="text-gray-500 hover:text-red-400 p-1.5 hover:bg-gray-800/30 rounded-lg transition-colors" title="Log Out">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+            <a href="/logout" class="text-slate-500 hover:text-red-400 p-1.5 hover:bg-gray-800/30 rounded-lg transition-colors" title="Log Out">
+                <i class="fa-solid fa-sign-out-alt"></i>
             </a>
         </div>
     </div>
 
-    <div class="md:hidden bg-[#1f2833] border-b border-gray-800 p-4">
+    <div class="md:hidden bg-[#12161f] border-b border-[#1f242e] p-4 w-full">
         <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-                <div class="bg-[#45f3ff] rounded-full p-0.5 flex items-center justify-center w-8 h-8 overflow-hidden shrink-0">
-                    <img src="https://i.postimg.cc/Fsgf4zWP/favicon.png" alt="Logo InvenioWeb" class="w-full h-full object-cover rounded-full">
+            <div class="flex items-center gap-2">
+                <div class="bg-cyan-500 rounded-lg p-1 w-8 h-8 flex items-center justify-center text-slate-900 font-bold text-sm">
+                    IW
                 </div>
-                <span class="font-bold tracking-tight text-white">
-                    InvenioWeb
-                </span>
+                <span class="font-bold text-sm tracking-tight text-white">InvenioWeb</span>
             </div>
             <div class="flex items-center gap-3">
-                <span class="text-xs text-gray-400">
-                    <%= user.nama %> (<span class="capitalize text-[#45f3ff]"><%= user.role %></span>)
+                <span class="text-xs text-slate-400 font-medium">
+                    <%= user.nama %> (<span class="capitalize text-cyan-400"><%= user.role %></span>)
                 </span>
                 <a href="/logout" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</a>
             </div>
         </div>
         
-        <nav class="flex flex-wrap gap-2">
-            <a href="/dashboard" class="px-3 py-1.5 bg-[#45f3ff] text-[#0b0c10] rounded-lg text-xs font-bold shadow-md">Dashboard</a>
-            <a href="/barang" class="px-3 py-1.5 bg-[#151a21] text-gray-400 rounded-lg text-xs font-medium transition hover:text-white">Barang</a>
-            <a href="/supplier" class="px-3 py-1.5 bg-[#151a21] text-gray-400 rounded-lg text-xs font-medium transition hover:text-white">Supplier</a>
-            <a href="/transaksi" class="px-3 py-1.5 bg-[#151a21] text-gray-400 rounded-lg text-xs font-medium transition hover:text-white">Transaksi</a>
-            <a href="/laporan" class="px-3 py-1.5 bg-[#151a21] text-gray-400 rounded-lg text-xs font-medium transition hover:text-white">Laporan</a>
-            <a href="/barang-terjual" class="px-3 py-1.5 bg-[#151a21] text-gray-400 rounded-lg text-xs font-medium transition hover:text-white">Barang Terjual</a>
-            <% if (user.role === 'admin') { %>
-                <a href="/admin/users" class="px-3 py-1.5 bg-red-950/50 text-red-400 rounded-lg text-xs font-medium border border-red-500/20">Kelola User</a>
-            <% } %>
+        <nav class="flex flex-wrap gap-1.5">
+            <a href="/dashboard" class="px-3 py-1.5 bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-md text-xs font-medium">Dashboard</a>
+            <a href="/barang" class="px-3 py-1.5 bg-[#1c212c] text-slate-400 rounded-md text-xs font-medium">Barang</a>
+            <a href="/supplier" class="px-3 py-1.5 bg-[#1c212c] text-slate-400 rounded-md text-xs font-medium">Supplier</a>
+            <a href="/transaksi" class="px-3 py-1.5 bg-[#1c212c] text-slate-400 rounded-md text-xs font-medium">Transaksi</a>
+            <a href="/laporan" class="px-3 py-1.5 bg-[#1c212c] text-slate-400 rounded-md text-xs font-medium">Laporan</a>
+            <a href="/barang-terjual" class="px-3 py-1.5 bg-[#1c212c] text-slate-400 rounded-md text-xs font-medium">Barang Terjual</a>
         </nav>
     </div>
 
-    <div class="flex-grow p-6 md:p-10 overflow-y-auto bg-[#0b0c10]">
-        <header class="mb-8">
-            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Sistem Inventaris Barang Toko</h1>
-            <p class="text-gray-500 text-sm mt-1">Metode Pengembangan: Waterfall SDLC Model</p>
+    <div class="flex-grow p-6 md:p-8 overflow-y-auto bg-[#0c1017]">
+        <header class="mb-6">
+            <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white">Sistem Inventaris Barang Toko</h1>
+            <p class="text-slate-400 text-xs mt-1">Metode Pengembangan: Waterfall SDLC Model</p>
         </header>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
-            <div class="p-6 bg-[#1f2833] border border-gray-800 rounded-xl relative overflow-hidden shadow-xl group">
-                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Total Varian Produk</p>
-                <p class="text-3xl font-bold mt-2 text-indigo-400 group-hover:text-indigo-300 transition-colors"><%= totalBarang %></p>
-                <div class="absolute right-2 bottom-2 text-6xl font-bold text-gray-700/10">📦</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="p-5 bg-[#161b22] border border-[#30363d] rounded-xl relative overflow-hidden shadow-md group">
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total Varian Produk</p>
+                <p class="text-2xl font-bold mt-2 text-indigo-400"><%= totalBarang %></p>
+                <div class="absolute right-4 bottom-3 text-3xl font-bold text-slate-600/20">📦</div>
             </div>
-            <div class="p-6 bg-[#1f2833] border border-gray-800 rounded-xl relative overflow-hidden shadow-xl group">
-                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Mitra Penyuplai (Supplier)</p>
-                <p class="text-3xl font-bold mt-2 text-emerald-400 group-hover:text-emerald-300 transition-colors"><%= totalSupplier %></p>
-                <div class="absolute right-2 bottom-2 text-6xl font-bold text-gray-700/10">🤝</div>
+            <div class="p-5 bg-[#161b22] border border-[#30363d] rounded-xl relative overflow-hidden shadow-md group">
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Mitra Penyuplai (Supplier)</p>
+                <p class="text-2xl font-bold mt-2 text-emerald-400"><%= totalSupplier %></p>
+                <div class="absolute right-4 bottom-3 text-3xl font-bold text-slate-600/20">🤝</div>
             </div>
-            <div class="p-6 bg-[#1f2833] border border-gray-800 rounded-xl relative overflow-hidden shadow-xl group">
-                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Transaksi Barang Masuk</p>
-                <p class="text-3xl font-bold mt-2 text-amber-400 group-hover:text-amber-300 transition-colors"><%= totalMasuk %></p>
-                <div class="absolute right-2 bottom-2 text-6xl font-bold text-gray-700/10">📥</div>
+            <div class="p-5 bg-[#161b22] border border-[#30363d] rounded-xl relative overflow-hidden shadow-md group">
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Transaksi Barang Masuk</p>
+                <p class="text-2xl font-bold mt-2 text-amber-400"><%= totalMasuk %></p>
+                <div class="absolute right-4 bottom-3 text-3xl font-bold text-slate-600/20">📥</div>
             </div>
-            <div class="p-6 bg-[#1f2833] border border-gray-800 rounded-xl relative overflow-hidden shadow-xl group">
-                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Transaksi Barang Keluar</p>
-                <p class="text-3xl font-bold mt-2 text-rose-400 group-hover:text-rose-300 transition-colors"><%= totalKeluar %></p>
-                <div class="absolute right-2 bottom-2 text-6xl font-bold text-gray-700/10">📤</div>
+            <div class="p-5 bg-[#161b22] border border-[#30363d] rounded-xl relative overflow-hidden shadow-md group">
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Transaksi Barang Keluar</p>
+                <p class="text-2xl font-bold mt-2 text-rose-400"><%= totalKeluar %></p>
+                <div class="absolute right-4 bottom-3 text-3xl font-bold text-slate-600/20">📤</div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-            <div class="lg:col-span-2 p-6 bg-[#1f2833] border border-gray-800 rounded-xl shadow-xl">
-                <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-white">⚠️ Notifikasi Stok Produk Menipis</h3>
-                <p class="text-gray-400 text-xs mb-4">Segera hubungi supplier terkait jika stok menyentuh batas aman (minimal 5 item).</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 p-5 bg-[#161b22] border border-[#30363d] rounded-xl shadow-md">
+                <h3 class="text-sm font-bold mb-2 flex items-center gap-2 text-white">⚠️ Notifikasi Stok Produk Menipis</h3>
+                <p class="text-slate-400 text-xs mb-4">Segera hubungi supplier terkait jika stok menyentuh batas aman (minimal 5 item).</p>
                 <div class="space-y-3">
-                    <div class="p-4 bg-[#151a21] rounded-lg border border-gray-800 flex justify-between items-center">
+                    <div class="p-4 bg-[#12161f]/40 rounded-lg border border-[#30363d]/50 flex justify-between items-center">
                         <div>
-                            <p class="text-sm font-medium text-white">Beras Premium 5kg</p>
-                            <span class="text-xs text-gray-500 font-mono">SUP-001 (PT. Sumber Rasa)</span>
+                            <p class="text-xs font-semibold text-white">Beras Premium 5kg</p>
+                            <span class="text-[11px] text-slate-500 font-mono">SUP-001 (PT. Sumber Rasa)</span>
                         </div>
                         <span class="text-xs font-bold text-rose-400 bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20">Sisa 2 Pcs</span>
                     </div>
-                    <div class="p-4 bg-[#151a21] rounded-lg border border-gray-800 flex justify-between items-center">
+                    <div class="p-4 bg-[#12161f]/40 rounded-lg border border-[#30363d]/50 flex justify-between items-center">
                         <div>
-                            <p class="text-sm font-medium text-white">Minyak Goreng 2L</p>
-                            <span class="text-xs text-gray-500 font-mono">SUP-003 (Wilmar Retail)</span>
+                            <p class="text-xs font-semibold text-white">Minyak Goreng 2L</p>
+                            <span class="text-[11px] text-slate-500 font-mono">SUP-003 (Wilmar Retail)</span>
                         </div>
                         <span class="text-xs font-bold text-rose-400 bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20">Sisa 4 Pcs</span>
                     </div>
                 </div>
             </div>
 
-            <div class="p-6 bg-[#1f2833] border border-gray-800 rounded-xl shadow-xl flex flex-col justify-between">
+            <div class="p-5 bg-[#161b22] border border-[#30363d] rounded-xl shadow-md flex flex-col justify-between">
                 <div>
-                    <h3 class="text-lg font-bold mb-2 text-white">📊 Status Alur Waterfall</h3>
-                    <p class="text-xs text-gray-400 leading-relaxed">Sistem ini dikembangkan secara sekuensial terstruktur sesuai metodologi air terjun:</p>
+                    <h3 class="text-sm font-bold mb-2 text-white">📊 Status Alur Waterfall</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Sistem ini dikembangkan secara sekuensial terstruktur sesuai metodologi air terjun:</p>
                     
                     <div class="mt-4 space-y-2 text-xs">
-                        <div class="flex items-center gap-2 text-gray-500"><span class="text-emerald-400">✓</span> 1. Analisis Kebutuhan Toko</div>
-                        <div class="flex items-center gap-2 text-gray-500"><span class="text-emerald-400">✓</span> 2. Desain Database & ERD</div>
-                        <div class="flex items-center gap-2 text-[#45f3ff]">➔ 3. Tahap Coding & Implementasi</div>
-                        <div class="flex items-center gap-2 text-gray-600">⚪ 4. Pengujian Sistem Toko</div>
+                        <div class="flex items-center gap-2 text-slate-500"><span class="text-emerald-400">✓</span> 1. Analisis Kebutuhan Toko</div>
+                        <div class="flex items-center gap-2 text-slate-500"><span class="text-emerald-400">✓</span> 2. Desain Database & ERD</div>
+                        <div class="flex items-center gap-2 text-cyan-400">➔ 3. Tahap Coding & Implementasi</div>
+                        <div class="flex items-center gap-2 text-slate-600">⚪ 4. Pengujian Sistem Toko</div>
                     </div>
                 </div>
-                <div class="mt-6 pt-4 border-t border-gray-800 text-[11px] text-gray-500 text-center">
-                    InvenioWeb v1.0.0 © 2026
+                <div class="mt-6 pt-4 border-t border-[#30363d] text-[11px] text-slate-500 text-center">
+                    InvenioWeb w1.0.0 © 2026
                 </div>
             </div>
         </div>
