@@ -26,28 +26,61 @@
             -webkit-appearance: none;
             margin: 0;
         }
+        
+        /* === PERBAIKAN UTUK CETAK / PRINT MODE === */
         @media print {
             .no-print {
                 display: none !important;
             }
             body {
-                background-color: white !important;
-                color: black !important;
+                background-color: #ffffff !important;
+                color: #111827 !important;
             }
             .print-card {
-                background-color: transparent !important;
+                background-color: #ffffff !important;
                 border: 1px solid #d1d5db !important;
                 box-shadow: none !important;
-                color: black !important;
+                color: #111827 !important;
+                page-break-inside: avoid; /* Mencegah card terpotong di tengah halaman */
+                margin-bottom: 1.5rem;
             }
-            .text-white, .text-slate-200, .text-slate-300 { color: #000000 !important; }
-            .text-slate-400, .text-slate-500 { color: #4b5563 !important; }
+            .text-white, .text-slate-200, .text-slate-300 { 
+                color: #111827 !important; 
+            }
+            .text-slate-400, .text-slate-500 { 
+                color: #4b5563 !important; 
+            }
             
+            /* Optimasi Kontras Warna Khusus Teks Mutasi Saat Di-print */
+            .text-amber-500 {
+                color: #b45309 !important; /* Kuning cerah jadi Cokelat/Oranye Tua */
+            }
+            .text-rose-400, .text-rose-500 {
+                color: #9f1239 !important; /* Merah muda jadi Merah Marun Tua */
+            }
+            .text-cyan-400 {
+                color: #0369a1 !important; /* Cyan cerah jadi Biru Tua */
+            }
+            
+            /* Reset Background Utility Tailwind */
             [class*="bg-"] { 
                 background-color: transparent !important; 
             }
             [class*="border-"] { 
                 border-color: #e5e7eb !important; 
+            }
+
+            /* Struktur Tabel Formal */
+            thead tr {
+                background-color: #f3f4f6 !important;
+                border-bottom: 2px solid #d1d5db !important;
+            }
+            th {
+                color: #111827 !important;
+                font-weight: 700 !important;
+            }
+            td {
+                border-bottom: 1px solid #e5e7eb !important;
             }
         }
     </style>
