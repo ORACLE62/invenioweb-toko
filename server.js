@@ -390,6 +390,20 @@ app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpin
     } catch (e) { res.status(500).send("Error Halaman Barang Terjual: " + e.message); }
 });
 
+app.get('/barang-terjual/hapus/:id', requireLogin, requireRole(['admin']), async (req, res) => {
+    try {
+        const idTransaksi = req.params.id;
+
+        // Menghapus data berdasarkan nama tabel 'transaksi' dan kolom 'id_transaksi'
+        await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [idTransaksi]);
+
+        // Redirect kembali ke halaman barang terjual setelah sukses menghapus
+        res.redirect('/barang-terjual');
+    } catch (e) { 
+        res.status(500).send("Error Gagal Menghapus Transaksi: " + e.message); 
+    }
+});
+
 // ==========================================
 // 7. ROUTE LAPORAN (DATA LOGISTIK UTAMA)
 // ==========================================
