@@ -193,7 +193,7 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse min-w-[600px]">
+                <table class="w-full text-left text-xs border-collapse min-w-[700px]">
                     <thead>
                         <tr class="bg-[#12161f]/50 text-slate-400 uppercase tracking-wider border-b border-[#30363d] font-semibold">
                             <th class="p-4">Tanggal Transaksi</th>
@@ -201,12 +201,13 @@
                             <th class="p-4">Komoditas Barang</th>
                             <th class="p-4 text-center">Volume Beli</th>
                             <th class="p-4 text-right">Total Nominal</th>
+                            <th class="p-4 text-center no-print">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#30363d]/60 text-slate-300">
                         <% if (typeof terjual === 'undefined' || terjual.length === 0) { %>
                             <tr>
-                                <td colspan="5" class="p-8 text-center text-slate-500 italic">
+                                <td colspan="6" class="p-8 text-center text-slate-500 italic">
                                     Belum ada data transaksi dari pembeli.
                                 </td>
                             </tr>
@@ -228,6 +229,14 @@
                                     </td>
                                     <td class="p-4 text-right text-emerald-400 font-mono font-bold">
                                         Rp <%= (t.jumlah * t.harga).toLocaleString('id-ID') %>
+                                    </td>
+                                    <td class="p-4 text-center no-print">
+                                        <a href="/barang-terjual/hapus/<%= t.id %>" 
+                                           onclick="return confirm('Apakah Anda yakin ingin menghapus riwayat transaksi milik <%= t.nama_pembeli %> ini?')" 
+                                           class="inline-flex items-center justify-center bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-[11px] px-2.5 py-1.5 rounded transition duration-150" 
+                                           title="Hapus Data">
+                                            <i class="fa-solid fa-trash-can mr-1"></i> Hapus
+                                        </a>
                                     </td>
                                 </tr>
                             <% }) %>
