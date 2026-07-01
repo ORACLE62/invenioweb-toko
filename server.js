@@ -377,7 +377,6 @@ app.get('/transaksi/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'p
 // ==========================================
 app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
-        // FIXED: Filter diperlonggar agar semua jenis_transaksi = 'keluar' otomatis masuk dan terhitung
         const [terjual] = await db.execute(`
             SELECT t.*, b.nama_barang, b.harga, COALESCE(u.nama, 'Pelanggan/Gudang') as nama_pembeli 
             FROM transaksi t 
@@ -390,14 +389,20 @@ app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpin
     } catch (e) { res.status(500).send("Error Halaman Barang Terjual: " + e.message); }
 });
 
+// === TARUH DI SINI (Penanganan Hapus Data) ===
 app.get('/barang-terjual/hapus/:id', requireLogin, requireRole(['admin']), async (req, res) => {
     try {
         const idTransaksi = req.params.id;
 
-        // Menghapus data berdasarkan nama tabel 'transaksi' dan kolom 'id_transaksi'
+        // Validasi tambahan jika ID tidak valid/kosong
+        if (!idTransaksi || idTransaksi === 'undefined') {
+            return res.status(400).send("Error: ID Transaksi tidak ditemukan atau tidak valid.");
+        }
+
+        // Jalankan perintah hapus ke tabel 'transaksi' dengan kolom 'id_transaksi'
         await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [idTransaksi]);
 
-        // Redirect kembali ke halaman barang terjual setelah sukses menghapus
+        // Segarkan kembali halaman setelah sukses
         res.redirect('/barang-terjual');
     } catch (e) { 
         res.status(500).send("Error Gagal Menghapus Transaksi: " + e.message); 
