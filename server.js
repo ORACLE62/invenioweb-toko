@@ -419,76 +419,80 @@ app.get('/barang-terjual/hapus/:id', requireLogin, requireRole(['admin']), async
 });
 
 // ==========================================
-// 7. ROUTE LAPORAN (DATA LOGISTIK UTAMA)
+// 7. ROUTE LAPORAN (DATA LOGISTIK UTAMA) - FIXED MULTI-TABLE & FILTER TAHUN
 // ==========================================
 app.get('/laporan', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
-        const [stokGudang] = await db.execute(`SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier FROM barang b LEFT JOIN supplier s ON b.id_supplier = s.id_supplier`);
-        
-        const [allTransaksi] = await db.execute(`
-            SELECT t.*, b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
-            FROM transaksi t 
-            JOIN barang b ON t.id_barang = b.id_barang 
-            LEFT JOIN supplier s ON b.id_supplier = s.id_supplier 
-            WHERE t.id_user IS NULL
-            ORDER BY t.tanggal DESC, t.id_transaksi DESC
-        `);
+        // 1. Ambil parameter tahun dari dropdown form (?tahun=2025 atau ?tahun=2026).
+        // Jika tidak ada parameter, otomatis default ke tahun berjalan saat ini (2026).
+        const tahunTerpilih = req.query.tahun || new Date().getFullYear();
 
+        // 2. AMBIL DATA AKUMULASI STOK GUDANG (BAGIAN ATAS)
+        // Query ini sengaja tidak diberi filter TAHUN agar master komoditas barang tetap muncul utuh
+        const [stokGudang] = await db.execute(`
+            SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
+            FROM barang b 
+            LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
+            ORDER BY b.nama_barang ASC
+        `);
+        
+        // 3. AMBIL DATA LOG BARANG MASUK BERDASARKAN TAHUN YANG DIPILIH
+        const [barangMasuk] = await db.execute(`
+            SELECT tm.id_masuk AS id_transaksi, tm.tgl_masuk AS tanggal, tm.jumlah_masuk AS jumlah, 
+                   b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier,
+                   'masuk' AS jenis_transaksi
+            FROM transaksi_masuk tm
+            JOIN barang b ON tm.id_barang = b.id_barang
+            LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
+            WHERE YEAR(tm.tgl_masuk) = ?
+            ORDER BY tm.tgl_masuk DESC
+        `, [tahunTerpilih]);
+
+        // 4. AMBIL DATA LOG BARANG KELUAR BERDASARKAN TAHUN YANG DIPILIH
+        const [barangKeluar] = await db.execute(`
+            SELECT tk.id_keluar AS id_transaksi, tk.tgl_keluar AS tanggal, tk.jumlah_keluar AS jumlah, 
+                   b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier,
+                   'keluar' AS jenis_transaksi
+            FROM transaksi_keluar tk
+            JOIN barang b ON tk.id_barang = b.id_barang
+            LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
+            WHERE YEAR(tk.tgl_keluar) = ?
+            ORDER BY tk.tgl_keluar DESC
+        `, [tahunTerpilih]);
+
+        // 5. PENGELOMPOKAN DATA MUTASI HARIAN (laporanPerHari)
         const laporanPerHari = {};
-        allTransaksi.forEach(t => {
+
+        // Satukan data masuk ke pengelompokan tanggal harian
+        barangMasuk.forEach(t => {
             if (t.tanggal) {
                 const tglKey = new Date(t.tanggal).toISOString().split('T')[0];
                 if (!laporanPerHari[tglKey]) laporanPerHari[tglKey] = { masuk: [], keluar: [] };
-                if (t.jenis_transaksi === 'masuk') laporanPerHari[tglKey].masuk.push(t); else laporanPerHari[tglKey].keluar.push(t);
+                laporanPerHari[tglKey].masuk.push(t);
             }
         });
-        res.render('laporan', { user: req.session.user, stokGudang, laporanPerHari });
-    } catch (e) { res.status(500).send("Error Laporan: " + e.message); }
-});
 
-app.post('/laporan/barang/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
-    try {
-        const { nama_barang, stok, harga } = req.body;
-        await db.execute('UPDATE barang SET nama_barang = ?, stok = ?, harga = ? WHERE id_barang = ?', [nama_barang, stok, harga, req.params.id]);
-        res.redirect('/laporan');
-    } catch (e) { res.status(500).send(e.message); }
-});
+        // Satukan data keluar ke pengelompokan tanggal harian
+        barangKeluar.forEach(t => {
+            if (t.tanggal) {
+                const tglKey = new Date(t.tanggal).toISOString().split('T')[0];
+                if (!laporanPerHari[tglKey]) laporanPerHari[tglKey] = { masuk: [], keluar: [] };
+                laporanPerHari[tglKey].keluar.push(t);
+            }
+        });
 
-app.get('/laporan/barang/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
-    try {
-        await db.execute('DELETE FROM transaksi WHERE id_barang = ?', [req.params.id]);
-        await db.execute('DELETE FROM barang WHERE id_barang = ?', [req.params.id]);
-        res.redirect('/laporan');
-    } catch (e) { res.status(500).send(e.message); }
-});
+        // 6. RENDER KE VIEW LAPORAN.EJS DENGAN DATA YANG SUDAH TERFILTER
+        res.render('laporan', { 
+            user: req.session.user, 
+            stokGudang, 
+            laporanPerHari,
+            tahunTerpilih: parseInt(tahunTerpilih) // Dikirim ke view untuk mempertahankan status dropdown select
+        });
 
-app.post('/laporan/edit/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
-    try {
-        const { jumlah_baru, tanggal_baru } = req.body;
-        const [old] = await db.execute('SELECT * FROM transaksi WHERE id_transaksi = ?', [req.params.id]);
-        if (old.length === 0) return res.redirect('/laporan');
-        
-        const { id_barang, jenis_transaksi, jumlah: jumlah_lama } = old[0];
-        const selisih = parseInt(jumlah_baru) - parseInt(jumlah_lama);
-
-        await db.execute('UPDATE transaksi SET jumlah = ?, tanggal = ? WHERE id_transaksi = ?', [jumlah_baru, tanggal_baru, req.params.id]);
-        const op = (jenis_transaksi === 'masuk') ? '+' : '-';
-        await db.execute(`UPDATE barang SET stok = stok ${op} ? WHERE id_barang = ?`, [selisih, id_barang]);
-        res.redirect('/laporan');
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.get('/laporan/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
-    try {
-        const [t] = await db.execute('SELECT * FROM transaksi WHERE id_transaksi = ?', [req.params.id]);
-        if (t.length > 0) {
-            const { id_barang, jenis_transaksi, jumlah } = t[0];
-            const op = (jenis_transaksi === 'masuk') ? '-' : '+';
-            await db.execute(`UPDATE barang SET stok = stok ${op} ? WHERE id_barang = ?`, [jumlah, id_barang]);
-            await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [req.params.id]);
-        }
-        res.redirect('/laporan');
-    } catch (e) { res.status(500).send(e.message); }
+    } catch (e) { 
+        console.error("🚨 Error pada rute laporan:", e);
+        res.status(500).send("Error Laporan Gudang: " + e.message); 
+    }
 });
 
 // ===================================================================
