@@ -330,12 +330,11 @@ app.get('/supplier/hapus/:id', requireLogin, requireRole(['admin', 'gudang', 'pi
 });
 
 // ==========================================
-// 5. ROUTE TRANSAKSI (🔥 FIXED: Ditambahkan kata 'BY' pada ORDER BY)
+// 5. ROUTE TRANSAKSI
 // ==========================================
 app.get('/transaksi', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
         const [barang] = await db.execute('SELECT * FROM barang');
-        // DISINI SUDAH FIXED: Menggunakan ORDER BY yang lengkap dan benar
         const [transaksi] = await db.execute("SELECT t.*, b.nama_barang FROM transaksi t JOIN barang b ON t.id_barang = b.id_barang WHERE t.id_user IS NULL ORDER BY t.tanggal DESC, t.id_transaksi DESC");
         res.render('transaksi', { user: req.session.user, barang, transaksi });
     } catch (e) { res.status(500).send("Error Menu Transaksi: " + e.message); }
@@ -389,18 +388,28 @@ app.get('/barang-terjual', requireLogin, requireRole(['admin', 'gudang', 'pimpin
     } catch (e) { res.status(500).send("Error Halaman Barang Terjual: " + e.message); }
 });
 
-// === TARUH DI SINI (Penanganan Hapus Data) ===
+// === AKSI HAPUS RIWAYAT TRANSAKSI TERJUAL DENGAN RESTORE STOK (FIXED) ===
 app.get('/barang-terjual/hapus/:id', requireLogin, requireRole(['admin']), async (req, res) => {
     try {
         const idTransaksi = req.params.id;
 
-        // Validasi tambahan jika ID tidak valid/kosong
+        // Validasi tambahan jika ID tidak valid atau kosong
         if (!idTransaksi || idTransaksi === 'undefined') {
             return res.status(400).send("Error: ID Transaksi tidak ditemukan atau tidak valid.");
         }
 
-        // Jalankan perintah hapus ke tabel 'transaksi' dengan kolom 'id_transaksi'
-        await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [idTransaksi]);
+        // 1. Ambil data transaksi lama terlebih dahulu untuk tahu barang apa dan berapa jumlahnya
+        const [t] = await db.execute('SELECT * FROM transaksi WHERE id_transaksi = ?', [idTransaksi]);
+        
+        if (t.length > 0) {
+            const { id_barang, jumlah } = t[0];
+            
+            // 2. Kembalikan stok barang (+ karena transaksi sebelumnya adalah barang 'keluar')
+            await db.execute('UPDATE barang SET stok = stok + ? WHERE id_barang = ?', [jumlah, id_barang]);
+            
+            // 3. Baru jalankan penghapusan riwayat transaksi
+            await db.execute('DELETE FROM transaksi WHERE id_transaksi = ?', [idTransaksi]);
+        }
 
         // Segarkan kembali halaman setelah sukses
         res.redirect('/barang-terjual');
