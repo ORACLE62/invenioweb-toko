@@ -418,80 +418,66 @@ app.get('/barang-terjual/hapus/:id', requireLogin, requireRole(['admin']), async
     }
 });
 
-// ==========================================
-// 7. ROUTE LAPORAN (DATA LOGISTIK UTAMA) - FIXED MULTI-TABLE & FILTER TAHUN
-// ==========================================
+// =========================================================================
+// 7. ROUTE LAPORAN (DATA LOGISTIK UTAMA) - DUA VARIAN VARIABEL (ANTI-KOSONG)
+// =========================================================================
 app.get('/laporan', requireLogin, requireRole(['admin', 'gudang', 'pimpinan']), async (req, res) => {
     try {
-        // 1. Ambil parameter tahun dari dropdown form (?tahun=2025 atau ?tahun=2026).
-        // Jika tidak ada parameter, otomatis default ke tahun berjalan saat ini (2026).
+        // 1. Ambil parameter tahun dari dropdown form (?tahun=2026)
         const tahunTerpilih = req.query.tahun || new Date().getFullYear();
 
-        // 2. AMBIL DATA AKUMULASI STOK GUDANG (BAGIAN ATAS)
-        // Query ini sengaja tidak diberi filter TAHUN agar master komoditas barang tetap muncul utuh
-        const [stokGudang] = await db.execute(`
+        // 2. QUERY MASTER BARANG (BAGIAN ATAS)
+        // Menarik data komoditas master agar tabel atas terisi
+        const [stokGudangResult] = await db.execute(`
             SELECT b.*, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
             FROM barang b 
             LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
             ORDER BY b.nama_barang ASC
         `);
         
-        // 3. AMBIL DATA LOG BARANG MASUK BERDASARKAN TAHUN YANG DIPILIH
-        const [barangMasuk] = await db.execute(`
-            SELECT tm.id_masuk AS id_transaksi, tm.tgl_masuk AS tanggal, tm.jumlah_masuk AS jumlah, 
-                   b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier,
-                   'masuk' AS jenis_transaksi
-            FROM transaksi_masuk tm
-            JOIN barang b ON tm.id_barang = b.id_barang
-            LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
-            WHERE YEAR(tm.tgl_masuk) = ?
-            ORDER BY tm.tgl_masuk DESC
+        // 3. QUERY LOG MUTASI HARIAN (BAGIAN BAWAH)
+        // Menarik data transaksi internal toko Anda berdasarkan tahun terpilih
+        const [allTransaksi] = await db.execute(`
+            SELECT t.*, b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier 
+            FROM transaksi t 
+            JOIN barang b ON t.id_barang = b.id_barang 
+            LEFT JOIN supplier s ON b.id_supplier = s.id_supplier 
+            WHERE t.id_user IS NULL AND YEAR(t.tanggal) = ?
+            ORDER BY t.tanggal DESC, t.id_transaksi DESC
         `, [tahunTerpilih]);
 
-        // 4. AMBIL DATA LOG BARANG KELUAR BERDASARKAN TAHUN YANG DIPILIH
-        const [barangKeluar] = await db.execute(`
-            SELECT tk.id_keluar AS id_transaksi, tk.tgl_keluar AS tanggal, tk.jumlah_keluar AS jumlah, 
-                   b.nama_barang, COALESCE(s.nama_supplier, 'Tanpa Supplier') as nama_supplier,
-                   'keluar' AS jenis_transaksi
-            FROM transaksi_keluar tk
-            JOIN barang b ON tk.id_barang = b.id_barang
-            LEFT JOIN supplier s ON b.id_supplier = s.id_supplier
-            WHERE YEAR(tk.tgl_keluar) = ?
-            ORDER BY tk.tgl_keluar DESC
-        `, [tahunTerpilih]);
-
-        // 5. PENGELOMPOKAN DATA MUTASI HARIAN (laporanPerHari)
+        // 4. LOGIKA PENGELOMPOKAN DATA MUTASI HARIAN
         const laporanPerHari = {};
-
-        // Satukan data masuk ke pengelompokan tanggal harian
-        barangMasuk.forEach(t => {
+        
+        allTransaksi.forEach(t => {
             if (t.tanggal) {
                 const tglKey = new Date(t.tanggal).toISOString().split('T')[0];
-                if (!laporanPerHari[tglKey]) laporanPerHari[tglKey] = { masuk: [], keluar: [] };
-                laporanPerHari[tglKey].masuk.push(t);
+                
+                if (!laporanPerHari[tglKey]) {
+                    laporanPerHari[tglKey] = { masuk: [], keluar: [] };
+                }
+                
+                if (t.jenis_transaksi === 'masuk') {
+                    laporanPerHari[tglKey].masuk.push(t);
+                } else if (t.jenis_transaksi === 'keluar') {
+                    laporanPerHari[tglKey].keluar.push(t);
+                }
             }
         });
 
-        // Satukan data keluar ke pengelompokan tanggal harian
-        barangKeluar.forEach(t => {
-            if (t.tanggal) {
-                const tglKey = new Date(t.tanggal).toISOString().split('T')[0];
-                if (!laporanPerHari[tglKey]) laporanPerHari[tglKey] = { masuk: [], keluar: [] };
-                laporanPerHari[tglKey].keluar.push(t);
-            }
-        });
-
-        // 6. RENDER KE VIEW LAPORAN.EJS DENGAN DATA YANG SUDAH TERFILTER
+        // 5. RENDER KE LAPORAN.EJS DENGAN INTEROP DUA NAMA VARIABEL
+        // Mengirimkan rawBarang DAN stokGudang sekaligus agar EJS Anda pasti mendeteksinya!
         res.render('laporan', { 
             user: req.session.user, 
-            stokGudang, 
-            laporanPerHari,
-            tahunTerpilih: parseInt(tahunTerpilih) // Dikirim ke view untuk mempertahankan status dropdown select
+            stokGudang: stokGudangResult, 
+            rawBarang: stokGudangResult, 
+            laporanPerHari: laporanPerHari,
+            tahunTerpilih: parseInt(tahunTerpilih)
         });
 
     } catch (e) { 
         console.error("🚨 Error pada rute laporan:", e);
-        res.status(500).send("Error Laporan Gudang: " + e.message); 
+        res.status(500).send("Error Laporan: " + e.message); 
     }
 });
 
